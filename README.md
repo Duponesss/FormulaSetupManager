@@ -1,97 +1,103 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# F1 Setup Manager 🏎️
+📄 Sobre o Projeto
+O F1 Setup Manager é um aplicativo mobile desenvolvido para entusiastas de jogos de corrida de Fórmula 1. Ele permite que os usuários salvem, gerenciem e consultem seus setups de carro (configurações) para diferentes circuitos e condições climáticas, otimizando a performance nas pistas virtuais.
 
-# Getting Started
+Este projeto foi criado para centralizar as informações de setup que, muitas vezes, ficam espalhadas em planilhas, blocos de notas ou fotos.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+✨ Funcionalidades Principais
+👤 Autenticação de Usuários: Sistema seguro de Login e Cadastro para proteger os setups de cada usuário.
 
-## Step 1: Start Metro
+📝 CRUD de Setups: Crie, visualize, edite e delete setups completos.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+🔍 Busca e Filtragem: Encontre facilmente um setup específico filtrando por jogo, carro, circuito ou condição climática.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+📄 Detalhes do Setup: Tela dedicada para visualizar todos os detalhes de uma configuração, incluindo aerodinâmica, transmissão, suspensão, freios e pneus.
 
-```sh
-# Using npm
-npm start
+📱 Interface Moderna: Componentes de UI construídos com HeroUI para uma experiência de usuário limpa e atraente.
 
-# OR using Yarn
-yarn start
-```
+🛠️ Tecnologias Utilizadas
+Este projeto foi construído utilizando as seguintes tecnologias:
 
-## Step 2: Build and run your app
+Frontend: React Native e HeroUI
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+Estilização: Tailwind CSS com NativeWind
 
-### Android
+Backend & Banco de Dados: Google Firebase
 
-```sh
-# Using npm
-npm run android
+Authentication: Para gerenciamento de usuários.
 
-# OR using Yarn
-yarn android
-```
+Cloud Firestore: Como banco de dados NoSQL para armazenar os setups.
 
-### iOS
+Linguagem: TypeScript
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+🚀 Como Executar o Projeto
+Siga os passos abaixo para configurar e rodar o projeto em seu ambiente local.
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+Pré-requisitos
+Antes de começar, você precisa ter todo o ambiente de desenvolvimento React Native (CLI) configurado. Caso não tenha, siga o guia oficial:
 
-```sh
-bundle install
-```
+Guia de Configuração do Ambiente React Native
 
-Then, and every time you update your native dependencies, run:
+Instalação
+Clone o repositório:
 
-```sh
-bundle exec pod install
-```
+git clone [https://github.com/seu-usuario/seu-repositorio.git](https://github.com/seu-usuario/seu-repositorio.git)
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+Acesse a pasta do projeto:
 
-```sh
-# Using npm
-npm run ios
+cd F1-Setup-Manager
 
-# OR using Yarn
-yarn ios
-```
+Instale as dependências:
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+npm install
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+Configuração do Firebase
+Para que o aplicativo se conecte ao Firebase, você precisa adicionar os arquivos de configuração do seu próprio projeto Firebase.
 
-## Step 3: Modify your app
+Acesse o Console do Firebase e crie um novo projeto (ou use um existente).
 
-Now that you have successfully run the app, let's make changes!
+Para Android:
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Adicione um app Android ao seu projeto Firebase.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+Faça o download do arquivo google-services.json.
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+Mova o arquivo para a pasta android/app/ do seu projeto.
 
-## Congratulations! :tada:
+Para iOS:
 
-You've successfully run and modified your React Native App. :partying_face:
+Adicione um app iOS ao seu projeto Firebase.
 
-### Now what?
+Faça o download do arquivo GoogleService-Info.plist.
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+Abra a pasta ios no Xcode e arraste o arquivo .plist para a raiz do projeto.
 
-# Troubleshooting
+Executando o Aplicativo
+Para Android:
+Certifique-se de que um emulador está em execução ou um dispositivo físico está conectado.
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+npx react-native run-android
 
-# Learn More
+Para iOS (apenas em macOS):
 
-To learn more about React Native, take a look at the following resources:
+cd ios && pod install && cd ..
+npx react-native run-ios
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+📂 Estrutura de Pastas
+F1-Setup-Manager/
+├── android/
+├── ios/
+├── src/
+│   ├── assets/         # Imagens, fontes, etc.
+│   ├── components/     # Componentes reutilizáveis (Button, Input, Card)
+│   ├── navigation/     # Configuração de rotas e navegação
+│   ├── screens/        # Telas do aplicativo (Login, Home, SetupDetails)
+│   ├── services/       # Lógica de negócio e comunicação com Firebase
+│   └── @types/         # Definições de tipos TypeScript
+├── App.tsx             # Arquivo de entrada principal
+└── ...                 # Outros arquivos de configuração
+
+👨‍💻 Autor
+[Seu Nome]
+
+GitHub: https://github.com/seu-usuario
