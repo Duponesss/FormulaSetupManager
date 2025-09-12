@@ -1,0 +1,9 @@
+/users/{userId}
+
+uid: string (NN) // ID único do Firebase Auth (redundante, mas bom para queries)
+
+nome: string (NN) // Nome de exibição do usuário
+
+email: string (NN) // Email de login
+
+createdAt: timestamp (NN) // Data e hora de criação do cadastro

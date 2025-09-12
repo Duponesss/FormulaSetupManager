@@ -1,0 +1,18 @@
+/gameData/{gameId}
+
+// O ID do documento será o nome do jogo (ex: "F1 24", "F1 23").
+// Isso facilita a busca por dados de um jogo específico.
+
+name: string (NN) // Nome completo do jogo, ex: "EA SPORTS F1 24"
+
+releaseYear: int (NN) // Ano de lançamento, ex: 2024
+
+teams: array<map> { // Uma lista de equipes, onde cada equipe é um objeto
+
+teamName: string // Ex: "Oracle Red Bull Racing"
+
+carName: string // Ex: "RB20"
+}
+
+tracks: array<string> // Uma lista com os nomes das pistas disponíveis no jogo
+// Ex: ["Bahrain", "Jeddah", "Melbourne", "Suzuka", "Shanghai"]

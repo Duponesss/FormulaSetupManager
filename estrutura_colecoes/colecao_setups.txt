@@ -1,0 +1,82 @@
+/setups/{setupId}
+
+userId: string (NN) // ID do usuário que criou o setup. Essencial para regras de segurança (só o dono pode editar/deletar).
+
+setupTitle: string (NN) // Um nome para o setup, ex: "Monza Molhado Agressivo"
+
+gameVersion: string (NN) // Ex: "F1 24" (usado para buscar carros e pistas na coleção gameData)
+
+car: string (NN) // Ex: "Red Bull RB20"
+
+track: string (NN) // Ex: "Silverstone"
+
+condition: string (NN) // Ex: "Seco" ou "Molhado"
+
+createdAt: timestamp (NN) // Data de criação
+
+updatedAt: timestamp (NN) // Data da última atualização
+
+notes: string (Nullable) // Campo de texto livre para anotações do piloto
+
+isPublic: boolean (NN) // true se o setup for visível para outros usuários, false se for privado.
+
+setupDetails: map { // Objeto contendo todas as configurações detalhadas
+
+aerodynamics: map {
+
+frontWing: int
+
+rearWing: int
+}
+
+transmission: map {
+
+differentialOnThrottle: int
+
+differentialOffThrottle: int
+}
+
+suspensionGeometry: map {
+
+frontCamber: float
+
+rearCamber: float
+
+frontToe: float
+
+rearToe: float
+}
+
+suspension: map {
+
+frontSuspension: int
+
+rearSuspension: int
+
+frontAntiRollBar: int
+
+rearAntiRollBar: int
+
+frontRideHeight: int
+
+rearRideHeight: int
+}
+
+brakes: map {
+
+brakePressure: int
+
+brakeBias: int
+}
+
+tyres: map {
+
+frontRightPressure: float
+
+frontLeftPressure: float
+
+rearRightPressure: float
+
+rearLeftPressure: float
+}
+}
