@@ -1,9 +1,8 @@
 import { StackNavigationProp } from '@react-navigation/stack';
-import { collection, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import { useAuth } from '../hooks/use-auth';
-import { db } from '../services/firebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { Box } from '../../components/ui/box';
 import { Text } from '../../components/ui/text';
 import { Button, ButtonText } from '../../components/ui/button';
@@ -16,8 +15,8 @@ import { VStack } from '../../components/ui/vstack';
 
 type MainStackParamList = {
   Home: undefined;
-  CreateSetup: undefined;
   SetupDetails: { setupId: string };
+  CreateSetup: { setupId?: string };
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<MainStackParamList, 'Home'>;
@@ -28,39 +27,49 @@ interface Props {
 
 interface Setup {
   id: string;
-  name: string;
+  setupTitle: string;
   car: string;
   track: string;
   controlType: string;
+  condition: string;
   frontWing: number;
   rearWing: number;
-  createdAt: any;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [setups, setSetups] = useState<Setup[]>([]);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  const { user, signOut } = useAuth();
+  const [loading, setLoading] = useState(true);
   
   // Animation values
   const floatAnimation = useSharedValue(0);
 
-  useEffect(() => {
-    if (!user) return;
+  const loadSetups = async () => {
+    try {
+      setLoading(true);
+      const storedSetups = await AsyncStorage.getItem('setups');
+      if (storedSetups) {
+        const parsedSetups = JSON.parse(storedSetups);
+        setSetups(parsedSetups);
+      } else {
+        setSetups([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar setups:', error);
+      showAlertDialog('Não foi possível carregar os setups');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const q = query(collection(db, 'setups'), where('userId', '==', user.uid));
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const setupsData: Setup[] = [];
-      querySnapshot.forEach((doc) => {
-        setupsData.push({ id: doc.id, ...doc.data() } as Setup);
-      });
-      setSetups(setupsData);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadSetups();
+    }, [])
+  );
 
   useEffect(() => {
     // Start floating animation
@@ -78,18 +87,27 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleDeleteSetup = async (setupId: string) => {
     try {
-      await deleteDoc(doc(db, 'setups', setupId));
+      const storedSetups = await AsyncStorage.getItem('setups');
+      if (storedSetups) {
+        const setups = JSON.parse(storedSetups);
+        const updatedSetups = setups.filter((s: any) => s.id !== setupId);
+        await AsyncStorage.setItem('setups', JSON.stringify(updatedSetups));
+        setSetups(updatedSetups);
+      }
     } catch (error) {
       console.error('Erro ao deletar setup:', error);
       showAlertDialog('Não foi possível deletar o setup');
     }
   };
 
-  const handleSignOut = async () => {
+  const handleClearData = async () => {
     try {
-      await signOut();
+      await AsyncStorage.removeItem('setups');
+      setSetups([]);
+      showAlertDialog('Dados limpos com sucesso');
     } catch (error) {
-      console.error('Erro ao sair:', error);
+      console.error('Erro ao limpar dados:', error);
+      showAlertDialog('Erro ao limpar dados');
     }
   };
 
@@ -104,7 +122,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const renderSetupItem = ({ item }: { item: Setup }) => (
     <Box className="rounded-xl p-4 mb-4">
       <HStack className="justify-between items-start mb-3">
-        <Text size="lg" className="font-bold">{item.name}</Text>
+        <Text size="lg" className="font-bold">{item.setupTitle}</Text>
         <HStack space="sm">
           <Pressable 
             className="w-8 h-8 items-center justify-center"
@@ -132,15 +150,22 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Text>{item.track}</Text>
         </HStack>
         
+        <HStack className="items-center">
+          <Text className="mr-2">🎮</Text>
+          <Text size="sm">{item.controlType}</Text>
+        </HStack>
+        
+        <HStack className="items-center">
+          <Text className="mr-2">🌤️</Text>
+          <Text size="sm">{item.condition}</Text>
+        </HStack>
+        
         <HStack className="items-center justify-between">
-          <HStack className="items-center">
-            <Text className="mr-2">🎮</Text>
-            <Box className="rounded-full px-3 py-1">
-              <Text size="sm">{item.controlType}</Text>
-            </Box>
-          </HStack>
           <Text size="sm">
-            {item.createdAt?.toDate?.()?.toLocaleDateString('pt-BR') || 'Data não disponível'}
+            Criado: {new Date(item.createdAt).toLocaleDateString('pt-BR')}
+          </Text>
+          <Text size="sm">
+            Atualizado: {new Date(item.updatedAt).toLocaleDateString('pt-BR')}
           </Text>
         </HStack>
         
@@ -170,9 +195,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         
         <Pressable 
           className="absolute top-12 right-6"
-          onPress={handleSignOut}
+          onPress={handleClearData}
         >
-          <Text size="sm">Sair</Text>
+          <Text size="sm">Limpar Dados</Text>
         </Pressable>
       </Box>
 
@@ -200,8 +225,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       {/* Floating Action Button */}
       <Animated.View style={[animatedFloatingButton]}>
         <Pressable
-          className="absolute bottom-6 right-6 w-14 h-14 rounded-full items-center justify-center"
-          onPress={() => navigation.navigate('CreateSetup')}
+          className="absolute bottom-6 bg-red-500 right-6 w-14 h-14 rounded-full items-center justify-center"
+          onPress={() => navigation.navigate('CreateSetup', {})}
         >
           <Text size="2xl">+</Text>
         </Pressable>

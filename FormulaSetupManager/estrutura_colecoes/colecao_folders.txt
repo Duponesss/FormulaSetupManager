@@ -1,0 +1,3 @@
+- userId: string (NN)        // Dono da pasta
+  - folderName: string (NN)    // Nome da pasta (ex: "Circuitos de Rua - Seco")
+  - createdAt: timestamp (NN)

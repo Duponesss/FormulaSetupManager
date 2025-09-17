@@ -1,0 +1,35 @@
+// --- Dados Principais ---
+  - userId: string (NN)
+  - setupTitle: string (NN)
+  - gameVersion: string (NN)
+  - car: string (NN)
+  - track: string (NN)
+  - condition: string (NN)
+  - notes: string (Nullable)
+  - setupDetails: map { ... } // (A estrutura interna permanece a mesma)
+
+  // --- Campos de Organização e Referência ---
+  - folderId: string (Nullable)       // ID do documento da coleção `folders`
+  - originalSetupId: string (Nullable) // Se for um clone, guarda o ID do setup original
+
+  // --- Campos de Status e Comunidade ---
+  - isPublic: boolean (NN)
+  - createdAt: timestamp (NN)
+  - updatedAt: timestamp (NN)
+  - ratingCount: number (NN, default: 0) // Quantidade de avaliações recebidas
+  - avgRating: number (NN, default: 0)   // Média das avaliações (de 1 a 5, por exemplo)
+  - cloneCount: number (NN, default: 0)  // Quantas vezes foi importado por outros usuários
+  
+  // --- Sub-coleções ---
+  /setups/{setupId}/comments/{commentId}
+    - userId: string (NN)
+    - userName: string (NN) // Denormalizado para não precisar buscar na coleção 'users'
+    - userProfilePic: string (Nullable) // Denormalizado também
+    - text: string (NN)
+    - createdAt: timestamp (NN)
+    
+  /setups/{setupId}/performanceLogs/{logId}
+    - lapTime: string (NN) // Ex: "1:28.452"
+    - weather: string (Nullable) // Ex: "Ensolarado, 30°C"
+    - notes: string (Nullable)
+    - loggedAt: timestamp (NN)
