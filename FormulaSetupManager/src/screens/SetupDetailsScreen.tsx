@@ -1,7 +1,6 @@
 import { StackNavigationProp } from '@react-navigation/stack';
-import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { db } from '../services/firebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Box } from '../../components/ui/box';
 import { Text } from '../../components/ui/text';
 import { Button, ButtonText } from '../../components/ui/button';
@@ -15,11 +14,8 @@ import { Divider } from '../../components/ui/divider';
 
 type MainStackParamList = {
   Home: undefined;
-  CreateSetup: undefined;
   SetupDetails: { setupId: string };
-  Aerodynamics: { setupId?: string };
-  Suspension: { setupId?: string };
-  TiresBrakes: { setupId?: string };
+  CreateSetup: { setupId?: string };
 };
 
 type SetupDetailsScreenNavigationProp = StackNavigationProp<MainStackParamList, 'SetupDetails'>;
@@ -35,20 +31,41 @@ interface Props {
 
 interface SetupData {
   id: string;
-  name: string;
+  setupTitle: string;
   car: string;
   track: string;
   controlType: string;
+  condition: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  // Aerodinâmica
   frontWing: number;
   rearWing: number;
+  // Transmissão
+  differentialOnThrottle: number;
+  differentialOffThrottle: number;
+  engineBraking: number;
+  // Geometria da Suspensão
+  frontCamber: number;
+  rearCamber: number;
+  frontToe: number;
+  rearToe: number;
+  // Suspensão
   frontSuspension: number;
   rearSuspension: number;
-  frontTirePressure: number;
-  rearTirePressure: number;
+  frontAntiRollBar: number;
+  rearAntiRollBar: number;
+  frontRideHeight: number;
+  rearRideHeight: number;
+  // Freios
   brakePressure: number;
   brakeBalance: number;
-  observations: string;
-  createdAt: any;
+  // Pneus
+  frontRightTirePressure: number;
+  frontLeftTirePressure: number;
+  rearRightTirePressure: number;
+  rearLeftTirePressure: number;
 }
 
 const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -73,13 +90,23 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const loadSetupData = async () => {
     try {
-      const docRef = doc(db, 'setups', setupId);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        setSetup({ id: docSnap.id, ...docSnap.data() } as SetupData);
+      const storedSetups = await AsyncStorage.getItem('setups');
+      if (storedSetups) {
+        const setups = JSON.parse(storedSetups);
+        const foundSetup = setups.find((s: any) => s.id === setupId);
+        if (foundSetup) {
+          setSetup(foundSetup as SetupData);
+        } else {
+          showAlertDialog('Erro', 'Setup não encontrado', [{
+            text: 'OK',
+            onPress: () => {
+              setShowAlert(false);
+              navigation.goBack();
+            }
+          }]);
+        }
       } else {
-        showAlertDialog('Erro', 'Setup não encontrado', [{
+        showAlertDialog('Erro', 'Nenhum setup encontrado', [{
           text: 'OK',
           onPress: () => {
             setShowAlert(false);
@@ -109,7 +136,12 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           onPress: async () => {
             setShowAlert(false);
             try {
-              await deleteDoc(doc(db, 'setups', setupId));
+              const storedSetups = await AsyncStorage.getItem('setups');
+              if (storedSetups) {
+                const setups = JSON.parse(storedSetups);
+                const updatedSetups = setups.filter((s: any) => s.id !== setupId);
+                await AsyncStorage.setItem('setups', JSON.stringify(updatedSetups));
+              }
               showAlertDialog('Sucesso', 'Setup excluído com sucesso!', [{
                 text: 'OK',
                 onPress: () => {
@@ -170,50 +202,87 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
       <ScrollView className="flex-1 p-6">
         {/* Basic Info Card */}
-        <Box className="rounded-xl p-6 mb-6">
-          <Heading size="xl" className="mb-4">{setup.name}</Heading>
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="xl" className="mb-4 text-red-600">{setup.setupTitle}</Heading>
           
-          <DetailRow label={setup.car} value="" icon="🚗" />
-          <DetailRow label={setup.track} value="" icon="📍" />
-          <DetailRow label={setup.controlType} value="" icon="🎮" />
+          <DetailRow label="Carro" value={setup.car} icon="🚗" />
+          <DetailRow label="Circuito" value={setup.track} icon="📍" />
+          <DetailRow label="Tipo de Controle" value={setup.controlType} icon="🎮" />
+          <DetailRow label="Condições" value={setup.condition} icon="🌤️" />
           <DetailRow 
             label="Criado em" 
-            value={setup.createdAt?.toDate?.()?.toLocaleDateString('pt-BR') || 'Data não disponível'} 
+            value={new Date(setup.createdAt).toLocaleDateString('pt-BR')} 
             icon="📅" 
+          />
+          <DetailRow 
+            label="Atualizado em" 
+            value={new Date(setup.updatedAt).toLocaleDateString('pt-BR')} 
+            icon="🔄" 
           />
         </Box>
 
         {/* Aerodynamics Card */}
-        <Box className="rounded-xl p-6 mb-6">
-          <Heading size="xl" className="mb-4">Aerodinâmica</Heading>
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="lg" className="mb-4 text-red-600">Aerodinâmica</Heading>
           
-          <DetailRow label="Asa Dianteira" value={setup.frontWing} icon="🏎️" />
-          <DetailRow label="Asa Traseira" value={setup.rearWing} icon="🏎️" />
+          <DetailRow label="Asa Dianteira" value={setup.frontWing} icon="✈️" />
+          <DetailRow label="Asa Traseira" value={setup.rearWing} icon="✈️" />
+        </Box>
+
+        {/* Transmission Card */}
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="lg" className="mb-4 text-red-600">Transmissão</Heading>
+          
+          <DetailRow label="Diferencial com Aceleração" value={`${setup.differentialOnThrottle}%`} icon="⚙️" />
+          <DetailRow label="Diferencial sem Aceleração" value={`${setup.differentialOffThrottle}%`} icon="⚙️" />
+          <DetailRow label="Frenagem do Motor" value={`${setup.engineBraking}%`} icon="🔧" />
+        </Box>
+
+        {/* Suspension Geometry Card */}
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="lg" className="mb-4 text-red-600">Geometria da Suspensão</Heading>
+          
+          <DetailRow label="Cambagem Dianteira" value={`${setup.frontCamber}°`} icon="📐" />
+          <DetailRow label="Cambagem Traseira" value={`${setup.rearCamber}°`} icon="📐" />
+          <DetailRow label="Toe-out Dianteiro" value={`${setup.frontToe}°`} icon="📏" />
+          <DetailRow label="Toe-in Traseiro" value={`${setup.rearToe}°`} icon="📏" />
         </Box>
 
         {/* Suspension Card */}
-        <Box className="rounded-xl p-6 mb-6">
-          <Heading size="xl" className="mb-4">Suspensão</Heading>
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="lg" className="mb-4 text-red-600">Suspensão</Heading>
           
           <DetailRow label="Suspensão Dianteira" value={setup.frontSuspension} icon="🔧" />
           <DetailRow label="Suspensão Traseira" value={setup.rearSuspension} icon="🔧" />
+          <DetailRow label="Barra Anti-Rolagem Dianteira" value={setup.frontAntiRollBar} icon="🔩" />
+          <DetailRow label="Barra Anti-Rolagem Traseira" value={setup.rearAntiRollBar} icon="🔩" />
+          <DetailRow label="Altura Dianteira" value={`${setup.frontRideHeight}mm`} icon="📏" />
+          <DetailRow label="Altura Traseira" value={`${setup.rearRideHeight}mm`} icon="📏" />
         </Box>
 
-        {/* Tires and Brakes Card */}
-        <Box className="rounded-xl p-6 mb-6">
-          <Heading size="xl" className="mb-4">Pneus e Freios</Heading>
+        {/* Brakes Card */}
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="lg" className="mb-4 text-red-600">Freios</Heading>
           
-          <DetailRow label="Pressão Pneus Dianteiros" value={`${setup.frontTirePressure} psi`} icon="🛞" />
-          <DetailRow label="Pressão Pneus Traseiros" value={`${setup.rearTirePressure} psi`} icon="🛞" />
           <DetailRow label="Pressão dos Freios" value={`${setup.brakePressure}%`} icon="🛑" />
-          <DetailRow label="Balanço dos Freios" value={`${setup.brakeBalance}%`} icon="⚖️" />
+          <DetailRow label="Balanceamento de Freios" value={`${setup.brakeBalance}%`} icon="⚖️" />
         </Box>
 
-        {/* Observations Card */}
-        {setup.observations && (
-          <Box className="rounded-xl p-6 mb-6">
-            <Heading size="xl" className="mb-4">Observações</Heading>
-            <Text>{setup.observations}</Text>
+        {/* Tires Card */}
+        <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+          <Heading size="lg" className="mb-4 text-red-600">Pneus</Heading>
+          
+          <DetailRow label="Pressão Pneu Dianteiro Direito" value={`${setup.frontRightTirePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Dianteiro Esquerdo" value={`${setup.frontLeftTirePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Traseiro Direito" value={`${setup.rearRightTirePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Traseiro Esquerdo" value={`${setup.rearLeftTirePressure} PSI`} icon="🛞" />
+        </Box>
+
+        {/* Notes Card */}
+        {setup.notes && (
+          <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+            <Heading size="lg" className="mb-4 text-red-600">Observações</Heading>
+            <Text>{setup.notes}</Text>
           </Box>
         )}
 
@@ -222,25 +291,9 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           <HStack space="md">
             <Button
               className="flex-1"
-              onPress={() => navigation.navigate('Aerodynamics', { setupId: setup.id })}
+              onPress={() => navigation.navigate('CreateSetup', { setupId })}
             >
-              <ButtonText>Editar Aerodinâmica</ButtonText>
-            </Button>
-            
-            <Button
-              className="flex-1"
-              onPress={() => navigation.navigate('Suspension', { setupId: setup.id })}
-            >
-              <ButtonText>Editar Suspensão</ButtonText>
-            </Button>
-          </HStack>
-
-          <HStack space="md">
-            <Button
-              className="flex-1"
-              onPress={() => navigation.navigate('TiresBrakes', { setupId: setup.id })}
-            >
-              <ButtonText>Editar Pneus e Freios</ButtonText>
+              <ButtonText>Editar Setup Completo</ButtonText>
             </Button>
             
             <Button

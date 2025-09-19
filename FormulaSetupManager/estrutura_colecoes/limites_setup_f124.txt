@@ -1,0 +1,44 @@
+aerodinâmica:
+- asa dianteira min 0 / max 50
+- asa traseira min 0 / max 50
+	- step asas: 1
+
+transmissão:
+- diferencial de aceleração ativa min 10 / max 100% 
+- diferencial de aceleração inativa min 10 / max 100% 
+	- step Dif accel ativa e inativa: 5
+- frenagem do motor min 0 / max 100%
+	- step Frenagem motor: 10
+
+geometria da suspensão:
+- cambagem dianteira min -3.50° / max -2.50°
+- cambagem traseira min -2.20° / max -0.70°
+	- step Cambagem: 0.10
+- Toe-out dianteiro min 0.00° / max 0.50°
+- Toe-in traseiro min 0.00° / max 0.50°
+	- step Toe in e out: 0.01
+
+suspensão:
+- suspensão dianteira min 1 / max 41
+- suspensão traseira min 1 / max 41
+	- step Suspensão: 1
+- barra estabilizadora dianteira min 1 / max 21
+- barra estabilizadora traseira min 1 / max 21
+	- step Barra estabilizadora: 1
+- altura frontal min 10 / max 40
+- altura traseira min 40 / max 100
+	- Altura: 1
+
+freios:
+- pressão dos freios min 80 / max 100%
+	- step Pressão freio: 1
+- balanceamento de freios diant. min 70 / max 50%
+	- step Balanceamento freio: 1
+
+pneus:
+- pressão dianteiro direito min 22.5 / max 29.5
+- pressão dianteiro esquerdo min 22.5 / max 29.5
+- pressão traseiro direito min 20.5 / max 26.5
+- pressão traseiro esquerdo min 20.5 / max 26.5
+	- step Pneu: 0.1
+

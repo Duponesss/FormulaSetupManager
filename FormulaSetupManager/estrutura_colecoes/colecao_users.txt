@@ -1,0 +1,15 @@
+// --- Campos Essenciais (O que você já tem) ---
+uid: string (NN)
+nome: string (NN)
+email: string (NN)
+createdAt: timestamp (NN)
+
+// --- Melhorias para Recursos Sociais e de Comunidade ---
+profilePictureUrl: string (Nullable) // Para o usuário poder enviar uma foto de perfil.
+bio: string (Nullable)               // Uma pequena biografia, ex: "Piloto virtual desde 2010. Fã da Ferrari."
+
+// --- Melhorias para Funcionalidades e Estatísticas ---
+publicSetupsCount: number (NN, default: 0) // Contador de quantos setups públicos o usuário já compartilhou. 
+                                           // Útil para mostrar no perfil sem fazer uma consulta cara.
+
+favorites: array<string> (Nullable)        // Uma lista (array) com os IDs dos setups que o usuário marcou como favoritos.
