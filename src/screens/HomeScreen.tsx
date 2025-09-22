@@ -1,6 +1,6 @@
 import { StackNavigationProp } from '@react-navigation/stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import Animated, { interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { Box } from '../../components/ui/box';
@@ -43,9 +43,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  
-  // Animation values
-  const floatAnimation = useSharedValue(0);
 
   const loadSetups = async () => {
     try {
@@ -70,15 +67,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       loadSetups();
     }, [])
   );
-
-  useEffect(() => {
-    // Start floating animation
-    floatAnimation.value = withRepeat(
-      withTiming(1, { duration: 2000 }),
-      -1,
-      true
-    );
-  }, []);
 
   const showAlertDialog = (message: string) => {
     setAlertMessage(message);
@@ -111,26 +99,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // Animated style for floating button
-  const animatedFloatingButton = useAnimatedStyle(() => {
-    const translateY = interpolate(floatAnimation.value, [0, 1], [0, -8]);
-    return {
-      transform: [{ translateY }],
-    };
-  });
-
   const renderSetupItem = ({ item }: { item: Setup }) => (
-    <Box className="rounded-xl p-4 mb-4">
+    <Box className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md shadow-red-500">
       <HStack className="justify-between items-start mb-3">
         <Text size="lg" className="font-bold">{item.setupTitle}</Text>
         <HStack space="sm">
-          <Pressable 
+          <Pressable
             className="w-8 h-8 items-center justify-center"
             onPress={() => navigation.navigate('SetupDetails', { setupId: item.id })}
           >
             <Text size="lg">✏️</Text>
           </Pressable>
-          <Pressable 
+          <Pressable
             className="w-8 h-8 items-center justify-center"
             onPress={() => handleDeleteSetup(item.id)}
           >
@@ -138,28 +118,28 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </Pressable>
         </HStack>
       </HStack>
-      
+
       <VStack space="sm">
         <HStack className="items-center">
           <Text className="mr-2">🚗</Text>
           <Text>{item.car}</Text>
         </HStack>
-        
+
         <HStack className="items-center">
           <Text className="mr-2">📍</Text>
           <Text>{item.track}</Text>
         </HStack>
-        
+
         <HStack className="items-center">
           <Text className="mr-2">🎮</Text>
           <Text size="sm">{item.controlType}</Text>
         </HStack>
-        
+
         <HStack className="items-center">
           <Text className="mr-2">🌤️</Text>
           <Text size="sm">{item.condition}</Text>
         </HStack>
-        
+
         <HStack className="items-center justify-between">
           <Text size="sm">
             Criado: {new Date(item.createdAt).toLocaleDateString('pt-BR')}
@@ -168,17 +148,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             Atualizado: {new Date(item.updatedAt).toLocaleDateString('pt-BR')}
           </Text>
         </HStack>
-        
-        <HStack className="justify-between mt-3">
-          <HStack className="items-center">
-            <Text className="mr-2">Asa Diant.</Text>
-            <Text className="font-bold">{item.frontWing}</Text>
-          </HStack>
-          <HStack className="items-center">
-            <Text className="mr-2">Asa Tras.</Text>
-            <Text className="font-bold">{item.rearWing}</Text>
-          </HStack>
-        </HStack>
       </VStack>
     </Box>
   );
@@ -186,19 +155,30 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <Box className="flex-1">
       {/* Header */}
-      <Box className="pt-12 pb-6 px-6">
-        <HStack className="items-center mb-2">
-          <Text size="2xl" className="mr-3">🏆</Text>
-          <Heading size="2xl">F1 Setup Manager</Heading>
-        </HStack>
-        <Text>Gerencie seus setups da F1 24</Text>
-        
-        <Pressable 
+      <Box className="pt-8 pb-5 px-6">
+        <LinearGradient
+          colors={['#000000', '#434343']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 130,
+          }}
+        >
+          <HStack className="items-center mt-2 mb-2">
+            <Text size="2xl" className="mr-3">🏆</Text>
+            <Heading size="2xl" className="text-white">F1 Setup Manager</Heading>
+          </HStack>
+        <Pressable
           className="absolute top-12 right-6"
           onPress={handleClearData}
         >
           <Text size="sm">Limpar Dados</Text>
         </Pressable>
+        </LinearGradient>
       </Box>
 
       {/* Main Content */}
@@ -223,14 +203,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       </Box>
 
       {/* Floating Action Button */}
-      <Animated.View style={[animatedFloatingButton]}>
-        <Pressable
-          className="absolute bottom-6 bg-red-500 right-6 w-14 h-14 rounded-full items-center justify-center"
-          onPress={() => navigation.navigate('CreateSetup', {})}
-        >
-          <Text size="2xl">+</Text>
-        </Pressable>
-      </Animated.View>
+      <Pressable
+        className="absolute bottom-6 bg-red-500 right-6 font-bold w-14 h-14 rounded-full items-center justify-center"
+        onPress={() => navigation.navigate('CreateSetup', {})}
+      >
+        <Text size="2xl">+</Text>
+      </Pressable>
 
       <AlertDialog isOpen={showAlert} onClose={() => setShowAlert(false)}>
         <AlertDialogBackdrop />
@@ -249,7 +227,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Box>
+    </Box >
   );
 };
 
