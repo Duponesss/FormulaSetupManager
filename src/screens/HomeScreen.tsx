@@ -168,9 +168,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             height: 130,
           }}
         >
-          <HStack className="items-center mt-2 mb-2">
-            <Text size="2xl" className="mr-3">🏆</Text>
-            <Heading size="2xl" className="text-white">F1 Setup Manager</Heading>
+          <HStack className="items-center ml-4 mt-6">
+            <Heading size="2xl" className="text-white">APEX F1 Assistant</Heading>
           </HStack>
         <Pressable
           className="absolute top-12 right-6"
