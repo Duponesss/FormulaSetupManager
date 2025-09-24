@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
 import { VStack } from '../../components/ui/vstack';
+import { useSingleTap } from '../hooks/useSingleTap';
 
 type MainStackParamList = {
   Home: undefined;
@@ -72,6 +73,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     setAlertMessage(message);
     setShowAlert(true);
   };
+
+  const handleCreateSetup = useSingleTap(() => {
+    navigation.navigate('CreateSetup', {});
+  }, 1500);
 
   const handleDeleteSetup = async (setupId: string) => {
     try {
@@ -165,11 +170,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             top: 0,
             left: 0,
             right: 0,
-            height: 130,
+            height: 100,
           }}
         >
           <HStack className="items-center ml-4 mt-6">
-            <Heading size="2xl" className="text-white">APEX F1 Assistant</Heading>
+            <Heading size="2xl" className="text-white">Meus Setups</Heading>
           </HStack>
         <Pressable
           className="absolute top-12 right-6"
@@ -182,7 +187,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Main Content */}
       <Box className="flex-1 px-6 pt-6">
-        <Heading size="xl" className="mb-2">Meus Setups</Heading>
         <Text className="mb-6">{setups.length} setup{setups.length !== 1 ? 's' : ''} cadastrado{setups.length !== 1 ? 's' : ''}</Text>
 
         <FlatList
@@ -204,7 +208,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       {/* Floating Action Button */}
       <Pressable
         className="absolute bottom-6 bg-red-500 right-6 font-bold w-14 h-14 rounded-full items-center justify-center"
-        onPress={() => navigation.navigate('CreateSetup', {})}
+        onPress={handleCreateSetup}
       >
         <Text size="2xl">+</Text>
       </Pressable>
