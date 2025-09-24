@@ -7,15 +7,16 @@ import { Text } from '../../components/ui/text';
 import { Button, ButtonText } from '../../components/ui/button';
 import { ScrollView } from '../../components/ui/scroll-view';
 import { Pressable } from '../../components/ui/pressable';
-import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogCloseButton, AlertDialogFooter, AlertDialogBody } from '../../components/ui/alert-dialog';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
 import { VStack } from '../../components/ui/vstack';
 import { Divider } from '../../components/ui/divider';
 import ConfirmationModal from '../components/dialogs/ConfirmationModal';
+import CustomAlertDialog from '../components/dialogs/CustomAlertDialog';
+import { useSingleTap } from '../hooks/useSingleTap';
 
 type MainStackParamList = {
-  Home: undefined;
+  index: undefined;
   'setup-details': { setupId: string };
   'create-setup': { setupId?: string };
 };
@@ -75,22 +76,14 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { setupId } = route.params;
   const [setup, setSetup] = useState<SetupData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertActions, setAlertActions] = useState<Array<{ text: string, onPress: () => void }>>([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     loadSetupData();
   }, [setupId]);
-
-  const showAlertDialog = (title: string, message: string, actions?: Array<{ text: string, onPress: () => void }>) => {
-    setAlertTitle(title);
-    setAlertMessage(message);
-    setAlertActions(actions || [{ text: 'OK', onPress: () => setShowAlert(false) }]);
-    setShowAlert(true);
-  };
 
   const loadSetupData = async () => {
     try {
@@ -101,26 +94,17 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         if (foundSetup) {
           setSetup(foundSetup as SetupData);
         } else {
-          showAlertDialog('Erro', 'Setup não encontrado', [{
-            text: 'OK',
-            onPress: () => {
-              setShowAlert(false);
-              navigation.goBack();
-            }
-          }]);
+          // 3. USA O ESTADO DO NOSSO CUSTOM ALERT DIALOG
+          setAlertTitle('Erro');
+          setAlertMessage('Setup não encontrado.');
+          setShowAlert(true);
         }
-      } else {
-        showAlertDialog('Erro', 'Nenhum setup encontrado', [{
-          text: 'OK',
-          onPress: () => {
-            setShowAlert(false);
-            navigation.goBack();
-          }
-        }]);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do setup:', error);
-      showAlertDialog('Erro', 'Não foi possível carregar o setup');
+      setAlertTitle('Erro');
+      setAlertMessage('Não foi possível carregar o setup.');
+      setShowAlert(true);
     } finally {
       setLoading(false);
     }
@@ -138,13 +122,21 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.goBack();
     } catch (error) {
       console.error('Erro ao excluir setup:', error);
-      // Idealmente, você teria um alerta de erro aqui também
+      setAlertTitle('Erro');
+      setAlertMessage('Não foi possível excluir o setup.');
+      setShowAlert(true);
     }
   };
 
-  const confirmDeletion = () => {
-    setShowDeleteModal(true); // Apenas abre o modal
+  const confirmDeletion = () => setShowDeleteModal(true); 
+  
+  const handleEditNavigation = () => {
+    console.log('EDITANDO SETUP COM setupId:', setupId);
+    router.push({ pathname: '/create-setup', params: { setupId } });
   };
+
+  const debouncedHandleEdit = useSingleTap(handleEditNavigation);
+  const debouncedConfirmDeletion = useSingleTap(confirmDeletion);
 
   if (loading) {
     return (
@@ -208,6 +200,14 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           />
         </Box>
 
+        {/* Notes Card */}
+        {setup.notes && (
+          <Box className="rounded-xl p-6 mb-6 bg-gray-50">
+            <Heading size="lg" className="mb-4 text-red-600">Observações</Heading>
+            <Text>{setup.notes}</Text>
+          </Box>
+        )}
+
         {/* Aerodynamics Card */}
         <Box className="rounded-xl p-6 mb-6 bg-gray-50">
           <Heading size="lg" className="mb-4 text-red-600">Aerodinâmica</Heading>
@@ -265,31 +265,19 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           <DetailRow label="Pressão Pneu Traseiro Esquerdo" value={`${setup.rearLeftTirePressure} PSI`} icon="🛞" />
         </Box>
 
-        {/* Notes Card */}
-        {setup.notes && (
-          <Box className="rounded-xl p-6 mb-6 bg-gray-50">
-            <Heading size="lg" className="mb-4 text-red-600">Observações</Heading>
-            <Text>{setup.notes}</Text>
-          </Box>
-        )}
-
         {/* Action Buttons */}
         <VStack space="md" className="m-10">
           <HStack space="md">
             <Button
               className="flex-1 p-2 rounded-xl"
-              onPress={() => {
-                console.log('A NAVEGAR PARA EDIÇÃO COM setupId:', setupId);
-                router.push({ pathname: '/create-setup', params: { setupId } });
-              }}
+              onPress={debouncedHandleEdit}
             >
               <ButtonText>Editar Setup</ButtonText>
             </Button>
-
             <Button
               className="flex-1 p-2 bg-red-500 rounded-xl"
               variant="destructive"
-              onPress={confirmDeletion}
+              onPress={debouncedConfirmDeletion}
             >
               <ButtonText className="text-white font-bold">Excluir Setup</ButtonText>
             </Button>
@@ -305,6 +293,18 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         onConfirm={handleDelete}
         confirmText="Excluir"
         cancelText="Cancelar"
+      />
+      <CustomAlertDialog
+        isOpen={showAlert}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setShowAlert(false)}
+        onConfirm={() => {
+          // Se o erro foi 'Setup não encontrado', volta para a tela anterior
+          if (alertMessage === 'Setup não encontrado.') {
+            navigation.goBack();
+          }
+        }}
       />
     </Box>
   );

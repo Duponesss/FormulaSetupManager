@@ -1,6 +1,6 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useEffect, useState, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { AlertDialog, AlertDialogBackdrop, AlertDialogBody, AlertDialogContent, AlertDialogFooter, AlertDialogHeader } from '../../components/ui/alert-dialog';
+import { useSetupStore } from '../stores/setupStore';
 import { Box } from '../../components/ui/box';
 import { Button, ButtonText } from '../../components/ui/button';
 import { Heading } from '../../components/ui/heading';
@@ -32,182 +32,94 @@ interface SetupData {
   setupTitle: string; controlType: string; car: string; track: string; condition: string; notes: string; frontWing: number; rearWing: number; differentialOnThrottle: number; differentialOffThrottle: number; engineBraking: number; frontCamber: number; rearCamber: number; frontToe: number; rearToe: number; frontSuspension: number; rearSuspension: number; frontAntiRollBar: number; rearAntiRollBar: number; frontRideHeight: number; rearRideHeight: number; brakePressure: number; brakeBalance: number; frontRightTirePressure: number; frontLeftTirePressure: number; rearRightTirePressure: number; rearLeftTirePressure: number; id?: string; createdAt?: string; updatedAt?: string;
 }
 
-const SliderComponent = forwardRef(({
-  label, initialValue, min = 0, max = 100, step = 1, unit = '', suffix = ''
-}: { label: string; initialValue: number; min?: number; max?: number; step?: number; unit?: string; suffix?: string; }, ref) => {
-  const [internalValue, setInternalValue] = useState(initialValue);
-  const [inputValue, setInputValue] = useState(() => initialValue.toFixed(step < 1 ? 2 : 0));
+const SliderComponent = ({
+  label,
+  value,
+  onFinalChange, // Função para atualizar o store global 
+  min,
+  max,
+  step,
+  unit,
+  suffix
+}: {
+  label: string;
+  value: number;
+  onFinalChange: (newValue: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  unit?: string;
+  suffix?: string;
+}) => {
+  const [localValue, setLocalValue] = useState(value);
 
-  // Expõe funções para o componente pai através da ref
-  useImperativeHandle(ref, () => ({
-    getValue: () => internalValue,
-    setValue: (newValue: number) => setInternalValue(newValue),
-  }));
-
-  // Atualiza o estado interno se o valor inicial mudar (para o modo de edição)
+  // Sincroniza o estado local se o valor global mudar (ex: ao carregar um setup)
   useEffect(() => {
-    setInternalValue(initialValue);
-  }, [initialValue]);
+    setLocalValue(value);
+  }, [value]);
 
-  // Sincroniza o campo de input com o valor do slider
-  useEffect(() => {
-    setInputValue(internalValue.toFixed(step < 1 ? 2 : 0));
-  }, [internalValue, step]);
-
-  // Lida com a submissão do valor digitado no input
-  const handleInputSubmit = () => {
-    let num = parseFloat(inputValue);
-    if (!isNaN(num)) {
-      if (num < min) num = min;
-      if (num > max) num = max;
-      setInternalValue(num);
-    } else {
-      // Se for inválido, reseta para o valor atual do slider
-      setInputValue(internalValue.toFixed(step < 1 ? 2 : 0));
-    }
-  };
 
   return (
     <Box className="mb-4">
-      <Text className="font-medium mb-2 text-sm">{label}</Text>
-      <HStack className="items-center gap-3">
-        <Box className="flex-1">
-          <HStack className="items-center justify-between mb-1">
-            <Text className="text-xs text-gray-500">{min}{unit}</Text>
-            <Text className="text-xs text-gray-500">{max}{unit}</Text>
-          </HStack>
-          <Slider
-            value={internalValue}
-            onChange={setInternalValue}
-            minValue={min} maxValue={max} step={step} className="mb-1"
-          >
-            <SliderTrack><SliderFilledTrack /></SliderTrack>
-            <SliderThumb />
-          </Slider>
-          <HStack className="items-center justify-between mt-1">
-            <Box className="bg-gray-200 rounded-full px-2 py-1">
-              <Text className="text-xs">{internalValue.toFixed(step < 1 ? 2 : 0)}{unit}{suffix}</Text>
-            </Box>
-          </HStack>
-        </Box>
-        <Box className="w-16">
-          <Input size="sm">
-            <InputField
-              value={inputValue}
-              onChangeText={setInputValue}
-              onSubmitEditing={handleInputSubmit}
-              onBlur={handleInputSubmit}
-              keyboardType="numeric" textAlign="center" className="text-xs" selectTextOnFocus
-            />
-          </Input>
-        </Box>
+      <HStack className="justify-between items-center gap-3">
+        <Text className="font-medium mb-2 text-sm">{label}</Text>
+        <Text className="font-bold">{localValue.toFixed(step < 1 ? 2 : 0)}{unit}{suffix}</Text>
       </HStack>
+      <Slider
+        value={localValue}
+        onChange={setLocalValue} // onChange atualiza apenas o estado local
+        onChangeEnd={onFinalChange} // onChangeEnd atualiza o store global - UMA ÚNICA VEZ
+        minValue={min} maxValue={max} step={step}
+      >
+        <SliderTrack><SliderFilledTrack /></SliderTrack>
+        <SliderThumb />
+      </Slider>
     </Box>
   );
-});
+};
 
 
 
 // O COMPONENTE PRINCIPAL DA TELA
 const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
-  console.log('OBJETO DE ROTA RECEBIDO:', JSON.stringify(route, null, 2)); 
+  console.log('OBJETO DE ROTA RECEBIDO:', JSON.stringify(route, null, 2));
   const { setupId } = route.params;
+  // Conecta-se ao store e pega os dados e ações que precisamos
+  const { data, updateField, loadExistingSetup, reset } = useSetupStore();
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [isEditMode, setIsEditMode] = useState(!!setupId);
+  const [submitted, setSubmitted] = useState(false);
+  const [canRenderHeavyContent, setCanRenderHeavyContent] = useState(false);
 
-  const initialSetupValues = useMemo(() => ({
-    frontWing: 25, rearWing: 25, differentialOnThrottle: 55, differentialOffThrottle: 55, engineBraking: 50, frontCamber: -3.0, rearCamber: -1.45, frontToe: 0.25, rearToe: 0.25, frontSuspension: 21, rearSuspension: 21, frontAntiRollBar: 11, rearAntiRollBar: 11, frontRideHeight: 25, rearRideHeight: 70, brakePressure: 90, brakeBalance: 60, frontRightTirePressure: 26.0, frontLeftTirePressure: 26.0, rearRightTirePressure: 23.5, rearLeftTirePressure: 23.5,
-  }), []);
-
-  // ESTADO APENAS PARA CAMPOS DE TEXTO E PICKER
-  const [formData, setFormData] = useState({
-    setupTitle: '', controlType: '', car: '', track: '', condition: '', notes: '',
-  });
-
-  // ESTADO PARA VALIDAÇÃO
-  const [fieldErrors, setFieldErrors] = useState({
-    setupTitle: false, controlType: false, car: false, track: false, condition: false
-  });
-
-  // REFERÊNCIAS PARA CADA SLIDER
-  const sliderRefs = {
-    frontWing: useRef(null), rearWing: useRef(null), differentialOnThrottle: useRef(null), differentialOffThrottle: useRef(null), engineBraking: useRef(null), frontCamber: useRef(null), rearCamber: useRef(null), frontToe: useRef(null), rearToe: useRef(null), frontSuspension: useRef(null), rearSuspension: useRef(null), frontAntiRollBar: useRef(null), rearAntiRollBar: useRef(null), frontRideHeight: useRef(null), rearRideHeight: useRef(null), brakePressure: useRef(null), brakeBalance: useRef(null), frontRightTirePressure: useRef(null), frontLeftTirePressure: useRef(null), rearRightTirePressure: useRef(null), rearLeftTirePressure: useRef(null),
-  };
 
   useEffect(() => {
-    // Usamos uma função anónima assíncrona que se chama a si mesma imediatamente (IIFE)
-    (async () => {
-      if (!setupId) {
-        console.log('Modo: Criar Novo Setup.');
-        return;
-      }
-
-      console.log('Modo: Editar. Carregando dados para o setupId:', setupId);
-
-      try {
-        const storedSetups = await AsyncStorage.getItem('setups');
-        if (storedSetups) {
-          const setups = JSON.parse(storedSetups);
-          const setupToEdit = setups.find((s: any) => s.id === setupId);
-
-          if (setupToEdit) {
-            console.log('Setup encontrado:', setupToEdit.setupTitle);
-
-            // Atualiza o estado dos campos de texto e pickers
-            setFormData({
-              setupTitle: setupToEdit.setupTitle || '',
-              controlType: setupToEdit.controlType || '',
-              car: setupToEdit.car || '',
-              track: setupToEdit.track || '',
-              condition: setupToEdit.condition || '',
-              notes: setupToEdit.notes || '',
-            });
-
-            // Atualiza os sliders programaticamente através das refs
-            for (const key in sliderRefs) {
-              const ref = sliderRefs[key as keyof typeof sliderRefs];
-              const valueToSet = setupToEdit[key];
-
-              if (ref.current && valueToSet !== undefined) {
-                (ref.current as any).setValue(valueToSet);
-              }
-            }
-          } else {
-            console.warn('Setup com ID', setupId, 'não encontrado no AsyncStorage.');
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados do setup:', error);
-      }
-    })(); // <-- Os parênteses aqui no final executam a função imediatamente
-
-  }, [setupId]); // Executa apenas quando o setupId muda
-
-  const updateField = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (field in fieldErrors) {
-      setFieldErrors(prev => ({ ...prev, [field]: !value || value === '' }));
+    if (setupId) {
+      loadExistingSetup(setupId);
+    } else {
+      reset();
     }
-  };
+    // Função de limpeza para resetar o formulário quando a tela fecha
+    return () => reset();
+  }, [setupId, loadExistingSetup, reset]);
 
-  // SUBSTITUA A SUA FUNÇÃO handleSave INTEIRA POR ESTA
+  // Este efeito ativa a renderização do conteúdo pesado após a tela ser montada
+  useEffect(() => {
+    // Delay de tempo para a animação de transição da tela terminar
+    const timer = setTimeout(() => {
+      setCanRenderHeavyContent(true);
+    }, 50);
+
+    return () => clearTimeout(timer); // Limpa o timer se a tela for fechada
+  }, []);
+
   const handleSave = async () => {
-    const errors = {
-      setupTitle: !formData.setupTitle, controlType: !formData.controlType, car: !formData.car, track: !formData.track, condition: !formData.condition,
-    };
-    setFieldErrors(errors);
-
-    const hasErrors = Object.values(errors).some(Boolean);
-
-    if (hasErrors) {
-      const missing = Object.entries(errors).filter(([, value]) => value).map(([key]) => {
-        const names = { setupTitle: 'Nome do Setup', controlType: 'Tipo de Controle', car: 'Carro', track: 'Circuito', condition: 'Condições' };
-        return names[key as keyof typeof names];
-      });
-      const message = `Por favor, preencha os seguintes campos obrigatórios:\n\n• ${missing.join('\n• ')}`;
+    setSubmitted(true);
+    // A validação é feita diretamente com os dados do store
+    if (!data.setupTitle || !data.controlType || !data.car || !data.track || !data.condition) {
+      const message = "Por favor, preencha todos os campos básicos obrigatórios.";
       setAlertTitle('Informações faltando');
       setAlertMessage(message);
       setShowAlert(true);
@@ -216,20 +128,10 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
 
     setLoading(true);
 
-    // Coleta os dados dos sliders através das refs no momento de salvar
-    const sliderValues: any = {};
-    for (const key in sliderRefs) {
-      const ref = sliderRefs[key as keyof typeof sliderRefs];
-      if (ref.current) {
-        sliderValues[key] = (ref.current as any).getValue();
-      }
-    }
-
     const setupToSave = {
-      ...formData,
-      ...sliderValues,
+      ...data,
       id: setupId || Date.now().toString(),
-      createdAt: new Date().toISOString(), // Simplificado
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
@@ -239,8 +141,11 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
 
       if (isEditMode && setupId) {
         const setupIndex = setups.findIndex((s: any) => s.id === setupId);
-        if (setupIndex !== -1) setups[setupIndex] = setupToSave;
-        else setups.push(setupToSave);
+        if (setupIndex !== -1) {
+          setups[setupIndex] = setupToSave;
+        } else {
+          setups.push(setupToSave);
+        }
       } else {
         setups.push(setupToSave);
       }
@@ -295,27 +200,27 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
           <Heading size="lg" className="mb-4">Informações Básicas</Heading>
 
           <VStack space="md">
-            <FormControl isInvalid={fieldErrors.setupTitle}>
+            <FormControl isInvalid={submitted && !data.setupTitle}>
               <Text className="mb-2 font-medium">Nome do Setup</Text>
               <Input>
                 <InputField
                   placeholder="Digite o nome do setup"
-                  value={formData.setupTitle}
+                  value={data.setupTitle}
                   onChangeText={(text) => updateField('setupTitle', text)}
                 />
               </Input>
-              {fieldErrors.setupTitle && (
+              {submitted && !data.setupTitle && (
                 <FormControlError>
                   <FormControlErrorText>Este campo é obrigatório</FormControlErrorText>
                 </FormControlError>
               )}
             </FormControl>
 
-            <FormControl isInvalid={fieldErrors.controlType}>
+            <FormControl isInvalid={submitted && !data.controlType}>
               <Text className="mb-2 font-medium">Tipo de Controle</Text>
               <Box className="border border-gray-300 rounded-lg overflow-hidden">
                 <Picker
-                  selectedValue={formData.controlType}
+                  selectedValue={data.controlType}
                   onValueChange={(value: string) => updateField('controlType', value)}
                 >
                   <Picker.Item label="Selecione o tipo de controle" value="" />
@@ -324,18 +229,18 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
                   ))}
                 </Picker>
               </Box>
-              {fieldErrors.controlType && (
+              {submitted && !data.controlType && (
                 <FormControlError>
                   <FormControlErrorText>Este campo é obrigatório</FormControlErrorText>
                 </FormControlError>
               )}
             </FormControl>
 
-            <FormControl isInvalid={fieldErrors.car}>
+            <FormControl isInvalid={submitted && !data.car}>
               <Text className="mb-2 font-medium">Carro</Text>
               <Box className="border border-gray-300 rounded-lg overflow-hidden">
                 <Picker
-                  selectedValue={formData.car}
+                  selectedValue={data.car}
                   onValueChange={(value: string) => updateField('car', value)}
                 >
                   <Picker.Item label="Selecione o carro" value="" />
@@ -344,18 +249,18 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
                   ))}
                 </Picker>
               </Box>
-              {fieldErrors.car && (
+              {submitted && !data.car && (
                 <FormControlError>
                   <FormControlErrorText>Este campo é obrigatório</FormControlErrorText>
                 </FormControlError>
               )}
             </FormControl>
 
-            <FormControl isInvalid={fieldErrors.track}>
+            <FormControl isInvalid={submitted && !data.track}>
               <Text className="mb-2 font-medium">Circuito</Text>
               <Box className="border border-gray-300 rounded-lg overflow-hidden">
                 <Picker
-                  selectedValue={formData.track}
+                  selectedValue={data.track}
                   onValueChange={(value: string) => updateField('track', value)}
                 >
                   <Picker.Item label="Selecione o circuito" value="" />
@@ -364,18 +269,18 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
                   ))}
                 </Picker>
               </Box>
-              {fieldErrors.track && (
+              {submitted && !data.track && (
                 <FormControlError>
                   <FormControlErrorText>Este campo é obrigatório</FormControlErrorText>
                 </FormControlError>
               )}
             </FormControl>
 
-            <FormControl isInvalid={fieldErrors.condition}>
+            <FormControl isInvalid={submitted && !data.condition}>
               <Text className="mb-2 font-medium">Condições</Text>
               <Box className="border border-gray-300 rounded-lg overflow-hidden">
                 <Picker
-                  selectedValue={formData.condition}
+                  selectedValue={data.condition}
                   onValueChange={(value: string) => updateField('condition', value)}
                 >
                   <Picker.Item label="Selecione as condições" value="" />
@@ -384,7 +289,7 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
                   ))}
                 </Picker>
               </Box>
-              {fieldErrors.condition && (
+              {submitted && !data.condition && (
                 <FormControlError>
                   <FormControlErrorText>Este campo é obrigatório</FormControlErrorText>
                 </FormControlError>
@@ -396,7 +301,7 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
               <Textarea>
                 <TextareaInput
                   placeholder="Notas sobre o setup, condições de pista, etc..."
-                  value={formData.notes}
+                  value={data.notes}
                   onChangeText={(text) => updateField('notes', text)}
                   multiline
                   numberOfLines={3}
@@ -406,204 +311,216 @@ const CreateSetupScreen: React.FC<Props> = ({ navigation, route }) => {
           </VStack>
         </Box>
 
-        {/* Aerodinâmica */}
-        <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <Heading size="md" className="mb-4 text-red-600">Aerodinâmica</Heading>
-          <SliderComponent ref={sliderRefs.frontWing} label="Asa Dianteira" initialValue={initialSetupValues.frontWing} min={0} max={50} step={1} />
-          <SliderComponent ref={sliderRefs.rearWing} label="Asa Traseira" initialValue={initialSetupValues.rearWing} min={0} max={50} step={1} />
-        </Box>
+        {canRenderHeavyContent && (
+          <>
+            {/* Aerodinâmica */}
+            <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Heading size="md" className="mb-4 text-red-600">Aerodinâmica</Heading>
+              <SliderComponent
+                value={data.frontWing}
+                label="Asa Dianteira"
+                onFinalChange={(newValue) => updateField('frontWing', newValue)}
+                min={0} max={50} step={1} />
+              <SliderComponent
+                value={data.rearWing}
+                label="Asa Traseira"
+                onFinalChange={(newValue) => updateField('rearWing', newValue)}
+                min={0} max={50} step={1} />
+            </Box>
 
-        {/* Transmissão */}
-        <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <Heading size="md" className="mb-4 text-red-600">Transmissão</Heading>
-          <SliderComponent
-            ref={sliderRefs.differentialOnThrottle}
-            label="Diferencial com Aceleração"
-            initialValue={initialSetupValues.differentialOnThrottle}
-            min={10}
-            max={100}
-            step={5}
-            unit="%"
-          />
-          <SliderComponent
-            ref={sliderRefs.differentialOffThrottle}
-            label="Diferencial sem Aceleração"
-            initialValue={initialSetupValues.differentialOffThrottle}
-            min={10}
-            max={100}
-            step={5}
-            unit="%"
-          />
-          <SliderComponent
-            ref={sliderRefs.engineBraking}
-            label="Frenagem do Motor"
-            initialValue={initialSetupValues.engineBraking}
-            min={0}
-            max={100}
-            step={10}
-            unit="%"
-          />
-        </Box>
+            {/* Transmissão */}
+            <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Heading size="md" className="mb-4 text-red-600">Transmissão</Heading>
+              <SliderComponent
+                value={data.differentialOnThrottle}
+                label="Diferencial com Aceleração"
+                onFinalChange={(newValue) => updateField('differentialOnThrottle', newValue)}
+                min={10}
+                max={100}
+                step={5}
+                unit="%"
+              />
+              <SliderComponent
+                value={data.differentialOffThrottle}
+                label="Diferencial sem Aceleração"
+                onFinalChange={(newValue) => updateField('differentialOffThrottle', newValue)}
+                min={10}
+                max={100}
+                step={5}
+                unit="%"
+              />
+              <SliderComponent
+                value={data.engineBraking}
+                label="Frenagem do Motor"
+                onFinalChange={(newValue) => updateField('engineBraking', newValue)}
+                min={0}
+                max={100}
+                step={10}
+                unit="%"
+              />
+            </Box>
 
-        {/* Geometria da Suspensão */}
-        <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <Heading size="md" className="mb-4 text-red-600">Geometria da Suspensão</Heading>
-          <SliderComponent
-            ref={sliderRefs.frontCamber}
-            label="Cambagem Dianteira"
-            initialValue={initialSetupValues.frontCamber}
-            min={-3.5}
-            max={-2.5}
-            step={0.1}
-            unit="°"
-          />
-          <SliderComponent
-            ref={sliderRefs.rearCamber}
-            label="Cambagem Traseira"
-            initialValue={initialSetupValues.rearCamber}
-            min={-2.2}
-            max={-0.7}
-            step={0.1}
-            unit="°"
-          />
-          <SliderComponent
-            ref={sliderRefs.frontToe}
-            label="Toe-out Dianteiro"
-            initialValue={initialSetupValues.frontToe}
-            min={0.0}
-            max={0.5}
-            step={0.01}
-            unit="°"
-          />
-          <SliderComponent
-            ref={sliderRefs.rearToe}
-            label="Toe-in Traseiro"
-            initialValue={initialSetupValues.rearToe}
-            min={0.0}
-            max={0.5}
-            step={0.01}
-            unit="°"
-          />
-        </Box>
+            {/* Geometria da Suspensão */}
+            <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Heading size="md" className="mb-4 text-red-600">Geometria da Suspensão</Heading>
+              <SliderComponent
+                value={data.frontCamber}
+                label="Cambagem Dianteira"
+                onFinalChange={(newValue) => updateField('frontCamber', newValue)}
+                min={-3.5}
+                max={-2.5}
+                step={0.1}
+                unit="°"
+              />
+              <SliderComponent
+                value={data.rearCamber}
+                label="Cambagem Traseira"
+                onFinalChange={(newValue) => updateField('rearCamber', newValue)}
+                min={-2.2}
+                max={-0.7}
+                step={0.1}
+                unit="°"
+              />
+              <SliderComponent
+                value={data.frontToe}
+                label="Toe-out Dianteiro"
+                onFinalChange={(newValue) => updateField('frontToe', newValue)}
+                min={0.0}
+                max={0.5}
+                step={0.01}
+                unit="°"
+              />
+              <SliderComponent
+                value={data.rearToe}
+                label="Toe-in Traseiro"
+                onFinalChange={(newValue) => updateField('rearToe', newValue)}
+                min={0.0}
+                max={0.5}
+                step={0.01}
+                unit="°"
+              />
+            </Box>
 
-        {/* Suspensão */}
-        <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <Heading size="md" className="mb-4 text-red-600">Suspensão</Heading>
-          <SliderComponent
-            ref={sliderRefs.frontSuspension}
-            label="Rigidez da Suspensão Dianteira"
-            initialValue={initialSetupValues.frontSuspension}
-            min={1}
-            max={41}
-            step={1}
-          />
-          <SliderComponent
-            ref={sliderRefs.rearSuspension}
-            label="Rigidez da Suspensão Traseira"
-            initialValue={initialSetupValues.rearSuspension}
-            min={1}
-            max={41}
-            step={1}
-          />
-          <SliderComponent
-            ref={sliderRefs.frontAntiRollBar}
-            label="Barra Estabilizadora Dianteira"
-            initialValue={initialSetupValues.frontAntiRollBar}
-            min={1}
-            max={21}
-            step={1}
-          />
-          <SliderComponent
-            ref={sliderRefs.rearAntiRollBar}
-            label="Barra Estabilizadora Traseira"
-            initialValue={initialSetupValues.rearAntiRollBar}
-            min={1}
-            max={21}
-            step={1}
-          />
-          <SliderComponent
-            ref={sliderRefs.frontRideHeight}
-            label="Altura do Veículo Dianteira"
-            initialValue={initialSetupValues.frontRideHeight}
-            min={10}
-            max={40}
-            step={1}
-            unit="mm"
-          />
-          <SliderComponent
-            ref={sliderRefs.rearRideHeight}
-            label="Altura do Veículo Traseira"
-            initialValue={initialSetupValues.rearRideHeight}
-            min={40}
-            max={100}
-            step={1}
-            unit="mm"
-          />
-        </Box>
+            {/* Suspensão */}
+            <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Heading size="md" className="mb-4 text-red-600">Suspensão</Heading>
+              <SliderComponent
+                value={data.frontSuspension}
+                label="Rigidez da Suspensão Dianteira"
+                onFinalChange={(newValue) => updateField('frontSuspension', newValue)}
+                min={1}
+                max={41}
+                step={1}
+              />
+              <SliderComponent
+                value={data.rearSuspension}
+                label="Rigidez da Suspensão Traseira"
+                onFinalChange={(newValue) => updateField('rearSuspension', newValue)}
+                min={1}
+                max={41}
+                step={1}
+              />
+              <SliderComponent
+                value={data.frontAntiRollBar}
+                label="Barra Estabilizadora Dianteira"
+                onFinalChange={(newValue) => updateField('frontAntiRollBar', newValue)}
+                min={1}
+                max={21}
+                step={1}
+              />
+              <SliderComponent
+                value={data.rearAntiRollBar}
+                label="Barra Estabilizadora Traseira"
+                onFinalChange={(newValue) => updateField('rearAntiRollBar', newValue)}
+                min={1}
+                max={21}
+                step={1}
+              />
+              <SliderComponent
+                value={data.frontRideHeight}
+                label="Altura do Veículo Dianteira"
+                onFinalChange={(newValue) => updateField('frontRideHeight', newValue)}
+                min={10}
+                max={40}
+                step={1}
+                unit="mm"
+              />
+              <SliderComponent
+                value={data.rearRideHeight}
+                label="Altura do Veículo Traseira"
+                onFinalChange={(newValue) => updateField('rearRideHeight', newValue)}
+                min={40}
+                max={100}
+                step={1}
+                unit="mm"
+              />
+            </Box>
 
-        {/* Freios */}
-        <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <Heading size="md" className="mb-4 text-red-600">Freios</Heading>
-          <SliderComponent
-            ref={sliderRefs.brakePressure}
-            label="Pressão dos Freios"
-            initialValue={initialSetupValues.brakePressure}
-            min={80}
-            max={100}
-            step={1}
-            unit="%"
-          />
-          <SliderComponent
-            ref={sliderRefs.brakeBalance}
-            label="Balanceamento dos Freios"
-            initialValue={initialSetupValues.brakeBalance}
-            min={50}
-            max={70}
-            step={1}
-            unit="%"
-          />
-        </Box>
+            {/* Freios */}
+            <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Heading size="md" className="mb-4 text-red-600">Freios</Heading>
+              <SliderComponent
+                value={data.brakePressure}
+                label="Pressão dos Freios"
+                onFinalChange={(newValue) => updateField('brakePressure', newValue)}
+                min={80}
+                max={100}
+                step={1}
+                unit="%"
+              />
+              <SliderComponent
+                value={data.brakeBalance}
+                label="Balanceamento dos Freios"
+                onFinalChange={(newValue) => updateField('brakeBalance', newValue)}
+                min={50}
+                max={70}
+                step={1}
+                unit="%"
+              />
+            </Box>
 
-        {/* Pneus */}
-        <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <Heading size="md" className="mb-4 text-red-600">Pneus</Heading>
-          <SliderComponent
-            ref={sliderRefs.frontRightTirePressure}
-            label="Pressão Pneu Dianteiro Direito"
-            initialValue={initialSetupValues.frontRightTirePressure}
-            min={22.5}
-            max={29.5}
-            step={0.1}
-            unit=" PSI"
-          />
-          <SliderComponent
-            ref={sliderRefs.frontLeftTirePressure}
-            label="Pressão Pneu Dianteiro Esquerdo"
-            initialValue={initialSetupValues.frontLeftTirePressure}
-            min={22.5}
-            max={29.5}
-            step={0.1}
-            unit=" PSI"
-          />
-          <SliderComponent
-            ref={sliderRefs.rearRightTirePressure}
-            label="Pressão Pneu Traseiro Direito"
-            initialValue={initialSetupValues.rearRightTirePressure}
-            min={20.5}
-            max={26.5}
-            step={0.1}
-            unit=" PSI"
-          />
-          <SliderComponent
-            ref={sliderRefs.rearLeftTirePressure}
-            label="Pressão Pneu Traseiro Esquerdo"
-            initialValue={initialSetupValues.rearLeftTirePressure}
-            min={20.5}
-            max={26.5}
-            step={0.1}
-            unit=" PSI"
-          />
-        </Box>
+            {/* Pneus */}
+            <Box className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <Heading size="md" className="mb-4 text-red-600">Pneus</Heading>
+              <SliderComponent
+                value={data.frontRightTirePressure}
+                label="Pressão Pneu Dianteiro Direito"
+                onFinalChange={(newValue) => updateField('frontRightTirePressure', newValue)}
+                min={22.5}
+                max={29.5}
+                step={0.1}
+                unit=" PSI"
+              />
+              <SliderComponent
+                value={data.frontLeftTirePressure}
+                label="Pressão Pneu Dianteiro Esquerdo"
+                onFinalChange={(newValue) => updateField('frontLeftTirePressure', newValue)}
+                min={22.5}
+                max={29.5}
+                step={0.1}
+                unit=" PSI"
+              />
+              <SliderComponent
+                value={data.rearRightTirePressure}
+                label="Pressão Pneu Traseiro Direito"
+                onFinalChange={(newValue) => updateField('rearRightTirePressure', newValue)}
+                min={20.5}
+                max={26.5}
+                step={0.1}
+                unit=" PSI"
+              />
+              <SliderComponent
+                value={data.rearLeftTirePressure}
+                label="Pressão Pneu Traseiro Esquerdo"
+                onFinalChange={(newValue) => updateField('rearLeftTirePressure', newValue)}
+                min={20.5}
+                max={26.5}
+                step={0.1}
+                unit=" PSI"
+              />
+            </Box>
+          </>
+        )}
 
         {/* Botões de Ação */}
         <Box className="mb-8 mt-4">
