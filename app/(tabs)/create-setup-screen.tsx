@@ -29,7 +29,7 @@ type FormSectionItem = {
   suffix?: string;
 };
 
-const SliderComponent = ({
+const SliderComponent = React.memo(({
   label,
   value,
   onFinalChange, // Função para atualizar o store global 
@@ -73,7 +73,7 @@ const SliderComponent = ({
       </Slider>
     </Box>
   );
-};
+});
 
 
 export default function CreateSetupScreen() {
@@ -166,7 +166,7 @@ export default function CreateSetupScreen() {
   const carOptions = useMemo(() => [
     'Mercedes W14', 'Red Bull RB19', 'Ferrari SF-23', 'McLaren MCL60',
     'Aston Martin AMR23', 'Alpine A523', 'Williams FW45', 'AlphaTauri AT04',
-    'Alfa Romeo C43', 'Haas VF-23'
+    'Sauber C44', 'Haas VF-23'
   ] as const, []);
   const trackOptions = useMemo(() => [
     'Bahrain', 'Saudi Arabia', 'Australia', 'Azerbaijan', 'Miami',
