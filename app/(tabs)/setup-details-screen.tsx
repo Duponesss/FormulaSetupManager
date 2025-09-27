@@ -1,36 +1,18 @@
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useRouter } from 'expo-router'; 
-import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from 'react';
 import { Box } from '../../components/ui/box';
-import { Text } from '../../components/ui/text';
 import { Button, ButtonText } from '../../components/ui/button';
-import { ScrollView } from '../../components/ui/scroll-view';
-import { Pressable } from '../../components/ui/pressable';
+import { Divider } from '../../components/ui/divider';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
+import { Pressable } from '../../components/ui/pressable';
+import { ScrollView } from '../../components/ui/scroll-view';
+import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import { Divider } from '../../components/ui/divider';
-import ConfirmationModal from '../components/dialogs/ConfirmationModal';
-import CustomAlertDialog from '../components/dialogs/CustomAlertDialog';
-import { useSingleTap } from '../hooks/useSingleTap';
-
-type MainStackParamList = {
-  index: undefined;
-  'setup-details': { setupId: string };
-  'create-setup': { setupId?: string };
-};
-
-type SetupDetailsScreenNavigationProp = StackNavigationProp<MainStackParamList, 'setup-details'>;
-
-interface Props {
-  navigation: SetupDetailsScreenNavigationProp;
-  route: {
-    params: {
-      setupId: string;
-    };
-  };
-}
+import ConfirmationModal from '../../src/components/dialogs/ConfirmationModal';
+import CustomAlertDialog from '../../src/components/dialogs/CustomAlertDialog';
+import { useSingleTap } from '../../src/hooks/useSingleTap';
 
 interface SetupData {
   id: string;
@@ -71,9 +53,9 @@ interface SetupData {
   rearLeftTirePressure: number;
 }
 
-const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
+export default function SetupDetailsScreen() {
   const router = useRouter();
-  const { setupId } = route.params;
+  const { setupId } = useLocalSearchParams<{ setupId: string }>();
   const [setup, setSetup] = useState<SetupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -81,12 +63,10 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
 
-  useEffect(() => {
-    loadSetupData();
-  }, [setupId]);
 
   const loadSetupData = async () => {
     try {
+      setLoading(true);
       const storedSetups = await AsyncStorage.getItem('setups');
       if (storedSetups) {
         const setups = JSON.parse(storedSetups);
@@ -94,7 +74,6 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         if (foundSetup) {
           setSetup(foundSetup as SetupData);
         } else {
-          // 3. USA O ESTADO DO NOSSO CUSTOM ALERT DIALOG
           setAlertTitle('Erro');
           setAlertMessage('Setup não encontrado.');
           setShowAlert(true);
@@ -110,6 +89,10 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  useEffect(() => {
+    if (setupId) loadSetupData();
+  }, [setupId]);
+
   const handleDelete = async () => {
     try {
       const storedSetups = await AsyncStorage.getItem('setups');
@@ -118,8 +101,7 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         const updatedSetups = setups.filter((s: any) => s.id !== setupId);
         await AsyncStorage.setItem('setups', JSON.stringify(updatedSetups));
       }
-      // Após a exclusão bem-sucedida, volta para a tela anterior
-      navigation.goBack();
+      router.back();
     } catch (error) {
       console.error('Erro ao excluir setup:', error);
       setAlertTitle('Erro');
@@ -132,7 +114,7 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   
   const handleEditNavigation = () => {
     console.log('EDITANDO SETUP COM setupId:', setupId);
-    router.push({ pathname: '/create-setup', params: { setupId } });
+    router.push({ pathname: '/create-setup-screen', params: { setupId } });
   };
 
   const debouncedHandleEdit = useSingleTap(handleEditNavigation);
@@ -173,7 +155,7 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       <Box className="pt-12 pb-4 px-6">
         <HStack className="items-center justify-between">
           <Heading size="xl">Detalhes do Setup</Heading>
-          <Pressable onPress={() => navigation.goBack()}>
+          <Pressable onPress={() => router.back()}>
             <Text size="2xl">×</Text>
           </Pressable>
         </HStack>
@@ -298,11 +280,17 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         isOpen={showAlert}
         title={alertTitle}
         message={alertMessage}
-        onClose={() => setShowAlert(false)}
+        onClose={() => {
+          setShowAlert(false);
+          if (alertMessage === 'Setup não encontrado.') {
+            router.back();
+          }
+        }}
         onConfirm={() => {
           // Se o erro foi 'Setup não encontrado', volta para a tela anterior
+          setShowAlert(false);
           if (alertMessage === 'Setup não encontrado.') {
-            navigation.goBack();
+            router.back();
           }
         }}
       />
@@ -310,4 +298,3 @@ const SetupDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-export default SetupDetailsScreen;

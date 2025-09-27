@@ -1,44 +1,37 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import { GluestackUIProvider } from "../components/ui/gluestack-ui-provider";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
+import { useSetupStore } from "../src/stores/setupStore"; 
 import { useEffect } from "react";
 import '../global.css';
 
-// Este componente interno gere a lógica de redirecionamento
 function RootNavigation() {
-  const { user, loading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
+  const { user, loading: isAuthLoading } = useAuth();
+  const { loadAllSetups } = useSetupStore();
 
   useEffect(() => {
-    // Se o estado de autenticação ainda estiver a carregar, não faz nada
-    if (loading) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    // Se o utilizador NÃO está logado E NÃO está na tela de autenticação,
-    // redireciona-o para a tela de login.
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)');
+    if (user) {
+      loadAllSetups();
     }
-    // Se o utilizador ESTÁ logado E ESTÁ na tela de autenticação,
-    // redireciona-o para a tela principal (tabs).
-    else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
-    }
+  }, [user]);
+  
+  if (isAuthLoading) {
+    return null;
+  }
 
-  }, [user, loading, segments]); // Re-executa sempre que o estado do utilizador ou a rota mudar
-
-  // O Stack define quais grupos de rotas existem na raiz da app
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
+    <Stack
+      screenOptions={{ headerShown: false }}
+      // A propriedade 'initialRouteName' define a tela de arranque do navegador.
+      initialRouteName={user ? '(tabs)' : '(auth)'}
+    >
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }
 
-// O layout raiz agora providencia todos os contextos necessários
+
 export default function RootLayout() {
   return (
     <GluestackUIProvider>
