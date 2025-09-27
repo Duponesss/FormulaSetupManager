@@ -1,4 +1,3 @@
-// app/(tabs)/results.tsx
 import React, { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Box } from '../../components/ui/box';
@@ -14,10 +13,14 @@ import { Spinner } from '@/components/ui/spinner';
 
 export default function ResultsScreen() {
   const router = useRouter();
-  const filters = useLocalSearchParams<{ car?: string; track?: string; }>(); // Recebe os filtros
-  const { car, track, condition, controlType } = useLocalSearchParams<{ car?: string; track?: string; condition?: string; controlType?: string; }>();
+  const { car, track, condition, controlType } = useLocalSearchParams<{ 
+    car?: string; 
+    track?: string; 
+    condition?: string; 
+    controlType?: string; 
+  }>();
   
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SetupData[]>([]);
   const [loading, setLoading] = useState(true);
   const { deleteSetupById } = useSetupStore(); 
 
@@ -31,15 +34,19 @@ export default function ResultsScreen() {
           return;
         }
         
-        let setups = JSON.parse(storedSetups);
+        let setups: SetupData[] = JSON.parse(storedSetups);
 
-        // Lógica de filtragem
-        if (car) setups = setups.filter((s: any) => s.car === car);
-        if (track) setups = setups.filter((s: any) => s.track === track);
-        if (condition) setups = setups.filter((s: any) => s.condition === condition);
-        if (controlType) setups = setups.filter((s: any) => s.controlType === controlType);
+        // Lógica de filtragem usando o objeto de filtros
+        let filteredData = setups.filter(setup => {
+          return (
+            (!car || setup.car === car) &&
+            (!track || setup.track === track) &&
+            (!condition || setup.condition === condition) &&
+            (!controlType || setup.controlType === controlType)
+          );
+        });
 
-        setResults(setups);
+        setResults(filteredData);
       } catch (error) {
         console.error("Erro ao buscar resultados:", error);
       } finally {
@@ -48,7 +55,7 @@ export default function ResultsScreen() {
     };
 
     fetchAndFilterSetups();
-  }, [car, track, condition, controlType]);
+  },  [car, track, condition, controlType]);
 
   if (loading) {
     return (
@@ -71,8 +78,8 @@ export default function ResultsScreen() {
 
       <FlatList
         data={results}
-        keyExtractor={(item: any) => item.id}
-        renderItem={({ item }: { item: SetupData }) => (
+        keyExtractor={(item: any) => item.id!}
+        renderItem={({ item }) => (
           <SetupCard item={item} onDelete={deleteSetupById} />
         )}
         contentContainerStyle={{ padding: 24 }}

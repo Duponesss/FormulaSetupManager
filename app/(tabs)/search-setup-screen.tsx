@@ -13,7 +13,7 @@ import { Picker } from '@react-native-picker/picker';
 
 export default function SearchScreen() {
   const router = useRouter();
-  
+
   // Estado local para guardar as seleções de filtro
   const [filters, setFilters] = useState({
     car: '',
@@ -23,16 +23,27 @@ export default function SearchScreen() {
   });
 
   // Opções para os Pickers (você já as tem)
-  const carOptions = useMemo(() => [/* Sua lista de carros aqui */] as const, []);
-  const trackOptions = useMemo(() => [/* Sua lista de pistas aqui */] as const, []);
+  const carOptions = useMemo(() => [
+    'Mercedes W14', 'Red Bull RB19', 'Ferrari SF-23', 'McLaren MCL60',
+    'Aston Martin AMR23', 'Alpine A523', 'Williams FW45', 'AlphaTauri AT04',
+    'Sauber C44', 'Haas VF-23'
+  ] as const, []);
+  const trackOptions = useMemo(() => ['Bahrain', 'Saudi Arabia', 'Australia', 'Azerbaijan', 'Miami',
+    'Monaco', 'Spain', 'Canada', 'Austria', 'Great Britain',
+    'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Singapore',
+    'Japan', 'Qatar', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Abu Dhabi'] as const, []);
   const controlTypes = useMemo(() => ['Controle', 'Volante'] as const, []);
   const conditionOptions = useMemo(() => ['Seco', 'Chuva', 'Chuva forte'] as const, []);
 
   const handleApplyFilters = () => {
-    // Apenas navega para a tela de resultados, passando os filtros como parâmetros
+    const activeFilters: Record<string, string> = {};
+    if (filters.car) activeFilters.car = filters.car;
+    if (filters.track) activeFilters.track = filters.track;
+    if (filters.controlType) activeFilters.controlType = filters.controlType;
+    if (filters.condition) activeFilters.condition = filters.condition;
     router.push({
       pathname: '/search-results-screen',
-      params: filters,
+      params: activeFilters,
     });
   };
 
@@ -62,9 +73,49 @@ export default function SearchScreen() {
               </Picker>
             </Box>
           </FormControl>
-          
-          {/* ... Adicione aqui os Pickers para Pista, Tipo de Controle e Condições ... */}
-          
+
+          {/* Picker de Pista */}
+          <FormControl>
+            <Text className="font-medium mb-2">Circuito</Text>
+            <Box className="border border-gray-300 rounded-lg overflow-hidden">
+              <Picker
+                selectedValue={filters.track}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, track: value }))}
+              >
+                <Picker.Item label="Qualquer Circuito" value="" />
+                {trackOptions.map(item => <Picker.Item key={item} label={item} value={item} />)}
+              </Picker>
+            </Box>
+          </FormControl>
+
+          {/* Picker de Tipo de Controle */}
+          <FormControl>
+            <Text className="font-medium mb-2">Tipo de Controle</Text>
+            <Box className="border border-gray-300 rounded-lg overflow-hidden">
+              <Picker
+                selectedValue={filters.controlType}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, controlType: value }))}
+              >
+                <Picker.Item label="Qualquer Tipo" value="" />
+                {controlTypes.map(item => <Picker.Item key={item} label={item} value={item} />)}
+              </Picker>
+            </Box>
+          </FormControl>
+
+          {/* Picker de Condições */}
+          <FormControl>
+            <Text className="font-medium mb-2">Condições Climáticas</Text>
+            <Box className="border border-gray-300 rounded-lg overflow-hidden">
+              <Picker
+                selectedValue={filters.condition}
+                onValueChange={(value) => setFilters(prev => ({ ...prev, condition: value }))}
+              >
+                <Picker.Item label="Qualquer Condição" value="" />
+                {conditionOptions.map(item => <Picker.Item key={item} label={item} value={item} />)}
+              </Picker>
+            </Box>
+          </FormControl>
+
         </VStack>
       </ScrollView>
 
