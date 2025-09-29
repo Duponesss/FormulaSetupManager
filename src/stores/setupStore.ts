@@ -5,8 +5,8 @@ import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc
 // Define a interface para todos os dados do formulário
 export interface SetupData {
   id?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
   setupTitle: string;
   controlType: string;
   car: string;
