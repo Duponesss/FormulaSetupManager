@@ -1,7 +1,8 @@
 /gameData/{gameId}
-
-// O ID do documento será o nome do jogo (ex: "F1 24", "F1 23").
+// O ID do documento será o nome do jogo (ex: "F124", "F123").
 // Isso facilita a busca por dados de um jogo específico.
+// Esse documento já está disponível no Firebase, ele deve ser importado e utilizado como validação dos parametros do setup.
+// Somente o /gamedata/F124 está disponível no Firebase por enquanto.
 
 name: string (NN) // Nome completo do jogo, ex: "EA SPORTS F1 24"
 
@@ -9,10 +10,129 @@ releaseYear: int (NN) // Ano de lançamento, ex: 2024
 
 teams: array<map> { // Uma lista de equipes, onde cada equipe é um objeto
 
-teamName: string // Ex: "Oracle Red Bull Racing"
-
-carName: string // Ex: "RB20"
+    teamName: string // Ex: "Oracle Red Bull Racing"
+    carName: string // Ex: "RB20"
 }
 
 tracks: array<string> // Uma lista com os nomes das pistas disponíveis no jogo
 // Ex: ["Bahrain", "Jeddah", "Melbourne", "Suzuka", "Shanghai"]
+
+validationRules: map { // Regras de validação para os limites de configuração
+    aerodynamics: map {
+        frontWing: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearWing: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+    }
+    transmission: map {
+        diffAdjustmentOn: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        diffAdjustmentOff: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        engineBraking: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+    }
+    suspensionGeometry: map {
+        frontCamber: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearCamber: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        frontToeOut: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearToeIn: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+    }
+    suspension: map {
+        frontAntiRollBar: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearAntiRollBar: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        frontSuspension: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearSuspension: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        frontRideHeight: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearRideHeight: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+    }
+    brakes: map {
+        brakePressure: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        frontBrakeBias: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+    }
+    tyres: map {
+        frontLeftTyrePressure: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        frontRightTyrePressure: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearLeftTyrePressure: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+        rearRightTyrePressure: map { 
+            min: number,
+            max: number,
+            step: number
+        }
+    }
+}
