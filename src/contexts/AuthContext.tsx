@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../services/firebaseConfig';
+import { router } from 'expo-router';
 
 // Conditional import for Google Sign-in (only works in development builds)
 let GoogleSignin: any = null;
@@ -42,7 +43,7 @@ interface AuthProviderProps {
 }
 
 // INTERRUPTOR PARA O MODO DE DESENVOLVIMENTO
-const MOCK_AUTH_IN_DEV = true; // <-- Mude para 'false' para testar o login real
+const MOCK_AUTH_IN_DEV = false; // <-- Mude para 'false' para testar o login real
 
 // Objeto de utilizador falso para simulação
 const FAKE_USER: User = {
@@ -137,6 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await GoogleSignin.signOut();
       }
       await firebaseSignOut(auth);
+      router.push('/(auth)');
     } catch (error) {
       throw error;
     }

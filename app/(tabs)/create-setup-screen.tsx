@@ -1,6 +1,7 @@
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
+
 import { Box } from '../../components/ui/box';
 import { Button, ButtonText } from '../../components/ui/button';
 import { Heading } from '../../components/ui/heading';
@@ -10,11 +11,12 @@ import { Pressable } from '../../components/ui/pressable';
 import { Text } from '../../components/ui/text';
 import { Textarea, TextareaInput } from '../../components/ui/textarea';
 import { Slider, SliderThumb, SliderTrack, SliderFilledTrack } from '../../components/ui/slider';
-import { Picker } from '@react-native-picker/picker';
 import { FormControl, FormControlError, FormControlErrorText } from '../../components/ui/form-control';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { Picker } from '@react-native-picker/picker';
 import CustomAlertDialog from '../../src/components/dialogs/CustomAlertDialog';
 import { FlatList } from 'react-native';
+import { Spinner } from '@/components/ui/spinner';
 
 type FormSectionItem = {
   type: 'header' | 'input' | 'picker' | 'textarea' | 'slider' | 'footer';
@@ -81,33 +83,35 @@ export default function CreateSetupScreen() {
   const router = useRouter();
   const { setupId } = useLocalSearchParams<{ setupId?: string }>();
   // Conecta-se ao store e pega os dados e ações necessárias
-  const { formData, updateField, loadExistingSetup, resetForm, addNewSetup, updateExistingSetup } = useSetupStore();
+  const formData = useSetupStore((state) => state.formData);
+  const gameData = useSetupStore((state) => state.gameData);
+  const loadingGameData = useSetupStore((state) => state.loadingGameData);
+
+  // 2. Pega as AÇÕES (funções) de forma estável com getState(), sem causar re-renderizações.
+  const { updateField, loadFormWithExistingSetup, resetForm, saveSetup } = useSetupStore.getState();
+  
+  
   
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(!!setupId);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [isEditMode, setIsEditMode] = useState(!!setupId);
   const [submitted, setSubmitted] = useState(false);
+
 
 
   useFocusEffect(
     React.useCallback(() => {
-      // Quando a tela ganha foco
       if (setupId) {
         setIsEditMode(true);
-        loadExistingSetup(setupId);
+        loadFormWithExistingSetup(setupId);
       } else {
         setIsEditMode(false);
         resetForm();
       }
-
-      // Função de limpeza: executada quando a tela perde o foco
-      return () => {
-        resetForm();
-        setSubmitted(false); // Reseta o estado de submissão também
-      };
-    }, [setupId, loadExistingSetup, resetForm])
+      return () => { resetForm(); setSubmitted(false); };
+    }, [setupId])
   );
 
   const handleSave = async () => {
@@ -122,31 +126,8 @@ export default function CreateSetupScreen() {
 
     setLoading(true);
 
-    const creationDate = isEditMode ? formData.createdAt : new Date().toISOString();
-
-    const setupToSave = {
-      ...formData,
-      id: setupId || Date.now().toString(),
-      createdAt: creationDate,
-      updatedAt: new Date().toISOString()
-    };
-
     try {
-      const storedSetups = await AsyncStorage.getItem('setups');
-      let setups = storedSetups ? JSON.parse(storedSetups) : [];
-
-      if (isEditMode && setupId) {
-        const setupIndex = setups.findIndex((s: any) => s.id === setupId);
-        if (setupIndex > -1) setups[setupIndex] = setupToSave;
-        else setups.push(setupToSave); // Fallback para o caso de não encontrar
-        updateExistingSetup(setupToSave);
-      } else {
-        setups.push(setupToSave);
-        addNewSetup(setupToSave);
-      }
-
-      await AsyncStorage.setItem('setups', JSON.stringify(setups));
-
+      await saveSetup(formData);
       setAlertTitle('Sucesso');
       setAlertMessage('Setup salvo com sucesso!');
       setShowAlert(true);
@@ -162,57 +143,174 @@ export default function CreateSetupScreen() {
 
 
   // Dados para os selects
+  const carOptions = useMemo(() => gameData?.teams.map(t => t.teamName) || [], [gameData]);
+  const trackOptions = useMemo(() => gameData?.tracks || [], [gameData]);
   const controlTypes = useMemo(() => ['Controle', 'Volante'] as const, []);
-  const carOptions = useMemo(() => [
-    'Mercedes W14', 'Red Bull RB19', 'Ferrari SF-23', 'McLaren MCL60',
-    'Aston Martin AMR23', 'Alpine A523', 'Williams FW45', 'AlphaTauri AT04',
-    'Sauber C44', 'Haas VF-23'
-  ] as const, []);
-  const trackOptions = useMemo(() => [
-    'Bahrain', 'Saudi Arabia', 'Australia', 'Azerbaijan', 'Miami',
-    'Monaco', 'Spain', 'Canada', 'Austria', 'Great Britain',
-    'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Singapore',
-    'Japan', 'Qatar', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Abu Dhabi'
-  ] as const, []);
   const conditionOptions = useMemo(() => ['Seco', 'Chuva', 'Chuva forte'] as const, []);
 
-  const formSections: FormSectionItem[] = useMemo(() => [
-    { type: 'header', id: 'basic_info_header' },
-    { type: 'input', id: 'setupTitle', label: 'Nome do Setup' },
-    { type: 'picker', id: 'controlType', label: 'Tipo de Controle', options: controlTypes },
-    { type: 'picker', id: 'car', label: 'Carro', options: carOptions },
-    { type: 'picker', id: 'track', label: 'Circuito', options: trackOptions },
-    { type: 'picker', id: 'condition', label: 'Condições', options: conditionOptions },
-    { type: 'textarea', id: 'notes', label: 'Observações' },
-    { type: 'header', id: 'aero_header' },
-    { type: 'slider', id: 'frontWing', label: 'Asa Dianteira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearWing', label: 'Asa Traseira', min: 0, max: 50, step: 1 },
-    { type: 'header', id: 'transmission_header' },
-    { type: 'slider', id: 'differentialOnThrottle', label: 'Diferencial com Aceleração', min: 0, max: 100, step: 1 },
-    { type: 'slider', id: 'differentialOffThrottle', label: 'Diferencial sem Aceleração', min: 0, max: 100, step: 1 },
-    { type: 'slider', id: 'engineBraking', label: 'Frenagem do Motor', min: 0, max: 100, step: 1 },
-    { type: 'header', id: 'suspension_geometry_header' },
-    { type: 'slider', id: 'frontCamber', label: 'Cambagem Dianteira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearCamber', label: 'Cambagem Traseira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'frontToe', label: 'Toe Dianteiro', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearToe', label: 'Toe Traseiro', min: 0, max: 50, step: 1 },
-    { type: 'header', id: 'suspension_header' },
-    { type: 'slider', id: 'frontSuspension', label: 'Suspensão Dianteira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearSuspension', label: 'Suspensão Traseira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'frontAntiRollBar', label: 'Anti-Roll Bar Dianteira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearAntiRollBar', label: 'Anti-Roll Bar Traseira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'frontRideHeight', label: 'Altura de Suspensão Dianteira', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearRideHeight', label: 'Altura de Suspensão Traseira', min: 0, max: 50, step: 1 },
-    { type: 'header', id: 'brakes_header' },
-    { type: 'slider', id: 'brakePressure', label: 'Pressão de Freio', min: 0, max: 100, step: 1 },
-    { type: 'slider', id: 'brakeBalance', label: 'Balanceamento de Freio', min: 0, max: 100, step: 1 },
-    { type: 'header', id: 'tires_header' },
-    { type: 'slider', id: 'frontRightTirePressure', label: 'Pressão de Pneu Dianteiro Direito', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'frontLeftTirePressure', label: 'Pressão de Pneu Dianteiro Esquerdo', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearRightTirePressure', label: 'Pressão de Pneu Traseiro Direito', min: 0, max: 50, step: 1 },
-    { type: 'slider', id: 'rearLeftTirePressure', label: 'Pressão de Pneu Traseiro Esquerdo', min: 0, max: 50, step: 1 },
-    { type: 'footer', id: 'action_buttons' }
-  ], [carOptions, trackOptions, conditionOptions, controlTypes]); 
+  const formSections: FormSectionItem[] = useMemo(() => {
+    const rules = gameData?.validationRules;
+    console.log("RULES RECEBIDAS:", JSON.stringify(rules, null, 2));
+    if (!rules) return []; // Retorna vazio se as regras ainda não carregaram
+
+    return [
+
+      { type: 'header', id: 'basic_info_header', title: 'Informações Básicas' },
+      { type: 'input', id: 'setupTitle', label: 'Nome do Setup' },
+      { type: 'picker', id: 'car', label: 'Carro', options: carOptions },
+      { type: 'picker', id: 'track', label: 'Circuito', options: trackOptions },
+      { type: 'picker', id: 'controlType', label: 'Tipo de Controle', options: controlTypes },
+      { type: 'picker', id: 'condition', label: 'Condições', options: conditionOptions },
+      { type: 'textarea', id: 'notes', label: 'Observações' },
+      
+      { type: 'header', id: 'aero_header', title: 'Aerodinâmica' },
+      { 
+        type: 'slider', id: 'frontWing', label: 'Asa Dianteira', 
+        min: rules.aerodynamics.frontWing.min,
+        max: rules.aerodynamics.frontWing.max,
+        step: rules.aerodynamics.frontWing.step,
+      },
+      { 
+        type: 'slider', id: 'rearWing', label: 'Asa Traseira', 
+        min: rules.aerodynamics.rearWing.min,
+        max: rules.aerodynamics.rearWing.max,
+        step: rules.aerodynamics.rearWing.step,
+      },
+
+      { type: 'header', id: 'trans_header', title: 'Transmissão' },
+      { 
+        type: 'slider', id: 'diffAdjustmentOn', label: 'Diferencial Aceleração Ativa', 
+        min: rules.transmission.diffAdjustmentOn.min,
+        max: rules.transmission.diffAdjustmentOn.max,
+        step: rules.transmission.diffAdjustmentOn.step,
+      },
+      { 
+        type: 'slider', id: 'diffAdjustmentOff', label: 'Diferencial Aceleração Inativa', 
+        min: rules.transmission.diffAdjustmentOff.min,
+        max: rules.transmission.diffAdjustmentOff.max,
+        step: rules.transmission.diffAdjustmentOff.step,
+      },
+      { 
+        type: 'slider', id: 'engineBraking', label: 'Frenagem do Motor', 
+        min: rules.transmission.engineBraking.min,
+        max: rules.transmission.engineBraking.max,
+        step: rules.transmission.engineBraking.step,
+      },
+
+      { type: 'header', id: 'geo_header', title: 'Geometria da Suspensão' },
+      { 
+        type: 'slider', id: 'frontCamber', label: 'Cambagem Dianteira', 
+        min: rules.suspensionGeometry.frontCamber.min,
+        max: rules.suspensionGeometry.frontCamber.max,
+        step: rules.suspensionGeometry.frontCamber.step,
+      },
+      { 
+        type: 'slider', id: 'frontToeOut', label: 'Toe-out Dianteiro', 
+        min: rules.suspensionGeometry.frontToeOut.min,
+        max: rules.suspensionGeometry.frontToeOut.max,
+        step: rules.suspensionGeometry.frontToeOut.step,
+      },
+      { 
+        type: 'slider', id: 'rearCamber', label: 'Cambagem Traseira', 
+        min: rules.suspensionGeometry.rearCamber.min,
+        max: rules.suspensionGeometry.rearCamber.max,
+        step: rules.suspensionGeometry.rearCamber.step,
+      },
+      { 
+        type: 'slider', id: 'rearToeIn', label: 'Toe-in Traseiro', 
+        min: rules.suspensionGeometry.rearToeIn.min,
+        max: rules.suspensionGeometry.rearToeIn.max,
+        step: rules.suspensionGeometry.rearToeIn.step,
+      },
+
+      { type: 'header', id: 'susp_header', title: 'Suspensão' },
+      { 
+        type: 'slider', id: 'frontAntiRollBar', label: 'Barra Estabilizadora Dianteira', 
+        min: rules.suspension.frontAntiRollBar.min,
+        max: rules.suspension.frontAntiRollBar.max,
+        step: rules.suspension.frontAntiRollBar.step,
+      },
+      { 
+        type: 'slider', id: 'frontRideHeight', label: 'Altura Frontal', 
+        min: rules.suspension.frontRideHeight.min,
+        max: rules.suspension.frontRideHeight.max,
+        step: rules.suspension.frontRideHeight.step,
+      },
+      { 
+        type: 'slider', id: 'frontSuspension', label: 'Suspensão Dianteira', 
+        min: rules.suspension.frontSuspension.min,
+        max: rules.suspension.frontSuspension.max,
+        step: rules.suspension.frontSuspension.step,
+      },
+      { 
+        type: 'slider', id: 'rearAntiRollBar', label: 'Barra Estabilizadora Traseira', 
+        min: rules.suspension.rearAntiRollBar.min,
+        max: rules.suspension.rearAntiRollBar.max,
+        step: rules.suspension.rearAntiRollBar.step,
+      },
+      { 
+        type: 'slider', id: 'rearRideHeight', label: 'Altura Traseira', 
+        min: rules.suspension.rearRideHeight.min,
+        max: rules.suspension.rearRideHeight.max,
+        step: rules.suspension.rearRideHeight.step,
+      },
+      { 
+        type: 'slider', id: 'rearSuspension', label: 'Suspensão Traseira', 
+        min: rules.suspension.rearSuspension.min,
+        max: rules.suspension.rearSuspension.max,
+        step: rules.suspension.rearSuspension.step,
+      },
+
+      { type: 'header', id: 'brakes_header', title: 'Freios' },
+      { 
+        type: 'slider', id: 'brakePressure', label: 'Pressão dos Freios', 
+        min: rules.brakes.brakePressure.min,
+        max: rules.brakes.brakePressure.max,
+        step: rules.brakes.brakePressure.step,
+      },
+      { 
+        type: 'slider', id: 'frontBrakeBias', label: 'Balanceamento dos Freios Diant.', 
+        min: rules.brakes.frontBrakeBias.min,
+        max: rules.brakes.frontBrakeBias.max,
+        step: rules.brakes.frontBrakeBias.step,
+      },
+
+      { type: 'header', id: 'tyres_header', title: 'Pneus' },
+      { 
+        type: 'slider', id: 'frontLeftTyrePressure', label: 'Pressão do Pneu Dianteiro Esquerdo', 
+        min: rules.tyres.frontLeftTyrePressure.min,
+        max: rules.tyres.frontLeftTyrePressure.max,
+        step: rules.tyres.frontLeftTyrePressure.step,
+      },
+      { 
+        type: 'slider', id: 'frontRightTyrePressure', label: 'Pressão do Pneu Dianteiro Direito', 
+        min: rules.tyres.frontRightTyrePressure.min,
+        max: rules.tyres.frontRightTyrePressure.max,
+        step: rules.tyres.frontRightTyrePressure.step,
+      },
+      { 
+        type: 'slider', id: 'rearLeftTyrePressure', label: 'Pressão do Pneu Traseiro Esquerdo', 
+        min: rules.tyres.rearLeftTyrePressure.min,
+        max: rules.tyres.rearLeftTyrePressure.max,
+        step: rules.tyres.rearLeftTyrePressure.step,
+      },
+      { 
+        type: 'slider', id: 'rearRightTyrePressure', label: 'Pressão do Pneu Traseiro Direito', 
+        min: rules.tyres.rearRightTyrePressure.min,
+        max: rules.tyres.rearRightTyrePressure.max,
+        step: rules.tyres.rearRightTyrePressure.step,
+      },
+      { type: 'footer', id: 'action_buttons' }
+    ];
+  }, [gameData, carOptions, trackOptions]);
+  
+  if (loadingGameData || !gameData) {
+    return (
+      <Box className="flex-1 justify-center items-center">
+        <Spinner size="large" />
+      </Box>
+    );
+  }
 
   return (
     <Box className="flex-1 bg-white">

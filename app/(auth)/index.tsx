@@ -10,6 +10,7 @@ import { Spinner } from '../../components/ui/spinner';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
 import { Input, InputField } from '../../components/ui/input';
+import { Image } from 'react-native';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogCloseButton, AlertDialogFooter, AlertDialogBody } from '../../components/ui/alert-dialog';
 
 export default function AuthScreen() {
@@ -57,7 +58,7 @@ export default function AuthScreen() {
     } catch (error: any) {
       console.error('Erro de autenticação:', error);
       let errorMessage = 'Erro ao fazer autenticação';
-      
+
       if (error.code === 'auth/user-not-found') {
         errorMessage = 'Usuário não encontrado';
       } else if (error.code === 'auth/wrong-password') {
@@ -71,7 +72,7 @@ export default function AuthScreen() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       showAlertDialog('Erro', errorMessage);
     } finally {
       setLoading(false);
@@ -88,17 +89,20 @@ export default function AuthScreen() {
 
   return (
     <Box className="flex-1 justify-center items-center">
-      <Box className="w-full" style={{ maxWidth: 400 }}>
-        <VStack space="lg" className="mb-8">
-          <Heading size="3xl" className="text-center">
-            F1 Setup Manager
-          </Heading>
-          <Text className="text-center">
+      <Heading size="xl" className="text-center">
+        <Image
+          source={require('../../src/assets/images/apex-logo.png')}
+          className="w-10/12 h-60 mt-0" // Ajuste a largura (w) e altura (h) como desejar
+        />
+      </Heading>
+      <Box className="w-full" style={{ maxWidth: 370 }}>
+        <VStack space="lg" className="mb-5">
+          <Text className="text-center font-bold">
             {isSignUp ? 'Criar nova conta' : 'Entre na sua conta'}
           </Text>
         </VStack>
 
-        <Card className="p-6 mb-6">
+        <Card className="p-6 mb-6 rounded-xl">
           <VStack space="md">
             <Box>
               <Text className="mb-2">Email</Text>
@@ -124,9 +128,10 @@ export default function AuthScreen() {
                 />
               </Input>
             </Box>
-
+            
+            <VStack className="items-center">
             <Button
-              className="mb-4"
+              className="mb-0 mt-8 w-1/2"
               onPress={handleEmailAuth}
               disabled={loading}
             >
@@ -141,6 +146,7 @@ export default function AuthScreen() {
                 )}
               </ButtonText>
             </Button>
+            </VStack>
 
             <Button
               variant="link"
@@ -161,14 +167,17 @@ export default function AuthScreen() {
           </HStack>
         </VStack>
 
-        <Button
-          onPress={handleGoogleSignIn}
-          disabled={loading}
-        >
-          <ButtonText>
-            {loading ? 'Carregando...' : 'Continuar com Google'}
-          </ButtonText>
-        </Button>
+        <VStack className="items-center">
+          <Button
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+            className="w-1/2"
+          >
+            <ButtonText>
+              {loading ? 'Carregando...' : 'Continuar com Google'}
+            </ButtonText>
+          </Button>
+        </VStack>
 
         <Box className="mt-8">
           <Text size="xs" className="text-center">

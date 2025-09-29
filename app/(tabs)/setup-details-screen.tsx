@@ -1,6 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Box } from '../../components/ui/box';
 import { Button, ButtonText } from '../../components/ui/button';
 import { Divider } from '../../components/ui/divider';
@@ -13,49 +12,13 @@ import { VStack } from '../../components/ui/vstack';
 import ConfirmationModal from '../../src/components/dialogs/ConfirmationModal';
 import CustomAlertDialog from '../../src/components/dialogs/CustomAlertDialog';
 import { useSingleTap } from '../../src/hooks/useSingleTap';
-
-interface SetupData {
-  id: string;
-  setupTitle: string;
-  car: string;
-  track: string;
-  controlType: string;
-  condition: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-  // Aerodinâmica
-  frontWing: number;
-  rearWing: number;
-  // Transmissão
-  differentialOnThrottle: number;
-  differentialOffThrottle: number;
-  engineBraking: number;
-  // Geometria da Suspensão
-  frontCamber: number;
-  rearCamber: number;
-  frontToe: number;
-  rearToe: number;
-  // Suspensão
-  frontSuspension: number;
-  rearSuspension: number;
-  frontAntiRollBar: number;
-  rearAntiRollBar: number;
-  frontRideHeight: number;
-  rearRideHeight: number;
-  // Freios
-  brakePressure: number;
-  brakeBalance: number;
-  // Pneus
-  frontRightTirePressure: number;
-  frontLeftTirePressure: number;
-  rearRightTirePressure: number;
-  rearLeftTirePressure: number;
-}
+import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
 
 export default function SetupDetailsScreen() {
   const router = useRouter();
   const { setupId } = useLocalSearchParams<{ setupId: string }>();
+  const allSetups = useSetupStore((state) => state.allSetups);
+  const deleteSetup = useSetupStore((state) => state.deleteSetup);
   const [setup, setSetup] = useState<SetupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -63,45 +26,22 @@ export default function SetupDetailsScreen() {
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
 
-
-  const loadSetupData = async () => {
-    try {
-      setLoading(true);
-      const storedSetups = await AsyncStorage.getItem('setups');
-      if (storedSetups) {
-        const setups = JSON.parse(storedSetups);
-        const foundSetup = setups.find((s: any) => s.id === setupId);
-        if (foundSetup) {
-          setSetup(foundSetup as SetupData);
-        } else {
-          setAlertTitle('Erro');
-          setAlertMessage('Setup não encontrado.');
-          setShowAlert(true);
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados do setup:', error);
-      setAlertTitle('Erro');
-      setAlertMessage('Não foi possível carregar o setup.');
-      setShowAlert(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (setupId) loadSetupData();
-  }, [setupId]);
+    if (setupId) {
+      const foundSetup = allSetups.find((s) => s.id === setupId);
+      if (foundSetup) {
+        setSetup(foundSetup);
+      } else {
+        console.warn(`Setup com id ${setupId} não encontrado no store.`);
+      }
+    }
+  }, [setupId, allSetups]);
 
   const handleDelete = async () => {
+    if (!setupId) return;
     try {
-      const storedSetups = await AsyncStorage.getItem('setups');
-      if (storedSetups) {
-        const setups = JSON.parse(storedSetups);
-        const updatedSetups = setups.filter((s: any) => s.id !== setupId);
-        await AsyncStorage.setItem('setups', JSON.stringify(updatedSetups));
-      }
-      router.back();
+      await deleteSetup(setupId);
+      router.push('/(tabs)' ); // Volta para a tela inicial após a exclusão
     } catch (error) {
       console.error('Erro ao excluir setup:', error);
       setAlertTitle('Erro');
@@ -119,14 +59,6 @@ export default function SetupDetailsScreen() {
 
   const debouncedHandleEdit = useSingleTap(handleEditNavigation);
   const debouncedConfirmDeletion = useSingleTap(confirmDeletion);
-
-  if (loading) {
-    return (
-      <Box className="flex-1 justify-center items-center">
-        <Text>Carregando...</Text>
-      </Box>
-    );
-  }
 
   if (!setup) {
     return (
@@ -166,18 +98,19 @@ export default function SetupDetailsScreen() {
         <Box className="rounded-xl p-6 mb-6 bg-gray-50">
           <Heading size="xl" className="mb-4 text-red-600">{setup.setupTitle}</Heading>
 
+          {/* <DetailRow label="Equipe" value={setup.team} icon="🚗" /> */}
           <DetailRow label="Carro" value={setup.car} icon="🚗" />
           <DetailRow label="Circuito" value={setup.track} icon="📍" />
           <DetailRow label="Tipo de Controle" value={setup.controlType} icon="🎮" />
           <DetailRow label="Condições" value={setup.condition} icon="🌤️" />
           <DetailRow
             label="Criado em"
-            value={new Date(setup.createdAt).toLocaleDateString('pt-BR')}
+            value={new Date(setup.createdAt || '').toLocaleDateString('pt-BR')}
             icon="📅"
           />
           <DetailRow
             label="Atualizado em"
-            value={new Date(setup.updatedAt).toLocaleDateString('pt-BR')}
+            value={new Date(setup.updatedAt || '').toLocaleDateString('pt-BR')}
             icon="🔄"
           />
         </Box>
@@ -202,8 +135,8 @@ export default function SetupDetailsScreen() {
         <Box className="rounded-xl p-6 mb-6 bg-gray-50">
           <Heading size="lg" className="mb-4 text-red-600">Transmissão</Heading>
 
-          <DetailRow label="Diferencial com Aceleração" value={`${setup.differentialOnThrottle}%`} icon="⚙️" />
-          <DetailRow label="Diferencial sem Aceleração" value={`${setup.differentialOffThrottle}%`} icon="⚙️" />
+          <DetailRow label="Diferencial com Aceleração" value={`${setup.diffAdjustmentOn}%`} icon="⚙️" />
+          <DetailRow label="Diferencial sem Aceleração" value={`${setup.diffAdjustmentOff}%`} icon="⚙️" />
           <DetailRow label="Frenagem do Motor" value={`${setup.engineBraking}%`} icon="🔧" />
         </Box>
 
@@ -213,8 +146,8 @@ export default function SetupDetailsScreen() {
 
           <DetailRow label="Cambagem Dianteira" value={`${setup.frontCamber}°`} icon="📐" />
           <DetailRow label="Cambagem Traseira" value={`${setup.rearCamber}°`} icon="📐" />
-          <DetailRow label="Toe-out Dianteiro" value={`${setup.frontToe}°`} icon="📏" />
-          <DetailRow label="Toe-in Traseiro" value={`${setup.rearToe}°`} icon="📏" />
+          <DetailRow label="Toe-out Dianteiro" value={`${setup.frontToeOut}°`} icon="📏" />
+          <DetailRow label="Toe-in Traseiro" value={`${setup.rearToeIn}°`} icon="📏" />
         </Box>
 
         {/* Suspension Card */}
@@ -225,8 +158,8 @@ export default function SetupDetailsScreen() {
           <DetailRow label="Suspensão Traseira" value={setup.rearSuspension} icon="🔧" />
           <DetailRow label="Barra Anti-Rolagem Dianteira" value={setup.frontAntiRollBar} icon="🔩" />
           <DetailRow label="Barra Anti-Rolagem Traseira" value={setup.rearAntiRollBar} icon="🔩" />
-          <DetailRow label="Altura Dianteira" value={`${setup.frontRideHeight}mm`} icon="📏" />
-          <DetailRow label="Altura Traseira" value={`${setup.rearRideHeight}mm`} icon="📏" />
+          <DetailRow label="Altura Dianteira" value={`${setup.frontRideHeight}`} icon="📏" />
+          <DetailRow label="Altura Traseira" value={`${setup.rearRideHeight}`} icon="📏" />
         </Box>
 
         {/* Brakes Card */}
@@ -234,17 +167,17 @@ export default function SetupDetailsScreen() {
           <Heading size="lg" className="mb-4 text-red-600">Freios</Heading>
 
           <DetailRow label="Pressão dos Freios" value={`${setup.brakePressure}%`} icon="🛑" />
-          <DetailRow label="Balanceamento de Freios" value={`${setup.brakeBalance}%`} icon="⚖️" />
+          <DetailRow label="Balanceamento de Freios" value={`${setup.frontBrakeBias}%`} icon="⚖️" />
         </Box>
 
         {/* Tires Card */}
         <Box className="rounded-xl p-6 mb-6 bg-gray-50">
           <Heading size="lg" className="mb-4 text-red-600">Pneus</Heading>
 
-          <DetailRow label="Pressão Pneu Dianteiro Direito" value={`${setup.frontRightTirePressure} PSI`} icon="🛞" />
-          <DetailRow label="Pressão Pneu Dianteiro Esquerdo" value={`${setup.frontLeftTirePressure} PSI`} icon="🛞" />
-          <DetailRow label="Pressão Pneu Traseiro Direito" value={`${setup.rearRightTirePressure} PSI`} icon="🛞" />
-          <DetailRow label="Pressão Pneu Traseiro Esquerdo" value={`${setup.rearLeftTirePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Dianteiro Direito" value={`${setup.frontRightTyrePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Dianteiro Esquerdo" value={`${setup.frontLeftTyrePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Traseiro Direito" value={`${setup.rearRightTyrePressure} PSI`} icon="🛞" />
+          <DetailRow label="Pressão Pneu Traseiro Esquerdo" value={`${setup.rearLeftTyrePressure} PSI`} icon="🛞" />
         </Box>
 
         {/* Action Buttons */}

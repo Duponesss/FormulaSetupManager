@@ -2,6 +2,8 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAuth } from "@/src/contexts/AuthContext";
+
 import { Box } from '../../components/ui/box';
 import { Text } from '../../components/ui/text';
 import { Pressable } from '../../components/ui/pressable';
@@ -13,14 +15,17 @@ import { useSingleTap } from '../../src/hooks/useSingleTap';
 import { SetupCard } from '../../src/components/cards/SetupCard';
 import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
 import { Spinner } from '../../components/ui/spinner';
+import { LogOut, Plus, Search, Trophy } from 'lucide-react-native';
+
 
 export default function HomeScreen() {
   console.log('Renderizando HomeScreen...');
   const router = useRouter();
   const allSetups = useSetupStore((state) => state.allSetups);
-  const loading = useSetupStore((state) => state.loading);
-  const loadAllSetups = useSetupStore((state) => state.loadAllSetups);
-  const deleteSetupById = useSetupStore((state) => state.deleteSetupById);
+  const loading = useSetupStore((state) => state.loadingSetups);
+  const deleteSetupById = useSetupStore((state) => state.deleteSetup);
+  const { signOut } = useAuth();
+  const debouncedSignOut = useSingleTap(() => signOut());
 
 
   const handleCreateSetup = useSingleTap(() => {
@@ -45,18 +50,26 @@ export default function HomeScreen() {
           end={{ x: 1, y: 0 }}
         >
           <Box className="pt-5 pb-5 px-6">
-              <HStack className="items-center justify-between ml-4 mt-6">
-                <Heading size="2xl" className="text-white">Meus Setups</Heading>
-                <Pressable className="p-2" onPress={() => router.push('/search-setup-screen')}>
-                  <Text size="2xl">🔍</Text>
-                </Pressable>
+            <HStack className="items-center justify-between ml-4 mt-5">
+              <HStack className="items-center justify-between">
+                <Trophy color="red" size={30} />
+                <Heading size="2xl" className="text-white ml-3">Meus Setups</Heading>
               </HStack>
+              <Pressable onPress={debouncedSignOut}>
+                <LogOut color="red" size={30} />
+              </Pressable>
+            </HStack>
           </Box>
         </LinearGradient>
 
         {/* Main Content */}
         <Box className="flex-1 px-6 pt-4">
-          <Text className="mb-4">{allSetups.length} setup{allSetups.length !== 1 ? 's' : ''} cadastrado{allSetups.length !== 1 ? 's' : ''}</Text>
+          <HStack className="items-center justify-between ml-4 ">
+            <Text className="">{allSetups.length} setup{allSetups.length !== 1 ? 's' : ''} cadastrado{allSetups.length !== 1 ? 's' : ''}</Text>
+            <Pressable className=" m-3" onPress={() => router.push('/search-setup-screen')}>
+              <Search color="red" size={30} />
+            </Pressable>
+          </HStack>
           <FlatList
             data={allSetups}
             renderItem={({ item }) => <SetupCard item={item} onDelete={deleteSetupById} />}
@@ -79,7 +92,7 @@ export default function HomeScreen() {
           className="absolute bottom-6 bg-red-500 right-6 font-bold w-14 h-14 rounded-full items-center justify-center"
           onPress={handleCreateSetup}
         >
-          <Text size="3xl" className="text-white mb-1">+</Text>
+          <Plus color="white" size={30} />
         </Pressable>
       </Box >
     </>

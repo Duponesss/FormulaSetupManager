@@ -10,6 +10,7 @@ import { ScrollView } from '../../components/ui/scroll-view';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
 import { Picker } from '@react-native-picker/picker';
+import { useSetupStore } from '../../src/stores/setupStore';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -22,16 +23,9 @@ export default function SearchScreen() {
     condition: '',
   });
 
-  // Opções para os Pickers (você já as tem)
-  const carOptions = useMemo(() => [
-    'Mercedes W14', 'Red Bull RB19', 'Ferrari SF-23', 'McLaren MCL60',
-    'Aston Martin AMR23', 'Alpine A523', 'Williams FW45', 'AlphaTauri AT04',
-    'Sauber C44', 'Haas VF-23'
-  ] as const, []);
-  const trackOptions = useMemo(() => ['Bahrain', 'Saudi Arabia', 'Australia', 'Azerbaijan', 'Miami',
-    'Monaco', 'Spain', 'Canada', 'Austria', 'Great Britain',
-    'Hungary', 'Belgium', 'Netherlands', 'Italy', 'Singapore',
-    'Japan', 'Qatar', 'United States', 'Mexico', 'Brazil', 'Las Vegas', 'Abu Dhabi'] as const, []);
+  const gameData = useSetupStore(state => state.gameData);
+  const carOptions = useMemo(() => gameData?.teams.map(t => t.teamName) || [], [gameData]);
+  const trackOptions = useMemo(() => gameData?.tracks || [], [gameData]);
   const controlTypes = useMemo(() => ['Controle', 'Volante'] as const, []);
   const conditionOptions = useMemo(() => ['Seco', 'Chuva', 'Chuva forte'] as const, []);
 
@@ -60,7 +54,7 @@ export default function SearchScreen() {
 
       <ScrollView className="flex-1">
         <VStack space="xl" className="p-6">
-          {/* Adicione os Pickers para cada filtro */}
+          {/* Pickers para cada filtro */}
           <FormControl>
             <Text className="font-medium mb-2">Carro</Text>
             <Box className="border border-gray-300 rounded-lg overflow-hidden">

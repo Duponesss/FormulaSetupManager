@@ -48,3 +48,5 @@ app-example
 # firebase
 firebase-backup-config.txt
 node_modules
+
+package-lock.json
