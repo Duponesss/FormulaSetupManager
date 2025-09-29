@@ -6,6 +6,7 @@ import { VStack } from '../../../components/ui/vstack';
 import { Pressable } from '../../../components/ui/pressable';
 import { useRouter } from 'expo-router';
 import { type SetupData } from '../../stores/setupStore';
+import { NotebookPen, Trash2 } from 'lucide-react-native';
 
 
 interface SetupCardProps {
@@ -21,18 +22,18 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete 
     <Box className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md">
       <HStack className="justify-between items-start mb-3">
         <Text size="lg" className="font-bold flex-1" numberOfLines={1}>{item.setupTitle}</Text>
-        <HStack space="sm">
+        <HStack space="lg">
           <Pressable
-            className="w-8 h-8 items-center justify-center"
+            className="w-8 h-8 items-center justify-center bg-green-200 p-1 rounded-xl"
             onPress={() => router.push({ pathname: '/setup-details-screen', params: { setupId: item.id } })}
           >
-            <Text size="lg">✏️</Text>
+            <NotebookPen color="green" />
           </Pressable>
           <Pressable
-            className="w-8 h-8 items-center justify-center"
+            className="w-8 h-8 items-center justify-center bg-red-200 p-1 rounded-xl"
             onPress={() => onDelete(item.id!)}
           >
-            <Text size="lg">🗑️</Text>
+            <Trash2 color="red" />
           </Pressable>
         </HStack>
       </HStack>

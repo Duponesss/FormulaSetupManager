@@ -1,17 +1,18 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, initializeAuth } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence  } from 'firebase/auth'; 
 import { getFirestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuração do Firebase usando suas credenciais
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_API_KEY || "AIzaSyBBocwz2Sp3E8KpXTaZNrUez4AMCuIDgXg",
-  authDomain: process.env.EXPO_PUBLIC_AUTH_DOMAIN || "formulatsetupmanager.firebaseapp.com",
-  projectId: process.env.EXPO_PUBLIC_PROJECT_ID || "formulatsetupmanager",
-  storageBucket: process.env.EXPO_PUBLIC_STORAGE_BUCKET || "formulatsetupmanager.firebasestorage.app",
-  messagingSenderId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID || "542753300240",
-  appId: process.env.EXPO_PUBLIC_APP_ID || "1:542753300240:android:c0c5d0e8ab526638d40f95",
+  apiKey: process.env.EXPO_PUBLIC_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_APP_ID,
 };
+
 
 // Debug: Log Firebase config 
 console.log('Firebase Config Status:', {
@@ -36,9 +37,15 @@ if (missingFields.length > 0) {
   console.log('✅ Firebase configuration is complete');
 }
 
-// Inicializa o Firebase
+// Inicializa o Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Inicializa Auth (AsyncStorage será usado automaticamente no React Native)
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Inicializa a Autenticação
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
+
+// Inicializa o Firestore
+const db = getFirestore(app);
+
+export { app, auth, db };
