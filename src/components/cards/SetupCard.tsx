@@ -43,8 +43,8 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete 
         <HStack className="items-center"><Text className="mr-2">🎮</Text><Text size="sm">{item.controlType}</Text></HStack>
         <HStack className="items-center"><Text className="mr-2">🌤️</Text><Text size="sm">{item.condition}</Text></HStack>
         <HStack className="items-center justify-between">
-          <Text size="sm">Criado: {new Date(item.createdAt!).toLocaleDateString('pt-BR')}</Text>
-          <Text size="sm">Atualizado: {new Date(item.updatedAt!).toLocaleDateString('pt-BR')}</Text>
+          <Text size="sm">Criado: {item.createdAt ? item.createdAt.toDate().toLocaleDateString('pt-BR') : '—'}</Text>
+          <Text size="sm">Atualizado: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}</Text>
         </HStack>
       </VStack>
     </Box>

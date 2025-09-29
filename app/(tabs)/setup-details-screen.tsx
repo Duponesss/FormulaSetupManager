@@ -105,12 +105,12 @@ export default function SetupDetailsScreen() {
           <DetailRow label="Condições" value={setup.condition} icon="🌤️" />
           <DetailRow
             label="Criado em"
-            value={new Date(setup.createdAt || '').toLocaleDateString('pt-BR')}
+            value={setup.createdAt ? setup.createdAt.toDate().toLocaleDateString('pt-BR') : '—'}
             icon="📅"
           />
           <DetailRow
             label="Atualizado em"
-            value={new Date(setup.updatedAt || '').toLocaleDateString('pt-BR')}
+            value={setup.updatedAt ? setup.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}
             icon="🔄"
           />
         </Box>

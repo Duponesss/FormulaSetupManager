@@ -355,7 +355,7 @@ export default function CreateSetupScreen() {
                   <Text className="mb-2 font-medium">{item.label}</Text>
                   <Box className="border border-gray-300 rounded-lg overflow-hidden">
                     <Picker
-                      selectedValue={formData[pickerKey]}
+                      selectedValue={formData[pickerKey] as string | number}
                       onValueChange={(value) => updateField(pickerKey, value)}
                       className="md"
                     >
