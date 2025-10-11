@@ -2,12 +2,12 @@
 
 <div align="center">
 
-![F1 Setup Manager](https://img.shields.io/badge/F1%20Setup%20Manager-v0.1.0-red?style=for-the-badge&logo=formula1)
+![Versão do app](https://img.shields.io/badge/v0.1.0-red?style=for-the-badge&logo=formula1)
 ![React Native](https://img.shields.io/badge/React%20Native-0.74-blue?style=for-the-badge&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Firebase](https://img.shields.io/badge/Firebase-10.0-orange?style=for-the-badge&logo=firebase)
 
-<img src="./src/assets/images/apex-logo-readme.png" alt="Backlog do Projeto" width="150" height="150">
+<img src="./src/assets/images/apex-logo-readme.png" alt="Logo do app" width="150" height="150">
 
 **Um aplicativo mobile para gerenciar setups de carros de Fórmula 1 em jogos de corrida**
 
