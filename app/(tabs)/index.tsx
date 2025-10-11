@@ -66,9 +66,6 @@ export default function HomeScreen() {
         <Box className="flex-1 px-6 pt-4">
           <HStack className="items-center justify-between ml-4 ">
             <Text className="">{allSetups.length} setup{allSetups.length !== 1 ? 's' : ''} cadastrado{allSetups.length !== 1 ? 's' : ''}</Text>
-            <Pressable className=" m-3" onPress={() => router.push('/search-setup-screen')}>
-              <Search color="red" size={30} />
-            </Pressable>
           </HStack>
           <FlatList
             data={allSetups}
@@ -86,14 +83,6 @@ export default function HomeScreen() {
             }
           />
         </Box>
-
-        {/* Floating Action Button */}
-        <Pressable
-          className="absolute bottom-6 bg-red-500 right-6 font-bold w-14 h-14 rounded-full items-center justify-center"
-          onPress={handleCreateSetup}
-        >
-          <Plus color="white" size={30} />
-        </Pressable>
       </Box >
     </>
   );
