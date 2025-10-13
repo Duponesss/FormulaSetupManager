@@ -6,15 +6,16 @@ import { VStack } from '../../../components/ui/vstack';
 import { Pressable } from '../../../components/ui/pressable';
 import { useRouter } from 'expo-router';
 import { type SetupData } from '../../stores/setupStore';
-import { NotebookPen, Trash2 } from 'lucide-react-native';
+import { NotebookPen, Trash2, Bookmark } from 'lucide-react-native';
 
 
 interface SetupCardProps {
   item: SetupData;
   onDelete: (id: string) => void;
+  onAddToFolder: (item: SetupData) => void;
 }
 
-export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete }) => {
+export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete, onAddToFolder }) => {
   const router = useRouter();
   console.log(`Renderizando SetupCard: ${item.setupTitle}`);
 
@@ -22,7 +23,13 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete 
     <Box className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md">
       <HStack className="justify-between items-start mb-3">
         <Text size="lg" className="font-bold flex-1" numberOfLines={1}>{item.setupTitle}</Text>
-        <HStack space="lg">
+        <HStack space="md">
+          <Pressable
+            className="w-8 h-8 items-center justify-center bg-blue-200 p-1 rounded-xl"
+            onPress={() => onAddToFolder(item)}
+          >
+            <Bookmark color="blue" />
+          </Pressable>
           <Pressable
             className="w-8 h-8 items-center justify-center bg-green-200 p-1 rounded-xl"
             onPress={() => router.push({ pathname: '/setup-details-screen', params: { setupId: item.id } })}

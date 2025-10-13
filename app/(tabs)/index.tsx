@@ -16,6 +16,7 @@ import { SetupCard } from '../../src/components/cards/SetupCard';
 import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
 import { Spinner } from '../../components/ui/spinner';
 import { LogOut, Plus, Search, Trophy } from 'lucide-react-native';
+import AddToFolderModal from "@/src/components/dialogs/AddToFolderModal";
 
 
 export default function HomeScreen() {
@@ -26,6 +27,13 @@ export default function HomeScreen() {
   const deleteSetupById = useSetupStore((state) => state.deleteSetup);
   const { signOut } = useAuth();
   const debouncedSignOut = useSingleTap(() => signOut());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSetup, setSelectedSetup] = useState<SetupData | null>(null);
+
+  const handleOpenAddToFolderModal = (setup: SetupData) => {
+    setSelectedSetup(setup);
+    setIsModalOpen(true);
+  };
 
 
   const handleCreateSetup = useSingleTap(() => {
@@ -66,13 +74,16 @@ export default function HomeScreen() {
         <Box className="flex-1 px-6 pt-4">
           <HStack className="items-center justify-between ml-4 ">
             <Text className="">{allSetups.length} setup{allSetups.length !== 1 ? 's' : ''} cadastrado{allSetups.length !== 1 ? 's' : ''}</Text>
-            <Pressable className=" m-3" onPress={() => router.push('/search-setup-screen')}>
-              <Search color="red" size={30} />
-            </Pressable>
           </HStack>
           <FlatList
             data={allSetups}
-            renderItem={({ item }) => <SetupCard item={item} onDelete={deleteSetupById} />}
+            renderItem={({ item }) => (
+              <SetupCard 
+                item={item} 
+                onDelete={deleteSetupById} 
+                onAddToFolder={handleOpenAddToFolderModal} 
+              />
+            )}
             keyExtractor={(item) => item.id!}
             initialNumToRender={5} // Renderiza um número menor de itens no carregamento inicial da tela
             windowSize={11} // Define o tamanho da "janela" de renderização.
@@ -86,15 +97,12 @@ export default function HomeScreen() {
             }
           />
         </Box>
-
-        {/* Floating Action Button */}
-        <Pressable
-          className="absolute bottom-6 bg-red-500 right-6 font-bold w-14 h-14 rounded-full items-center justify-center"
-          onPress={handleCreateSetup}
-        >
-          <Plus color="white" size={30} />
-        </Pressable>
       </Box >
+      <AddToFolderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        setup={selectedSetup}
+      />
     </>
   );
 };

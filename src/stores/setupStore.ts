@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { db, auth } from '../services/firebaseConfig';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId } from 'firebase/firestore';
 
 // Define a interface para todos os dados do formulário
 export interface SetupData {
@@ -35,7 +35,28 @@ export interface SetupData {
   frontLeftTyrePressure: number;
   rearRightTyrePressure: number;
   rearLeftTyrePressure: number;
+  [key: string]: any; // Permite indexação por string
 }
+
+// Interface para uma Pasta
+export interface Folder {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  ownerId: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// Interface para a entrada na coleção de junção
+export interface FolderEntry {
+  id: string;
+  folderId: string;
+  setupId: string;
+  ownerId: string;
+  addedAt: Timestamp;
+}
+
 // Valores iniciais para um novo setup
 const formInitialState: SetupData = {
   setupTitle: '', controlType: '', car: '', team: '', track: '', condition: '', notes: '', 
@@ -65,18 +86,35 @@ interface SetupState {
 
   allSetups: SetupData[];
   loadingSetups: boolean;
-
-  // NOVO: estado para a gameData
-  gameData: GameData | null;
-  loadingGameData: boolean;
-
   listenToUserSetups: () => (() => void);
-  fetchGameData: (gameId: string) => Promise<void>;
   saveSetup: (setupData: SetupData) => Promise<void>;
   deleteSetup: (setupId: string) => Promise<void>;
+
+  // Estado para a gameData
+  gameData: GameData | null;
+  loadingGameData: boolean;
+  fetchGameData: (gameId: string) => Promise<void>;
+
+  // Estado das Pastas
+  folders: Folder[];
+  loadingFolders: boolean;
+  listenToUserFolders: () => (() => void); // Ouvinte em tempo real para pastas
+  createFolder: (name: string, isPublic: boolean) => Promise<void>;
+  updateFolder: (folderId: string, data: { name?: string, isPublic?: boolean }) => Promise<void>;
+  deleteFolder: (folderId: string) => Promise<void>;
+
+  // Estado para Setups dentro de uma Pasta
+  folderSetups: SetupData[];
+  loadingFolderSetups: boolean;
+  getSetupsForFolder: (folderId: string) => Promise<void>;
+  setupFolderIds: string[]; // Armazena os IDs das pastas em que um setup está
+  loadingSetupFolders: boolean;
+  getFoldersForSetup: (setupId: string) => Promise<void>;
+  updateSetupFolders: (setupId: string, newFolderIds: string[]) => Promise<void>;
 }
 
 let unsubscribeFromSetups: (() => void) | null = null;
+let unsubscribeFromFolders: (() => void) | null = null;
 
 // Cria o hook do store
 export const useSetupStore = create<SetupState>((set, get) => ({
@@ -85,67 +123,38 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   gameData: null,
   loadingSetups: true,
   loadingGameData: true,
+  folders: [],
+  loadingFolders: true,
+  folderSetups: [],
+  loadingFolderSetups: true,
+  setupFolderIds: [],
+  loadingSetupFolders: false,
 
   updateField: (field, value) => set(state => ({ formData: { ...state.formData, [field]: value } })),
   loadFormWithExistingSetup: (setupId) => {
     const setupToEdit = get().allSetups.find(s => s.id === setupId);
     if (setupToEdit) set({ formData: setupToEdit });
   },
+  
   resetForm: () => set({ formData: formInitialState }),
+  
   listenToUserSetups: () => {
-    // Cancela qualquer "ouvinte" anterior para evitar duplicados
-    if (unsubscribeFromSetups) {
-      unsubscribeFromSetups();
-    }
-
+    if (unsubscribeFromSetups) unsubscribeFromSetups();
     const user = auth.currentUser;
-    // Se não houver utilizador logado, limpa a lista de setups e para a execução.
     if (!user) {
       set({ allSetups: [], loadingSetups: false });
-      return () => { }; // Retorna uma função de limpeza vazia
+      return () => {};
     }
-
-    // Cria a consulta: busca na coleção 'setups' onde o campo 'userId' 
-    // é igual ao ID do utilizador atualmente logado.
     const q = query(collection(db, "setups"), where("userId", "==", user.uid));
-
-    // Inicia o "ouvinte" em tempo real do Firestore.
-    // Esta função será chamada imediatamente com os dados atuais e depois
-    // sempre que os dados no servidor mudarem.
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const setups: SetupData[] = [];
-      querySnapshot.forEach((doc) => {
-        // Adiciona o ID do documento da coleção ao objeto de dados do setup
-        setups.push({ id: doc.id, ...doc.data() } as SetupData);
-      });
-      // Atualiza o estado no store com a nova lista de setups
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const setups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
       set({ allSetups: setups, loadingSetups: false });
     }, (error) => {
-      console.error("Erro ao ouvir setups em tempo real:", error);
+      console.error("Erro ao ouvir setups:", error);
       set({ loadingSetups: false });
     });
-
-    // Guarda a função de unsubscribe para poder ser chamada mais tarde (ex: no logout)
     unsubscribeFromSetups = unsubscribe;
-    return unsubscribe; // Retorna a função de limpeza
-  },
-
-  fetchGameData: async (gameId) => {
-    if (get().gameData) return; // Não busca se já tiver os dados
-    try {
-      set({ loadingGameData: true });
-      const docRef = doc(db, "gamedata", gameId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        set({ gameData: docSnap.data() as GameData });
-      } else {
-        console.warn(`GameData para ${gameId} não encontrado.`);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar gamedata:", error);
-    } finally {
-      set({ loadingGameData: false });
-    }
+    return unsubscribe;
   },
 
   saveSetup: async (setupData) => {const user = auth.currentUser;
@@ -172,10 +181,184 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       });
     }
   },
+  
   deleteSetup: async (setupId) => {
-    if (!setupId) throw new Error("ID do setup é necessário para a exclusão.");
+    if (!setupId) throw new Error("ID do setup é necessário.");
     
-    const docRef = doc(db, "setups", setupId);
-    await deleteDoc(docRef);
+    // Deletar o documento do setup
+    await deleteDoc(doc(db, "setups", setupId));
+
+    // Deletar todas as entradas em 'folderEntries' para este setup
+    const q = query(collection(db, "folderEntries"), where("setupId", "==", setupId));
+    const entriesSnapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    entriesSnapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  },
+
+  fetchGameData: async (gameId) => {
+    if (get().gameData) return; // Não busca se já tiver os dados
+    try {
+      set({ loadingGameData: true });
+      const docRef = doc(db, "gamedata", gameId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        set({ gameData: docSnap.data() as GameData });
+      } else {
+        console.warn(`GameData para ${gameId} não encontrado.`);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar gamedata:", error);
+    } finally {
+      set({ loadingGameData: false });
+    }
+  },
+
+  listenToUserFolders: () => {
+    if (unsubscribeFromFolders) unsubscribeFromFolders();
+    const user = auth.currentUser;
+    if (!user) {
+      set({ folders: [], loadingFolders: false });
+      return () => {};
+    }
+    const q = query(collection(db, "folders"), where("ownerId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const folders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
+      set({ folders, loadingFolders: false });
+    }, (error) => {
+      console.error("Erro ao ouvir pastas:", error);
+      set({ loadingFolders: false });
+    });
+    unsubscribeFromFolders = unsubscribe;
+    return unsubscribe;
+  },
+
+  createFolder: async (name, isPublic) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+    await addDoc(collection(db, "folders"), {
+      name,
+      isPublic,
+      ownerId: user.uid,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+  },
+
+  updateFolder: async (folderId, data) => {
+    const docRef = doc(db, "folders", folderId);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: Timestamp.now(),
+    });
+  },
+
+  deleteFolder: async (folderId) => {
+    const batch = writeBatch(db);
+
+    // 1. Deletar a pasta
+    const folderRef = doc(db, "folders", folderId);
+    batch.delete(folderRef);
+
+    // 2. Encontrar e deletar todas as entradas associadas a esta pasta
+    const entriesQuery = query(collection(db, "folderEntries"), where("folderId", "==", folderId));
+    const entriesSnapshot = await getDocs(entriesQuery);
+    entriesSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    await batch.commit();
+  },
+
+  // --- AÇÕES PARA RELACIONAMENTO SETUP-PASTA ---
+
+  getSetupsForFolder: async (folderId) => {
+    set({ loadingFolderSetups: true, folderSetups: [] });
+    try {
+      // 1. Buscar todas as entradas para a pasta específica
+      const entriesQuery = query(collection(db, "folderEntries"), where("folderId", "==", folderId));
+      const entriesSnapshot = await getDocs(entriesQuery);
+      
+      const setupIds = entriesSnapshot.docs.map(doc => doc.data().setupId);
+
+      if (setupIds.length === 0) {
+        set({ folderSetups: [], loadingFolderSetups: false });
+        return;
+      }
+
+      // 2. Buscar todos os setups correspondentes aos IDs encontrados usando a query 'in'
+      // A query 'in' é muito performática e evita múltiplas leituras individuais.
+      // O Firestore limita as queries 'in' a 30 itens por vez.
+      // TODO: Implementar paginação ou múltiplas queries se uma pasta puder ter mais de 30 setups.
+      const setupsQuery = query(collection(db, "setups"), where(documentId(), "in", setupIds));
+      const setupsSnapshot = await getDocs(setupsQuery);
+      const setups = setupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
+      
+      set({ folderSetups: setups, loadingFolderSetups: false });
+    } catch (error) {
+      console.error("Erro ao buscar setups da pasta:", error);
+      set({ loadingFolderSetups: false });
+    }
+  },
+
+  // Busca os IDs de todas as pastas em que um setup específico se encontra
+  getFoldersForSetup: async (setupId) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    set({ loadingSetupFolders: true, setupFolderIds: [] });
+    try {
+      const q = query(
+        collection(db, "folderEntries"),
+        where("setupId", "==", setupId),
+        where("ownerId", "==", user.uid)
+      );
+      const snapshot = await getDocs(q);
+      const folderIds = snapshot.docs.map(doc => doc.data().folderId);
+      set({ setupFolderIds: folderIds, loadingSetupFolders: false });
+    } catch (error) {
+      console.error("Erro ao buscar pastas do setup:", error);
+      set({ loadingSetupFolders: false });
+    }
+  },
+
+  // Sincroniza as pastas de um setup com base na seleção do usuário no modal
+  updateSetupFolders: async (setupId, newFolderIds) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const currentFolderIds = get().setupFolderIds;
+    const batch = writeBatch(db);
+
+    // 1. Determina quais pastas precisam ser ADICIONADAS
+    const foldersToAdd = newFolderIds.filter(id => !currentFolderIds.includes(id));
+    
+    // 2. Determina quais pastas precisam ser REMOVIDAS
+    const foldersToRemove = currentFolderIds.filter(id => !newFolderIds.includes(id));
+
+    // Adiciona as novas entradas
+    foldersToAdd.forEach(folderId => {
+      const newEntryRef = doc(collection(db, "folderEntries")); // Cria uma referência com ID automático
+      batch.set(newEntryRef, {
+        setupId,
+        folderId,
+        ownerId: user.uid,
+        addedAt: Timestamp.now(),
+      });
+    });
+
+    // Para remover, precisamos primeiro encontrar os documentos correspondentes
+    if (foldersToRemove.length > 0) {
+      const q = query(
+        collection(db, "folderEntries"),
+        where("setupId", "==", setupId),
+        where("ownerId", "==", user.uid),
+        where("folderId", "in", foldersToRemove)
+      );
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+    }
+
+    // Executa todas as operações de uma só vez
+    await batch.commit();
   },
 }));
