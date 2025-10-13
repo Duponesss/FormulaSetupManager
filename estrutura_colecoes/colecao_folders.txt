@@ -1,3 +1,12 @@
 - userId: string (NN)        // Dono da pasta
   - folderName: string (NN)    // Nome da pasta (ex: "Circuitos de Rua - Seco")
   - createdAt: timestamp (NN)
+
+interface Folder {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  ownerId: string; // UID do usuário que criou a pasta
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
