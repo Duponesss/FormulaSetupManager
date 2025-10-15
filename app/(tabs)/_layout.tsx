@@ -1,15 +1,16 @@
 import { Tabs } from 'expo-router';
-import { CircleUserRound, Folder, House, Search, Wrench } from 'lucide-react-native';
+import { CircleUserRound, Folder, House, Search, Wrench, ClipboardList } from 'lucide-react-native';
 
 export default function TabsLayout() {
   return (
     <Tabs 
+      initialRouteName="index" 
       screenOptions={{ 
         headerShown: false,
-        tabBarActiveTintColor: '#E10600', // Cor do ícone ativo (Vermelho Ferrari/F1)
-        tabBarInactiveTintColor: 'gray', // Cor do ícone inativo
+        tabBarActiveTintColor: '#E10600',
+        tabBarInactiveTintColor: 'gray',
         tabBarStyle: {
-            backgroundColor: '#1F1F1F', // Um fundo escuro para a barra
+            backgroundColor: '#1F1F1F',
             borderTopWidth: 0,
         }
       }}
@@ -43,25 +44,25 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="strategies-screen" 
+        options={{
+          title: 'Estratégias',
+          tabBarIcon: ({ color }) => <ClipboardList color={color} size={30} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile-screen"
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color }) => <CircleUserRound color={color} size={30} />,
         }}
       />
-      {/* Estas telas são parte da navegação da aba, mas não aparecem na barra */}
-      <Tabs.Screen
-        name="setup-details-screen"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="search-results-screen"
-        options={{
-          href: null,
-        }}
-      />
+      
+      {/* Telas ocultas */}
+      <Tabs.Screen name="setup-details-screen" options={{ href: null }} />
+      <Tabs.Screen name="search-results-screen" options={{ href: null }} />
+      <Tabs.Screen name="folder-details-screen" options={{ href: null }} />
+      <Tabs.Screen name="strategy-details-screen" options={{ href: null }} />
     </Tabs>
   );
 }
