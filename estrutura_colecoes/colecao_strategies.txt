@@ -1,0 +1,38 @@
+// estrutura_colecoes/colecao_strategies.txt (novo arquivo)
+
+interface Strategy {
+  id: string;
+  ownerId: string; // UID do usuário
+  name: string; // "Bahrein 50% Agressiva"
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+
+  // --- Seção: Informações Gerais ---
+  track: string; // "Bahrain International Circuit"
+  raceDistance: "5 Laps" | "25%" | "35%" | "50%" | "100%";
+  notes: string; // Bloco de anotações livre
+
+  // --- Seção: Setup Vinculado ---
+  setupId: string; // O ID do documento da coleção 'setups' atrelado a esta estratégia
+
+  // --- Seção: Estratégia de Corrida ---
+  availableTyres: {
+    soft: number; // ex: 3
+    medium: number; // ex: 2
+    hard: number; // ex: 1
+  };
+  fuelLoadInLaps: number; // ex: 28.3
+  
+  // A estratégia de paradas pode ser um array de "stints" (períodos na pista)
+  pitStopStrategy: Array<{
+    tyreCompound: "soft" | "medium" | "hard" | "intermediate" | "wet";
+    laps: number; // Quantas voltas neste jogo de pneu
+    pitOnLap: number; // Em qual volta o pit stop acontece
+  }>;
+
+  // --- Seção: Média de Voltas (opcional) ---
+  lapTimes: Array<{
+    lapNumber: number;
+    time: string; // "01:34.567"
+  }>;
+}
