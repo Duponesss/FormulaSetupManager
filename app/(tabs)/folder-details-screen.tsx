@@ -79,7 +79,7 @@ export default function FolderDetailsScreen() {
     <Box className="flex-1 bg-gray-100">
       {/* Cabeçalho Customizado */}
       <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200">
-        <Pressable onPress={() => router.back()} className="p-2">
+        <Pressable onPress={() => router.push('/folders-screen')} className="p-2">
         <ArrowBigLeft />
         </Pressable>
         <Heading size="md" className="flex-1 text-center">{folderName}</Heading>
