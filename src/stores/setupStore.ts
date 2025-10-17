@@ -57,6 +57,26 @@ export interface FolderEntry {
   addedAt: Timestamp;
 }
 
+export interface Strategy {
+  id: string;
+  ownerId: string;
+  name: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  track: string;
+  raceDistance: "5 Laps" | "25%" | "35%" | "50%" | "100%";
+  notes: string;
+  setupId: string;
+  availableTyres: { soft: number; medium: number; hard: number; };
+  fuelLoadInLaps: number;
+  pitStopStrategy: Array<{
+    tyreCompound: "soft" | "medium" | "hard" | "intermediate" | "wet";
+    laps: number;
+    pitOnLap: number;
+  }>;
+  lapTimes: Array<{ lapNumber: number; timeInMillis: number; }>; // Salva em milissegundos
+}
+
 // Valores iniciais para um novo setup
 const formInitialState: SetupData = {
   setupTitle: '', controlType: '', car: '', team: '', track: '', condition: '', notes: '', 
@@ -111,10 +131,18 @@ interface SetupState {
   loadingSetupFolders: boolean;
   getFoldersForSetup: (setupId: string) => Promise<void>;
   updateSetupFolders: (setupId: string, newFolderIds: string[]) => Promise<void>;
+
+  // --- NOVOS ESTADOS E AÇÕES PARA STRATEGIES ---
+  strategies: Strategy[];
+  loadingStrategies: boolean;
+  listenToUserStrategies: () => (() => void);
+  createStrategy: (strategyData: Partial<Strategy>) => Promise<void>; // Adiciona create
+  updateStrategy: (strategyId: string, strategyData: Partial<Strategy>) => Promise<void>; // Adiciona update
 }
 
 let unsubscribeFromSetups: (() => void) | null = null;
 let unsubscribeFromFolders: (() => void) | null = null;
+let unsubscribeFromStrategies: (() => void) | null = null;
 
 // Cria o hook do store
 export const useSetupStore = create<SetupState>((set, get) => ({
@@ -129,6 +157,8 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   loadingFolderSetups: true,
   setupFolderIds: [],
   loadingSetupFolders: false,
+  strategies: [],
+  loadingStrategies: true,
 
   updateField: (field, value) => set(state => ({ formData: { ...state.formData, [field]: value } })),
   loadFormWithExistingSetup: (setupId) => {
@@ -360,5 +390,50 @@ export const useSetupStore = create<SetupState>((set, get) => ({
 
     // Executa todas as operações de uma só vez
     await batch.commit();
+  },
+
+  // --- AÇÃO PARA OUVIR ESTRATÉGIAS ---
+  listenToUserStrategies: () => {
+    if (unsubscribeFromStrategies) unsubscribeFromStrategies();
+    const user = auth.currentUser;
+    if (!user) {
+      set({ strategies: [], loadingStrategies: false });
+      return () => {};
+    }
+    const q = query(collection(db, "strategies"), where("ownerId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const strategies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
+      set({ strategies, loadingStrategies: false });
+    }, (error) => {
+      console.error("Erro ao ouvir estratégias:", error);
+      set({ loadingStrategies: false });
+    });
+    unsubscribeFromStrategies = unsubscribe;
+    return unsubscribe;
+  },
+
+  createStrategy: async (strategyData) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+    
+    await addDoc(collection(db, "strategies"), {
+      ...strategyData,
+      ownerId: user.uid,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+  },
+
+  updateStrategy: async (strategyId, strategyData) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const docRef = doc(db, "strategies", strategyId);
+    await updateDoc(docRef, {
+      ...strategyData,
+      // Garante que o ownerId não seja sobrescrito acidentalmente
+      ownerId: user.uid, 
+      updatedAt: Timestamp.now(),
+    });
   },
 }));

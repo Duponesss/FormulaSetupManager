@@ -17,7 +17,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
   // Função para navegar para a tela de detalhes da pasta
   const handlePress = () => {
     router.push({
-      pathname: '/(tabs)/folder-details-screen', // Tela que ainda vamos criar
+      pathname: '/folder-details-screen', // Tela que ainda vamos criar
       params: { folderId: folder.id, folderName: folder.name },
     });
   };

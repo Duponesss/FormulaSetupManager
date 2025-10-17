@@ -1,8 +1,8 @@
-import { Box } from '../../components/ui/box';
-import { Text } from '../../components/ui/text';
-import { Button, ButtonText } from '../../components/ui/button';
-import { Heading } from '../../components/ui/heading';
 import { useRouter } from 'expo-router';
+import { Box } from '../components/ui/box';
+import { Button, ButtonText } from '../components/ui/button';
+import { Heading } from '../components/ui/heading';
+import { Text } from '../components/ui/text';
 
 export default function StrategyDetailsScreen() {
   const router = useRouter();

@@ -80,7 +80,6 @@ export default function HomeScreen() {
             renderItem={({ item }) => (
               <SetupCard 
                 item={item} 
-                onDelete={deleteSetupById} 
                 onAddToFolder={handleOpenAddToFolderModal} 
               />
             )}

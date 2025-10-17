@@ -6,43 +6,37 @@ import { VStack } from '../../../components/ui/vstack';
 import { Pressable } from '../../../components/ui/pressable';
 import { useRouter } from 'expo-router';
 import { type SetupData } from '../../stores/setupStore';
-import { NotebookPen, Trash2, Bookmark } from 'lucide-react-native';
+import { Bookmark } from 'lucide-react-native';
 
 
 interface SetupCardProps {
   item: SetupData;
-  onDelete: (id: string) => void;
   onAddToFolder: (item: SetupData) => void;
+  isViewOnly?: boolean; 
 }
 
-export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete, onAddToFolder }) => {
+export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFolder, isViewOnly = false }) => {
   const router = useRouter();
+  const handleCardPress = () => {
+    // Se for apenas visualização, ainda permite ver os detalhes
+    router.push(`/setup-details-screen?setupId=${item.id}`);
+  };
   console.log(`Renderizando SetupCard: ${item.setupTitle}`);
 
   return (
-    <Box className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md">
+    <Pressable onPress={handleCardPress} className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md">
       <HStack className="justify-between items-start mb-3">
         <Text size="lg" className="font-bold flex-1" numberOfLines={1}>{item.setupTitle}</Text>
-        <HStack space="md">
-          <Pressable
-            className="w-8 h-8 items-center justify-center bg-blue-200 p-1 rounded-xl"
-            onPress={() => onAddToFolder(item)}
-          >
-            <Bookmark color="blue" />
-          </Pressable>
-          <Pressable
-            className="w-8 h-8 items-center justify-center bg-green-200 p-1 rounded-xl"
-            onPress={() => router.push({ pathname: '/setup-details-screen', params: { setupId: item.id } })}
-          >
-            <NotebookPen color="green" />
-          </Pressable>
-          <Pressable
-            className="w-8 h-8 items-center justify-center bg-red-200 p-1 rounded-xl"
-            onPress={() => onDelete(item.id!)}
-          >
-            <Trash2 color="red" />
-          </Pressable>
-        </HStack>
+        {!isViewOnly && (
+          <HStack space="md">
+            <Pressable
+              className="w-8 h-8 items-center justify-center bg-blue-200 p-1 rounded-xl"
+              onPress={(e) => { e.stopPropagation(); onAddToFolder(item); }} // Evita que o clique no botão ative o clique no card
+            >
+              <Bookmark color="blue" />
+            </Pressable>
+          </HStack>
+        )}
       </HStack>
       <VStack space="sm">
         <HStack className="items-center"><Text className="mr-2">🚗</Text><Text>{item.car}</Text></HStack>
@@ -54,6 +48,6 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onDelete,
           <Text size="sm">Atualizado: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}</Text>
         </HStack>
       </VStack>
-    </Box>
+    </Pressable>
   );
 });
