@@ -136,8 +136,10 @@ interface SetupState {
   strategies: Strategy[];
   loadingStrategies: boolean;
   listenToUserStrategies: () => (() => void);
-  createStrategy: (strategyData: Partial<Strategy>) => Promise<void>; // Adiciona create
-  updateStrategy: (strategyId: string, strategyData: Partial<Strategy>) => Promise<void>; // Adiciona update
+  createStrategy: (strategyData: Partial<Strategy>) => Promise<void>; 
+  updateStrategy: (strategyId: string, strategyData: Partial<Strategy>) => Promise<void>; 
+  deleteStrategy: (strategyId: string) => Promise<void>;
+  updateLapTimes: (strategyId: string, lapTimes: Strategy['lapTimes']) => Promise<void>;
 }
 
 let unsubscribeFromSetups: (() => void) | null = null;
@@ -434,6 +436,23 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       // Garante que o ownerId não seja sobrescrito acidentalmente
       ownerId: user.uid, 
       updatedAt: Timestamp.now(),
+    });
+  },
+
+  deleteStrategy: async (strategyId) => {
+    if (!strategyId) throw new Error("ID da estratégia é necessário para a exclusão.");
+    
+    const docRef = doc(db, "strategies", strategyId);
+    await deleteDoc(docRef);
+  },
+
+  updateLapTimes: async (strategyId, lapTimes) => {
+    if (!strategyId) throw new Error("ID da estratégia é necessário.");
+    
+    const docRef = doc(db, "strategies", strategyId);
+    await updateDoc(docRef, {
+      lapTimes: lapTimes,
+      updatedAt: Timestamp.now(), // Atualiza a data de modificação
     });
   },
 }));

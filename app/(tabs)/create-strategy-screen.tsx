@@ -11,11 +11,12 @@ import { Textarea, TextareaInput } from '../../components/ui/textarea';
 import { Button, ButtonText } from '../../components/ui/button';
 import { Spinner } from '../../components/ui/spinner';
 import { HStack } from '../../components/ui/hstack';
-import { ArrowLeft, ChevronDown, X } from 'lucide-react-native';
-import { Strategy, useSetupStore } from '../../src/stores/setupStore';
+import { ArrowLeft, ChevronDown, Trash2, X } from 'lucide-react-native';
+import { type Strategy, useSetupStore } from '../../src/stores/setupStore';
 import { VStack } from '@/components/ui/vstack';
-// Precisaremos de um modal para selecionar o setup
 import SelectSetupModal from '../../src/components/dialogs/SelectSetupModal';
+
+type PitStopStint = Strategy['pitStopStrategy'][0];
 
 export default function CreateStrategyScreen() {
     const router = useRouter();
@@ -25,8 +26,9 @@ export default function CreateStrategyScreen() {
     // Conecta à store para pegar os dados necessários
     const allSetups = useSetupStore(state => state.allSetups);
     const gameData = useSetupStore(state => state.gameData);
-    const createStrategy = useSetupStore(state => state.createStrategy); // Adicionaremos depois
-    const updateStrategy = useSetupStore(state => state.updateStrategy); // Adicionaremos depois
+    const createStrategy = useSetupStore(state => state.createStrategy);
+    const updateStrategy = useSetupStore(state => state.updateStrategy);
+    const strategies = useSetupStore(state => state.strategies);
 
     // Estados do formulário
     const [name, setName] = useState('');
@@ -34,62 +36,98 @@ export default function CreateStrategyScreen() {
     const [raceDistance, setRaceDistance] = useState<Strategy['raceDistance'] | ''>('');
     const [notes, setNotes] = useState('');
     const [selectedSetupId, setSelectedSetupId] = useState<string | null>(null);
+    const [stints, setStints] = useState<PitStopStint[]>([]);
+
     const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleRaceDistanceChange = (value: string) => {
-    // We use a type assertion to tell TypeScript we trust this value is correct
-    setRaceDistance(value as Strategy['raceDistance']);
-  };
+        setRaceDistance(value as Strategy['raceDistance']);
+    };
 
-    // Lógica para preencher o formulário em modo de edição (a ser implementada)
-    useEffect(() => {
-        if (isEditing) {
-            // TODO: Buscar a estratégia da store e preencher os campos
-            console.log('Modo de Edição para a estratégia:', params.strategyId);
+    const addStint = () => {
+        const lastPitLap = stints.length > 0 ? stints[stints.length - 1].pitOnLap : 0;
+        setStints([...stints, { tyreCompound: 'soft', laps: 10, pitOnLap: lastPitLap + 10 }]);
+    };
+
+    const updateStint = (index: number, field: keyof PitStopStint, value: string | number) => {
+        const newStints = [...stints];
+        // @ts-ignore - TypeScript pode reclamar da tipagem dinâmica aqui, mas é seguro
+        newStints[index][field] = value;
+
+        // Recalcula a volta de parada dos stints subsequentes
+        for (let i = index; i < newStints.length; i++) {
+            const prevPitLap = i > 0 ? newStints[i - 1].pitOnLap : 0;
+            newStints[i].pitOnLap = prevPitLap + Number(newStints[i].laps);
         }
-    }, [params.strategyId, isEditing]);
+        setStints(newStints);
+    };
+
+    const removeStint = (index: number) => {
+        const newStints = stints.filter((_, i) => i !== index);
+        // Recalcula tudo após a remoção
+        for (let i = 0; i < newStints.length; i++) {
+            const prevPitLap = i > 0 ? newStints[i - 1].pitOnLap : 0;
+            newStints[i].pitOnLap = prevPitLap + Number(newStints[i].laps);
+        }
+        setStints(newStints);
+    };
+
+    // Lógica para preencher o formulário em modo de edição
+    useEffect(() => {
+        if (isEditing && strategies.length > 0) {
+            const strategyToEdit = strategies.find(s => s.id === params.strategyId);
+            if (strategyToEdit) {
+                setName(strategyToEdit.name);
+                setTrack(strategyToEdit.track);
+                setRaceDistance(strategyToEdit.raceDistance);
+                setNotes(strategyToEdit.notes);
+                setSelectedSetupId(strategyToEdit.setupId);
+                setStints(strategyToEdit.pitStopStrategy || []); // Garante que stints seja um array
+            }
+        }
+    }, [params.strategyId, isEditing, strategies]);
 
     const handleSave = async () => {
-    if (!name || !track || !raceDistance || !selectedSetupId) {
-      setErrorMessage('Por favor, preencha o nome, pista, distância e setup.');
-      return;
-    }
-    
-    setIsSaving(true);
-    setErrorMessage('');
+        if (!name || !track || !raceDistance || !selectedSetupId) {
+            setErrorMessage('Por favor, preencha o nome, pista, distância e setup.');
+            return;
+        }
 
-    try {
-      // Monta o objeto de dados com base no formulário
-      const strategyData = {
-        name,
-        track,
-        raceDistance: raceDistance as Strategy['raceDistance'],
-        notes,
-        setupId: selectedSetupId,
-        // Valores padrão para os campos que ainda não têm UI
-        availableTyres: { soft: 0, medium: 0, hard: 0 },
-        fuelLoadInLaps: 0,
-        pitStopStrategy: [],
-        lapTimes: [],
-      };
+        setIsSaving(true);
+        setErrorMessage('');
 
-      if (isEditing) {
-        await updateStrategy(params.strategyId!, strategyData);
-      } else {
-        await createStrategy(strategyData);
-      }
+        try {
+            // Monta o objeto de dados com base no formulário
+            const strategyData = {
+                name,
+                track,
+                raceDistance: raceDistance as Strategy['raceDistance'],
+                notes,
+                setupId: selectedSetupId,
+                // Valores padrão para os campos que ainda não têm UI
+                availableTyres: { soft: 0, medium: 0, hard: 0 },
+                fuelLoadInLaps: 0,
+                pitStopStrategy: stints,
+                lapTimes: [],
+            };
 
-      router.back(); // Volta para a lista de estratégias após salvar
+            if (isEditing) {
+                await updateStrategy(params.strategyId!, strategyData);
+            } else {
+                await createStrategy(strategyData);
+            }
 
-    } catch (error) {
-      console.error("Erro ao salvar estratégia:", error);
-      setErrorMessage("Ocorreu um erro ao salvar. Tente novamente.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+            router.push('/strategies-screen'); // Volta para a lista de estratégias após salvar
+
+        } catch (error) {
+            console.error("Erro ao salvar estratégia:", error);
+            setErrorMessage("Ocorreu um erro ao salvar. Tente novamente.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const selectedSetup = allSetups.find(s => s.id === selectedSetupId);
 
@@ -178,6 +216,56 @@ export default function CreateStrategyScreen() {
                         )}
                     </Box>
 
+                    {/* --- Seção de Pneus e Paradas --- */}
+                    <Box className="bg-white p-4 rounded-lg">
+                        <Heading size="sm" className="mb-4">Estratégia de Pneus e Paradas</Heading>
+                        <VStack space="md">
+                            {stints.map((stint, index) => (
+                                <HStack key={index} space="md" className="items-center p-2 border border-gray-200 rounded-md">
+                                    <VStack className="flex-1">
+                                        <Text className="text-xs">Stint {index + 1}</Text>
+                                        <Select
+                                            selectedValue={stint.tyreCompound}
+                                            onValueChange={(value) => updateStint(index, 'tyreCompound', value)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectInput placeholder="Composto" />
+                                                <ChevronDown className="mr-2" />
+                                            </SelectTrigger>
+                                            <SelectPortal>
+                                                <SelectBackdrop />
+                                                <SelectContent>
+                                                    <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                                                    {['soft', 'medium', 'hard', 'intermediate', 'wet'].map(t => <SelectItem key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} value={t} />)}
+                                                </SelectContent>
+                                            </SelectPortal>
+                                        </Select>
+                                    </VStack>
+                                    <VStack className="w-24">
+                                        <Text className="text-xs">Voltas</Text>
+                                        <Input>
+                                            <InputField
+                                                keyboardType="numeric"
+                                                value={String(stint.laps)}
+                                                onChangeText={(value) => updateStint(index, 'laps', Number(value))}
+                                            />
+                                        </Input>
+                                    </VStack>
+                                    <VStack className="items-center">
+                                        <Text className="text-xs">Parar na</Text>
+                                        <Text className="font-bold text-lg">{stint.pitOnLap}</Text>
+                                    </VStack>
+                                    <Pressable onPress={() => removeStint(index)} className="self-center p-2">
+                                        <Trash2 size={18} color="red" />
+                                    </Pressable>
+                                </HStack>
+                            ))}
+                            <Button variant="outline" onPress={addStint}>
+                                <ButtonText>+ Adicionar Stint</ButtonText>
+                            </Button>
+                        </VStack>
+                    </Box>
+
                     {/* Seção de Anotações */}
                     <Box className="bg-white p-4 rounded-lg">
                         <Heading size="sm" className="mb-4">Anotações da Estratégia</Heading>
@@ -193,7 +281,7 @@ export default function CreateStrategyScreen() {
 
                 {errorMessage ? <Text className="text-red-500 mt-4 text-center">{errorMessage}</Text> : null}
 
-                <Button onPress={handleSave} disabled={isSaving} className="mt-6">
+                <Button onPress={handleSave} disabled={isSaving} className="mt-6 mb-6">
                     {isSaving ? <Spinner color="white" /> : <ButtonText>Salvar Estratégia</ButtonText>}
                 </Button>
             </ScrollView>
