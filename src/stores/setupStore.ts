@@ -57,6 +57,20 @@ export interface FolderEntry {
   addedAt: Timestamp;
 }
 
+// Representa um único stint dentro de um plano (máximo 3 por plano)
+export interface PlannedStint {
+  tyreCompound: "soft" | "medium" | "hard" | "intermediate" | "wet";
+  pitStopLap: number; // A volta em que o usuário planeja parar
+}
+
+// Representa um Plano de Estratégia completo (A, B ou C)
+export interface StrategyPlan {
+  planLabel: string; // "Plano A", "Plano B", "Plano C"
+  plannedStints: PlannedStint[]; // Array com até 3 stints
+  fuelLoad: number; // Carga de combustível em voltas (ex: 35.5)
+  totalTime: string; // Tempo total de corrida "MM:SS.mls"
+}
+
 export interface Strategy {
   id: string;
   ownerId: string;
@@ -67,14 +81,19 @@ export interface Strategy {
   raceDistance: "5 Laps" | "25%" | "35%" | "50%" | "100%";
   notes: string;
   setupId: string;
-  availableTyres: { soft: number; medium: number; hard: number; };
-  fuelLoadInLaps: number;
-  pitStopStrategy: Array<{
-    tyreCompound: "soft" | "medium" | "hard" | "intermediate" | "wet";
-    laps: number;
-    pitOnLap: number;
-  }>;
-  lapTimes: Array<{ lapNumber: number; timeInMillis: number; }>; // Salva em milissegundos
+
+  // --- CAMPOS ADICIONADOS ---
+  totalRaceLaps?: number; // Número total de voltas da corrida (opcional, pode ser inferido)
+  initialAvailableTyres: { // Pneus disponíveis NO INÍCIO da corrida
+    soft: number; 
+    medium: number; 
+    hard: number; 
+    intermediate: number; 
+    wet: number; 
+  };
+  strategyPlans: StrategyPlan[]; // Array com os Planos (A, B, C) - Max 3
+
+  lapTimes: Array<{ lapNumber: number; timeInMillis: number; }>; 
 }
 
 // Valores iniciais para um novo setup
@@ -404,6 +423,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
     const q = query(collection(db, "strategies"), where("ownerId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      // O mapeamento aqui já funcionará com a nova estrutura
       const strategies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
       set({ strategies, loadingStrategies: false });
     }, (error) => {
@@ -414,6 +434,10 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     return unsubscribe;
   },
 
+  // As funções createStrategy e updateStrategy precisam ser ajustadas
+  // quando implementarmos o formulário, para garantir que os dados
+  // passados (strategyData) correspondam à nova interface Strategy.
+  // Por enquanto, a assinatura delas pode permanecer a mesma.
   createStrategy: async (strategyData) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
@@ -433,7 +457,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     const docRef = doc(db, "strategies", strategyId);
     await updateDoc(docRef, {
       ...strategyData,
-      // Garante que o ownerId não seja sobrescrito acidentalmente
       ownerId: user.uid, 
       updatedAt: Timestamp.now(),
     });
