@@ -1,28 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Box } from '../../components/ui/box';
-import { Heading } from '../../components/ui/heading';
-import { Text } from '../../components/ui/text';
-import { Spinner } from '../../components/ui/spinner';
-import { Pressable } from '../../components/ui/pressable';
-import { HStack } from '../../components/ui/hstack';
+import { ArrowBigLeft, PencilLine, Trash, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { FlatList } from 'react-native';
 import {
   AlertDialog,
   AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogCloseButton,
-  AlertDialogFooter,
   AlertDialogBody,
-} from '../../components/ui/alert-dialog';
-import { X, ArrowBigLeft, PencilLine, Trash } from 'lucide-react-native';
-import { Button, ButtonText } from '../../components/ui/button';
+  AlertDialogCloseButton,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '../components/ui/alert-dialog';
+import { Box } from '../components/ui/box';
+import { Button, ButtonText } from '../components/ui/button';
+import { Heading } from '../components/ui/heading';
+import { HStack } from '../components/ui/hstack';
+import { Pressable } from '../components/ui/pressable';
+import { Spinner } from '../components/ui/spinner';
+import { Text } from '../components/ui/text';
 
-import { SetupData, useSetupStore, type Folder } from '../../src/stores/setupStore';
-import { SetupCard } from '../../src/components/cards/SetupCard';
-import CreateEditFolderModal from '../../src/components/dialogs/CreateEditFolderModal';
-import AddToFolderModal from '../../src/components/dialogs/AddToFolderModal';
+import { SetupCard } from '../src/components/cards/SetupCard';
+import CreateEditFolderModal from '../src/components/dialogs/CreateEditFolderModal';
+import { SetupData, useSetupStore } from '../src/stores/setupStore';
 
 export default function FolderDetailsScreen() {
   const router = useRouter();
@@ -79,7 +78,7 @@ export default function FolderDetailsScreen() {
     <Box className="flex-1 bg-gray-100">
       {/* Cabeçalho Customizado */}
       <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200">
-        <Pressable onPress={() => router.push('/folders-screen')} className="p-2">
+        <Pressable onPress={() => router.back()} className="p-2">
         <ArrowBigLeft />
         </Pressable>
         <Heading size="md" className="flex-1 text-center">{folderName}</Heading>
@@ -108,7 +107,7 @@ export default function FolderDetailsScreen() {
         <FlatList
           data={folderSetups}
           renderItem={({ item }) => (
-            <SetupCard item={item} onDelete={deleteSetup} onAddToFolder={handleOpenAddToFolderModal} />
+            <SetupCard item={item} onAddToFolder={handleOpenAddToFolderModal} />
           )}
           keyExtractor={(item) => item.id!}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}

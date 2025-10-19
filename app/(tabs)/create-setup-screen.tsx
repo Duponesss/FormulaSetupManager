@@ -318,7 +318,6 @@ export default function CreateSetupScreen() {
       <Box className="pt-12 pb-4 px-6 border-b border-neutral-200">
         <HStack className="items-center justify-between">
           <Heading size="xl">{isEditMode ? 'Editar Setup' : 'Novo Setup'}</Heading>
-          <Pressable onPress={() => router.back()}><Text size="2xl">×</Text></Pressable>
         </HStack>
       </Box>
 

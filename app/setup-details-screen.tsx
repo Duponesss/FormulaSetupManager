@@ -1,22 +1,26 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState, useMemo } from 'react';
-import { Box } from '../../components/ui/box';
-import { Button, ButtonText } from '../../components/ui/button';
-import { Divider } from '../../components/ui/divider';
-import { Heading } from '../../components/ui/heading';
-import { HStack } from '../../components/ui/hstack';
-import { Pressable } from '../../components/ui/pressable';
-import { ScrollView } from '../../components/ui/scroll-view';
-import { Text } from '../../components/ui/text';
-import { VStack } from '../../components/ui/vstack';
-import ConfirmationModal from '../../src/components/dialogs/ConfirmationModal';
-import CustomAlertDialog from '../../src/components/dialogs/CustomAlertDialog';
-import { useSingleTap } from '../../src/hooks/useSingleTap';
-import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
+import React, { useEffect, useState } from 'react';
+import { Box } from '../components/ui/box';
+import { Button, ButtonText } from '../components/ui/button';
+import { Divider } from '../components/ui/divider';
+import { Heading } from '../components/ui/heading';
+import { HStack } from '../components/ui/hstack';
+import { Pressable } from '../components/ui/pressable';
+import { ScrollView } from '../components/ui/scroll-view';
+import { Text } from '../components/ui/text';
+import { VStack } from '../components/ui/vstack';
+import ConfirmationModal from '../src/components/dialogs/ConfirmationModal';
+import CustomAlertDialog from '../src/components/dialogs/CustomAlertDialog';
+import { useSingleTap } from '../src/hooks/useSingleTap';
+import { useSetupStore, type SetupData } from '../src/stores/setupStore';
 
 export default function SetupDetailsScreen() {
   const router = useRouter();
-  const { setupId } = useLocalSearchParams<{ setupId: string }>();
+  const handleGoBack = () => router.back();
+
+  const params = useLocalSearchParams<{ setupId: string, isViewOnly?: string }>();
+  const { setupId } = params;
+  const isViewOnly = params.isViewOnly === 'true';
   const allSetups = useSetupStore((state) => state.allSetups);
   const deleteSetup = useSetupStore((state) => state.deleteSetup);
   const [setup, setSetup] = useState<SetupData | null>(null);
@@ -87,7 +91,7 @@ export default function SetupDetailsScreen() {
       <Box className="pt-12 pb-4 px-6">
         <HStack className="items-center justify-between">
           <Heading size="xl">Detalhes do Setup</Heading>
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={handleGoBack}>
             <Text size="2xl">×</Text>
           </Pressable>
         </HStack>
@@ -181,23 +185,25 @@ export default function SetupDetailsScreen() {
         </Box>
 
         {/* Action Buttons */}
-        <VStack space="md" className="m-10">
-          <HStack space="md">
-            <Button
-              className="flex-1 p-2 rounded-xl"
-              onPress={debouncedHandleEdit}
-            >
-              <ButtonText>Editar Setup</ButtonText>
-            </Button>
-            <Button
-              className="flex-1 p-2 bg-red-500 rounded-xl"
-              variant="destructive"
-              onPress={debouncedConfirmDeletion}
-            >
-              <ButtonText className="text-white font-bold">Excluir Setup</ButtonText>
-            </Button>
-          </HStack>
-        </VStack>
+        {!isViewOnly && (
+          <VStack space="md" className="m-10">
+            <HStack space="md">
+              <Button
+                className="flex-1 p-2 rounded-xl"
+                onPress={debouncedHandleEdit}
+              >
+                <ButtonText>Editar Setup</ButtonText>
+              </Button>
+              <Button
+                className="flex-1 p-2 bg-red-500 rounded-xl"
+                variant="destructive"
+                onPress={debouncedConfirmDeletion}
+              >
+                <ButtonText className="text-white font-bold">Excluir Setup</ButtonText>
+              </Button>
+            </HStack>
+          </VStack>
+        )}
       </ScrollView>
 
       <ConfirmationModal
