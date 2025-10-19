@@ -13,10 +13,11 @@ import { Button, ButtonText } from '../components/ui/button';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogCloseButton, AlertDialogFooter, AlertDialogBody } from '../components/ui/alert-dialog';
 import { Input, InputField } from '../components/ui/input';
 import { ArrowLeft, Pencil, Trash2, X } from 'lucide-react-native';
+import { Divider } from '../components/ui/divider';
 
-import { useSetupStore, type Strategy } from '../src/stores/setupStore';
+import { useSetupStore, type Strategy, type PlannedStint } from '../src/stores/setupStore';
 import { SetupCard } from '../src/components/cards/SetupCard';
-import { BarChart, LineChart } from "react-native-gifted-charts";
+import { LineChart, BarChart } from "react-native-gifted-charts";
 
 // --- FUNÇÕES HELPER ---
 // Converte uma string "MM:SS.mls" para milissegundos
@@ -37,6 +38,18 @@ const millisToTime = (millis: number): string => {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(remainingMillis).padStart(3, '0')}`;
 };
 
+// Nova helper para nomes dos pneus
+const getTyreName = (compound: PlannedStint['tyreCompound']): string => {
+  switch (compound) {
+    case 'soft': return 'Macio';
+    case 'medium': return 'Médio';
+    case 'hard': return 'Duro';
+    case 'intermediate': return 'Inter';
+    case 'wet': return 'Chuva';
+    default: return '';
+  }
+};
+
 export default function StrategyDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ strategyId: string }>();
@@ -55,13 +68,14 @@ export default function StrategyDetailsScreen() {
   const [lapTimeInput, setLapTimeInput] = useState('');
   const [isSavingLap, setIsSavingLap] = useState(false);
 
-  const tyreImages = {
-        soft: require('../src/assets/images/soft_pirelli_tyre.png'), 
-        medium: require('../src/assets/images/medium_pirelli_tyre.png'),
-        hard: require('../src/assets/images/hard_pirelli_tyre.png'),
-        intermediate: require('../src/assets/images/inter_pirelli_tyre.png'), 
-        wet: require('../src/assets/images/wet_pirelli_tyre.png'),  
-    };
+  // --- MAPEAMENTO DE IMAGENS (Pirelli para detalhes) ---
+  const pirelliTyreImages = useMemo(() => ({
+    soft: require('../src/assets/images/soft_pirelli_tyre.png'),
+    medium: require('../src/assets/images/medium_pirelli_tyre.png'),
+    hard: require('../src/assets/images/hard_pirelli_tyre.png'),
+    intermediate: require('../src/assets/images/inter_pirelli_tyre.png'),
+    wet: require('../src/assets/images/wet_pirelli_tyre.png'),
+  }), []);
 
   // Busca a estratégia específica quando a tela carrega
   useEffect(() => {
@@ -88,33 +102,6 @@ export default function StrategyDetailsScreen() {
       router.back();
     }
   };
-
-  const stintChartDataForStackedBar = useMemo(() => {
-    if (!strategy?.pitStopStrategy || strategy.pitStopStrategy.length === 0) {
-      return []; // Retorna um array vazio se não houver stints
-    }
-
-    const colorMap = {
-      soft: '#E10600',
-      medium: '#FFD700',
-      hard: '#F0F0F0',
-      intermediate: '#4CAF50',
-      wet: '#2196F3',
-    };
-
-    // 1. Cria o array de stacks (segmentos) como antes.
-    const stacksArray = strategy.pitStopStrategy.map((stint, index) => ({
-      value: stint.laps,
-      color: colorMap[stint.tyreCompound] || 'gray',
-      // Label opcional para tooltip
-      label: `Stint ${index + 1}: ${stint.tyreCompound} (${stint.laps}v)`
-    }));
-
-    // 2. Encapsula o array 'stacksArray' dentro de um objeto com a propriedade 'stacks'.
-    // O array final para 'stackData' precisa conter este objeto.
-    return [{ stacks: stacksArray }];
-
-  }, [strategy]);
 
   // --- Cálculos para tempos de volta com useMemo ---
   const { lapTimesData, averageTime, standardDeviation } = useMemo(() => {
@@ -195,6 +182,23 @@ export default function StrategyDetailsScreen() {
     }
   };
 
+  // --- LÓGICA PARA CALCULAR PNEUS RESERVAS ---
+  // Esta função será chamada para CADA plano
+  const calculateRemainingTyres = (plan: Strategy['strategyPlans'][0]): Strategy['initialAvailableTyres'] => {
+    const initial = strategy?.initialAvailableTyres || { soft: 0, medium: 0, hard: 0, intermediate: 0, wet: 0 };
+    const used = plan.plannedStints.reduce((acc, stint) => {
+      acc[stint.tyreCompound] = (acc[stint.tyreCompound] || 0) + 1;
+      return acc;
+    }, {} as Partial<Strategy['initialAvailableTyres']>);
+
+    const remaining: Strategy['initialAvailableTyres'] = { soft: 0, medium: 0, hard: 0, intermediate: 0, wet: 0 };
+    for (const compound in initial) {
+      // @ts-ignore - Confiança na iteração
+      remaining[compound] = Math.max(0, initial[compound] - (used[compound] || 0));
+    }
+    return remaining;
+  };
+
   if (isLoading) {
     return <Box className="flex-1 justify-center items-center"><Spinner size="large" /></Box>;
   }
@@ -259,48 +263,92 @@ export default function StrategyDetailsScreen() {
             </Box>
           )}
 
-          {/* --- SEÇÃO DO GRÁFICO --- */}
+          {/* --- SEÇÃO DE PLANOS DE ESTRATÉGIA --- */}
           <Box className="bg-white p-4 rounded-lg">
-                        <Heading size="sm" className="mb-3">Estratégia de Pneus e Paradas</Heading>
-                        {stintChartDataForStackedBar.length > 0 ? (
-                            <VStack> 
-                                {/* 2. Remove o Box verde e adiciona VStack */}
-                                <BarChart
-                                    stackData={stintChartDataForStackedBar}
-                                    isAnimated
-                                    horizontal
-                                    barWidth={30} // Pode ajustar a largura conforme necessário
-                                    barBorderRadius={4}
-                                    hideRules
-                                    hideYAxisText
-                                    xAxisThickness={0}
-                                    yAxisThickness={0}
-                                    initialSpacing={0}
-                                    // Define uma altura fixa menor para o gráfico em si
-                                    height={20} 
-                                />
+            <Heading size="sm" className="mb-3">Planos de Estratégia</Heading>
+            {strategy.strategyPlans && strategy.strategyPlans.length > 0 ? (
+              <VStack space="md">
+                {strategy.strategyPlans.map((plan, planIndex) => {
+                  const remainingTyres = calculateRemainingTyres(plan);
+                  return (
+                    <Box key={planIndex} className="border border-gray-300 rounded-lg p-3">
+                      <Heading size="xs" className="mb-3">{plan.planLabel}</Heading>
+                      <HStack>
+                        {/* Coluna Esquerda: Stints Planejados */}
+                        <VStack className="flex-1 pr-3 border-r border-gray-200" space="sm">
+                          <Text className="text-xs font-semibold mb-1">Stints Planejados:</Text>
+                          {plan.plannedStints.map((stint, stintIndex) => {
+                            let stintDetailText = '';
+                            // --- LÓGICA DE EXIBIÇÃO DO PRIMEIRO STINT ---
+                            if (stintIndex === 0) {
+                              if (plan.plannedStints.length === 1) {
+                                // Caso 1: Stint Único
+                                stintDetailText = `Voltas: ${strategy.totalRaceLaps || 'N/A'}`;
+                              } else {
+                                // Caso 2: Primeiro de Múltiplos Stints
+                                const nextStintPitLap = plan.plannedStints[1]?.pitStopLap;
+                                stintDetailText = `Voltas: 1 - ${nextStintPitLap || '?'}`; // Ex: Voltas 1 - 18
+                              }
+                            } else {
+                              // --- LÓGICA PARA STINTS SUBSEQUENTES (Janela) ---
+                              stintDetailText = `Janela de parada: Volta ${stint.pitStopLap} - ${stint.pitStopLap + 3}`;
+                            }
+                            // --- FIM DA LÓGICA DE EXIBIÇÃO ---
 
-                                {/* 3. Nova seção para exibir os detalhes dos stints */}
-                                <HStack space="md" className="justify-center items-end mt-2">
-                                    {strategy?.pitStopStrategy.map((stint, index) => (
-                                        <VStack key={index} className="items-center">
-                                            <Image
-                                                // @ts-ignore - TypeScript pode reclamar, mas o require funciona
-                                                source={tyreImages[stint.tyreCompound]}
-                                                style={{ width: 30, height: 30 }}
-                                                contentFit="contain" // Garante que a imagem caiba
-                                            />
-                                            <Text className="text-xs mt-1">{stint.laps} Voltas</Text>
-                                        </VStack>
-                                    ))}
-                                </HStack>
-                            </VStack>
-                        ) : (
-                            <Box className="h-20 justify-center items-center bg-gray-100 rounded">
-                                <Text className="text-gray-500">Nenhum stint definido.</Text>
-                            </Box>
-                        )}
+                            return (
+                              <HStack key={stintIndex} space="sm" className="items-center">
+                                <Image
+                                  // @ts-ignore
+                                  source={pirelliTyreImages[stint.tyreCompound]}
+                                  style={{ width: 25, height: 25 }}
+                                  contentFit="contain"
+                                />
+                                <VStack>
+                                  <Text className="text-sm font-medium">{getTyreName(stint.tyreCompound)}</Text>
+                                  {/* Exibe o texto calculado */}
+                                  <Text className="text-xs text-gray-500">{stintDetailText}</Text>
+                                </VStack>
+                              </HStack>
+                            );
+                          })}
+                          {plan.plannedStints.length === 0 && <Text className="text-xs text-gray-400">Nenhum stint planejado.</Text>}
+
+                          {/* Informações Adicionais */}
+                          <Divider className="my-2" />
+                          <Text className="text-xs">Combustível: <Text className="font-semibold">{plan.fuelLoad.toFixed(1)} voltas</Text></Text>
+                          <Text className="text-xs">Total de Voltas: <Text className="font-semibold">{strategy.totalRaceLaps || 'N/A'}</Text></Text>
+                          <Text className="text-xs">Tempo de Corrida: <Text className="font-semibold">{plan.totalTime}</Text></Text>
+                        </VStack>
+
+                        {/* Coluna Direita: Stints Reservas */}
+                        <VStack className="pl-3" style={{ width: 100 }} space="sm">
+                          <Text className="text-xs font-semibold mb-1">Stints Reservas:</Text>
+                          {(Object.keys(remainingTyres) as Array<keyof typeof remainingTyres>).map(compound => (
+                            remainingTyres[compound] > 0 && (
+                              <HStack key={compound} space="sm" className="items-center">
+                                <Image
+                                  // @ts-ignore
+                                  source={pirelliTyreImages[compound]}
+                                  style={{ width: 20, height: 20 }}
+                                  contentFit="contain"
+                                />
+                                <Text className="text-xs">{getTyreName(compound)}</Text>
+                                <Text className="text-xs font-bold">{remainingTyres[compound]}x</Text>
+                              </HStack>
+                            )
+                          ))}
+                        </VStack>
+                      </HStack>
                     </Box>
+                  );
+                })}
+              </VStack>
+            ) : (
+              <Box className="h-20 justify-center items-center bg-gray-100 rounded">
+                <Text className="text-gray-500">Nenhum plano de estratégia definido.</Text>
+              </Box>
+            )}
+          </Box>
 
           {/* --- SEÇÃO DE ANÁLISE DE DESEMPENHO --- */}
           <Box className="bg-white p-4 rounded-lg">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
 import { Box } from '../../components/ui/box';
 import { Heading } from '../../components/ui/heading';
 import { Text } from '../../components/ui/text';
@@ -12,11 +13,31 @@ import { Button, ButtonText } from '../../components/ui/button';
 import { Spinner } from '../../components/ui/spinner';
 import { HStack } from '../../components/ui/hstack';
 import { ArrowLeft, ChevronDown, Trash2, X } from 'lucide-react-native';
-import { type Strategy, useSetupStore } from '../../src/stores/setupStore';
+import { type Strategy, useSetupStore, StrategyPlan, PlannedStint } from '../../src/stores/setupStore';
 import { VStack } from '@/components/ui/vstack';
 import SelectSetupModal from '../../src/components/dialogs/SelectSetupModal';
 
-type PitStopStint = Strategy['pitStopStrategy'][0];
+// Converte uma string "MM:SS.mls" para milissegundos
+const timeToMillis = (time: string): number | null => {
+    const parts = time.match(/(\d{2}):(\d{2})\.(\d{3})/);
+    if (!parts) return null;
+    const [, minutes, seconds, millis] = parts.map(Number);
+    return (minutes * 60 + seconds) * 1000 + millis;
+};
+
+// Tipo para os pneus disponíveis (incluindo inter e wet)
+type AvailableTyres = Strategy['initialAvailableTyres'];
+type TyreCompound = PlannedStint['tyreCompound'];
+
+// Mapeamento para as imagens do formulário
+const formTyreImages = {
+    soft: require('../../src/assets/images/soft_tyre.png'),
+    medium: require('../../src/assets/images/medium_tyre.png'),
+    hard: require('../../src/assets/images/hard_tyre.png'),
+    intermediate: require('../../src/assets/images/inter_tyre.png'),
+    wet: require('../../src/assets/images/wet_tyre.png'),
+};
+const tyreCompounds: TyreCompound[] = ['soft', 'medium', 'hard', 'intermediate', 'wet'];
 
 export default function CreateStrategyScreen() {
     const router = useRouter();
@@ -36,7 +57,11 @@ export default function CreateStrategyScreen() {
     const [raceDistance, setRaceDistance] = useState<Strategy['raceDistance'] | ''>('');
     const [notes, setNotes] = useState('');
     const [selectedSetupId, setSelectedSetupId] = useState<string | null>(null);
-    const [stints, setStints] = useState<PitStopStint[]>([]);
+    const [totalRaceLaps, setTotalRaceLaps] = useState(''); // Input de voltas totais
+    const [initialAvailableTyres, setInitialAvailableTyres] = useState<AvailableTyres>({
+        soft: 2, medium: 2, hard: 2, intermediate: 2, wet: 2 // Valores iniciais padrão
+    });
+    const [strategyPlans, setStrategyPlans] = useState<StrategyPlan[]>([]); // Array para Planos A, B, C
 
     const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -46,32 +71,75 @@ export default function CreateStrategyScreen() {
         setRaceDistance(value as Strategy['raceDistance']);
     };
 
-    const addStint = () => {
-        const lastPitLap = stints.length > 0 ? stints[stints.length - 1].pitOnLap : 0;
-        setStints([...stints, { tyreCompound: 'soft', laps: 10, pitOnLap: lastPitLap + 10 }]);
+    // Adiciona um novo plano (A, B ou C) se houver menos de 3
+    const addStrategyPlan = () => {
+        if (strategyPlans.length < 3) {
+            const nextPlanLabel = `Plano ${String.fromCharCode(65 + strategyPlans.length)}`; // A, B, C
+            setStrategyPlans([
+                ...strategyPlans,
+                {
+                    planLabel: nextPlanLabel,
+                    plannedStints: [], // Começa sem stints
+                    fuelLoad: 0,
+                    totalTime: '00:00.000',
+                }
+            ]);
+        }
     };
 
-    const updateStint = (index: number, field: keyof PitStopStint, value: string | number) => {
-        const newStints = [...stints];
-        // @ts-ignore - TypeScript pode reclamar da tipagem dinâmica aqui, mas é seguro
-        newStints[index][field] = value;
-
-        // Recalcula a volta de parada dos stints subsequentes
-        for (let i = index; i < newStints.length; i++) {
-            const prevPitLap = i > 0 ? newStints[i - 1].pitOnLap : 0;
-            newStints[i].pitOnLap = prevPitLap + Number(newStints[i].laps);
-        }
-        setStints(newStints);
+    // Remove um plano pelo índice
+    const removeStrategyPlan = (planIndex: number) => {
+        let plans = strategyPlans.filter((_, index) => index !== planIndex);
+        // Reajusta os labels (A, B, C...)
+        plans = plans.map((plan, index) => ({
+            ...plan,
+            planLabel: `Plano ${String.fromCharCode(65 + index)}`
+        }));
+        setStrategyPlans(plans);
     };
 
-    const removeStint = (index: number) => {
-        const newStints = stints.filter((_, i) => i !== index);
-        // Recalcula tudo após a remoção
-        for (let i = 0; i < newStints.length; i++) {
-            const prevPitLap = i > 0 ? newStints[i - 1].pitOnLap : 0;
-            newStints[i].pitOnLap = prevPitLap + Number(newStints[i].laps);
+    // Adiciona um stint a um plano específico (máximo 3 stints)
+    const addStintToPlan = (planIndex: number) => {
+        const currentPlan = strategyPlans[planIndex];
+        if (currentPlan && currentPlan.plannedStints.length < 3) {
+            const newStint: PlannedStint = { tyreCompound: 'soft', pitStopLap: 0 };
+            const updatedPlans = [...strategyPlans];
+            updatedPlans[planIndex].plannedStints.push(newStint);
+            setStrategyPlans(updatedPlans);
         }
-        setStints(newStints);
+    };
+
+    // Remove um stint de um plano específico
+    const removeStintFromPlan = (planIndex: number, stintIndex: number) => {
+        const updatedPlans = [...strategyPlans];
+        updatedPlans[planIndex].plannedStints.splice(stintIndex, 1);
+        setStrategyPlans(updatedPlans);
+    };
+
+    // Atualiza um campo dentro de um stint específico
+    const updateStintInPlan = (planIndex: number, stintIndex: number, field: keyof PlannedStint, value: string | number) => {
+        const updatedPlans = [...strategyPlans];
+        // @ts-ignore - Confiança na tipagem, embora dinâmica
+        updatedPlans[planIndex].plannedStints[stintIndex][field] = value;
+        setStrategyPlans(updatedPlans);
+    };
+
+    // Atualiza um campo do Plano (fuelLoad, totalTime)
+    const updatePlanField = (planIndex: number, field: keyof StrategyPlan, value: string | number) => {
+        const updatedPlans = [...strategyPlans];
+        // @ts-ignore
+        updatedPlans[planIndex][field] = value;
+        setStrategyPlans(updatedPlans);
+    }
+
+    // Atualiza a quantidade de pneus disponíveis
+    const updateAvailableTyreCount = (compound: keyof AvailableTyres, value: string) => {
+        const count = parseInt(value, 10);
+        if (!isNaN(count) && count >= 0) {
+            setInitialAvailableTyres(prev => ({ ...prev, [compound]: count }));
+        } else if (value === '') { // Permite apagar o campo
+            setInitialAvailableTyres(prev => ({ ...prev, [compound]: 0 }));
+        }
     };
 
     // Lógica para preencher o formulário em modo de edição
@@ -84,33 +152,46 @@ export default function CreateStrategyScreen() {
                 setRaceDistance(strategyToEdit.raceDistance);
                 setNotes(strategyToEdit.notes);
                 setSelectedSetupId(strategyToEdit.setupId);
-                setStints(strategyToEdit.pitStopStrategy || []); // Garante que stints seja um array
+                setTotalRaceLaps(String(strategyToEdit.totalRaceLaps || ''));
+                setInitialAvailableTyres(strategyToEdit.initialAvailableTyres || { soft: 0, medium: 0, hard: 0, intermediate: 0, wet: 0 });
+                setStrategyPlans(strategyToEdit.strategyPlans || []);
             }
         }
     }, [params.strategyId, isEditing, strategies]);
 
     const handleSave = async () => {
-        if (!name || !track || !raceDistance || !selectedSetupId) {
-            setErrorMessage('Por favor, preencha o nome, pista, distância e setup.');
+        if (!name || !track || !raceDistance || !selectedSetupId || !totalRaceLaps || strategyPlans.length === 0) {
+            setErrorMessage('Preencha as informações gerais, setup, voltas totais e adicione pelo menos um plano.');
             return;
         }
+        // Validação adicional pode ser feita aqui (ex: formato do tempo, combustível)
 
         setIsSaving(true);
         setErrorMessage('');
 
         try {
-            // Monta o objeto de dados com base no formulário
+            const finalTotalRaceLaps = parseInt(totalRaceLaps, 10);
+            if (isNaN(finalTotalRaceLaps)) throw new Error("Número de voltas inválido");
+
+            // Valida e converte combustível e tempo para cada plano
+            const validatedPlans = strategyPlans.map(plan => {
+                const fuel = parseFloat(String(plan.fuelLoad).replace(',', '.')); // Garante formato numérico
+                if (isNaN(fuel)) throw new Error(`Carga de combustível inválida no ${plan.planLabel}`);
+                if (!timeToMillis(plan.totalTime)) throw new Error(`Tempo total inválido no ${plan.planLabel}`);
+                return { ...plan, fuelLoad: fuel };
+            });
+
+
             const strategyData = {
                 name,
                 track,
                 raceDistance: raceDistance as Strategy['raceDistance'],
                 notes,
                 setupId: selectedSetupId,
-                // Valores padrão para os campos que ainda não têm UI
-                availableTyres: { soft: 0, medium: 0, hard: 0 },
-                fuelLoadInLaps: 0,
-                pitStopStrategy: stints,
-                lapTimes: [],
+                totalRaceLaps: finalTotalRaceLaps,
+                initialAvailableTyres,
+                strategyPlans: validatedPlans, // Usa os planos validados
+                lapTimes: isEditing ? (strategies.find(s => s.id === params.strategyId)?.lapTimes || []) : [], // Mantém os tempos de volta se estiver editando
             };
 
             if (isEditing) {
@@ -119,11 +200,11 @@ export default function CreateStrategyScreen() {
                 await createStrategy(strategyData);
             }
 
-            router.push('/strategies-screen'); // Volta para a lista de estratégias após salvar
+            router.push('/strategies-screen');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao salvar estratégia:", error);
-            setErrorMessage("Ocorreu um erro ao salvar. Tente novamente.");
+            setErrorMessage(error.message || "Ocorreu um erro ao salvar.");
         } finally {
             setIsSaving(false);
         }
@@ -220,49 +301,132 @@ export default function CreateStrategyScreen() {
                     <Box className="bg-white p-4 rounded-lg">
                         <Heading size="sm" className="mb-4">Estratégia de Pneus e Paradas</Heading>
                         <VStack space="md">
-                            {stints.map((stint, index) => (
-                                <HStack key={index} space="md" className="items-center p-2 border border-gray-200 rounded-md">
-                                    <VStack className="flex-1">
-                                        <Text className="text-xs">Stint {index + 1}</Text>
-                                        <Select
-                                            selectedValue={stint.tyreCompound}
-                                            onValueChange={(value) => updateStint(index, 'tyreCompound', value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectInput placeholder="Composto" />
-                                                <ChevronDown className="mr-2" />
-                                            </SelectTrigger>
-                                            <SelectPortal>
-                                                <SelectBackdrop />
-                                                <SelectContent>
-                                                    <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                                                    {['soft', 'medium', 'hard', 'intermediate', 'wet'].map(t => <SelectItem key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} value={t} />)}
-                                                </SelectContent>
-                                            </SelectPortal>
-                                        </Select>
-                                    </VStack>
-                                    <VStack className="w-24">
-                                        <Text className="text-xs">Voltas</Text>
-                                        <Input>
-                                            <InputField
-                                                keyboardType="numeric"
-                                                value={String(stint.laps)}
-                                                onChangeText={(value) => updateStint(index, 'laps', Number(value))}
+                            {/* Input Voltas Totais */}
+                            <Box>
+                                <Text className="mb-1 text-xs">Total de voltas da corrida</Text>
+                                <Input>
+                                    <InputField
+                                        placeholder="Ex: 50"
+                                        keyboardType="numeric"
+                                        value={totalRaceLaps}
+                                        onChangeText={setTotalRaceLaps}
+                                    />
+                                </Input>
+                            </Box>
+
+                            {/* Pneus Disponíveis */}
+                            <Box className="border border-gray-200 p-3 rounded-md">
+                                <Text className="text-xs mb-2">Total de jogos disponíveis para a corrida</Text>
+                                <HStack className="justify-around">
+                                    {tyreCompounds.map(compound => (
+                                        <VStack key={compound} className="items-center w-12">
+                                            <Image
+                                                // @ts-ignore
+                                                source={formTyreImages[compound]}
+                                                style={{ width: 30, height: 30 }}
+                                                contentFit="contain"
                                             />
-                                        </Input>
-                                    </VStack>
-                                    <VStack className="items-center">
-                                        <Text className="text-xs">Parar na</Text>
-                                        <Text className="font-bold text-lg">{stint.pitOnLap}</Text>
-                                    </VStack>
-                                    <Pressable onPress={() => removeStint(index)} className="self-center p-2">
-                                        <Trash2 size={18} color="red" />
-                                    </Pressable>
+                                            <Input size="sm" className="mt-1">
+                                                <InputField
+                                                    textAlign="center"
+                                                    keyboardType="numeric"
+                                                    value={String(initialAvailableTyres[compound])}
+                                                    onChangeText={(value) => updateAvailableTyreCount(compound, value)}
+                                                />
+                                            </Input>
+                                        </VStack>
+                                    ))}
                                 </HStack>
+                            </Box>
+
+                            {/* Renderização Dinâmica dos Planos */}
+                            {strategyPlans.map((plan, planIndex) => (
+                                <Box key={planIndex} className="border border-blue-300 p-3 rounded-md bg-blue-50">
+                                    <HStack className="justify-between items-center mb-3">
+                                        <Heading size="xs">{plan.planLabel}</Heading>
+                                        <Pressable onPress={() => removeStrategyPlan(planIndex)}>
+                                            <Trash2 size={18} color="red" />
+                                        </Pressable>
+                                    </HStack>
+                                    <VStack space="md">
+                                        {/* Stints do Plano */}
+                                        {plan.plannedStints.map((stint, stintIndex) => (
+                                            <HStack key={stintIndex} space="sm" className="items-end">
+                                                <VStack className="flex-1">
+                                                    <Text className="text-xs mb-1">Stint {stintIndex + 1}</Text>
+                                                    <Select
+                                                        selectedValue={stint.tyreCompound}
+                                                        onValueChange={(value) => updateStintInPlan(planIndex, stintIndex, 'tyreCompound', value)}
+                                                    >
+                                                        <SelectTrigger><SelectInput placeholder="Pneu" /><ChevronDown className="mr-2" /></SelectTrigger>
+                                                        <SelectPortal><SelectBackdrop /><SelectContent>
+                                                            <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                                                            {tyreCompounds.map(t => <SelectItem key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} value={t} />)}
+                                                        </SelectContent></SelectPortal>
+                                                    </Select>
+                                                </VStack>
+                                                {stintIndex > 0 ? (
+                                                    <VStack className="w-24">
+                                                        <Text className="text-xs mb-1">Parar na Volta</Text>
+                                                        <Input size="sm">
+                                                            <InputField
+                                                                placeholder="Volta"
+                                                                keyboardType="numeric"
+                                                                value={String(stint.pitStopLap)}
+                                                                onChangeText={(value) => updateStintInPlan(planIndex, stintIndex, 'pitStopLap', Number(value))}
+                                                            />
+                                                        </Input>
+                                                    </VStack>
+                                                ) : (
+                                                    // Espaçador para manter o alinhamento quando o input está oculto
+                                                    <Box className="w-24" />
+                                                )}
+                                                <Pressable onPress={() => removeStintFromPlan(planIndex, stintIndex)} className="pb-2">
+                                                    <Trash2 size={16} color="gray" />
+                                                </Pressable>
+                                            </HStack>
+                                        ))}
+                                        {plan.plannedStints.length < 3 && (
+                                            <Button size="xs" variant="link" onPress={() => addStintToPlan(planIndex)}>
+                                                <ButtonText>+ Adicionar Stint</ButtonText>
+                                            </Button>
+                                        )}
+
+                                        {/* Combustível e Tempo Total */}
+                                        <HStack space="md" className="items-end">
+                                            <VStack className="flex-1">
+                                                <Text className="text-xs mb-1">Carga de combustível (voltas)</Text>
+                                                <Input size="sm">
+                                                    <InputField
+                                                        placeholder="Ex: 35.5"
+                                                        keyboardType="decimal-pad"
+                                                        value={String(plan.fuelLoad)}
+                                                        onChangeText={(value) => updatePlanField(planIndex, 'fuelLoad', value)}
+                                                    />
+                                                </Input>
+                                            </VStack>
+                                            <VStack className="flex-1">
+                                                <Text className="text-xs mb-1">Tempo total de corrida</Text>
+                                                <Input size="sm">
+                                                    <InputField
+                                                        placeholder="MM:SS.mls"
+                                                        keyboardType="numbers-and-punctuation" // Melhor teclado
+                                                        value={plan.totalTime}
+                                                        onChangeText={(value) => updatePlanField(planIndex, 'totalTime', value)}
+                                                    />
+                                                </Input>
+                                            </VStack>
+                                        </HStack>
+                                    </VStack>
+                                </Box>
                             ))}
-                            <Button variant="outline" onPress={addStint}>
-                                <ButtonText>+ Adicionar Stint</ButtonText>
-                            </Button>
+
+                            {/* Botão para Adicionar Novo Plano */}
+                            {strategyPlans.length < 3 && (
+                                <Button variant="solid" action="primary" onPress={addStrategyPlan}>
+                                    <ButtonText>+ Adicionar {strategyPlans.length === 0 ? 'Plano A' : (strategyPlans.length === 1 ? 'Plano B' : 'Plano C')}</ButtonText>
+                                </Button>
+                            )}
                         </VStack>
                     </Box>
 
