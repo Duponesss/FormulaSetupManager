@@ -17,7 +17,8 @@ import { Divider } from '../components/ui/divider';
 
 import { useSetupStore, type Strategy, type PlannedStint } from '../src/stores/setupStore';
 import { SetupCard } from '../src/components/cards/SetupCard';
-import { LineChart, BarChart } from "react-native-gifted-charts";
+import LapTimeInput from '../src/components/inputs/LapTimeInput';
+import { LineChart } from "react-native-gifted-charts";
 
 // --- FUNÇÕES HELPER ---
 // Converte uma string "MM:SS.mls" para milissegundos
@@ -356,7 +357,6 @@ export default function StrategyDetailsScreen() {
 
             {lapTimesData.length > 0 ? (
               <VStack space="md" className=' p-1'>
-                {lapTimesData.length > 1 ? (
                   <LineChart
                     data={lapTimesData}
                     height={150}
@@ -377,18 +377,6 @@ export default function StrategyDetailsScreen() {
                     // hideRules
                     formatYLabel={(label: string) => millisToTime(Number(label)).substring(0, 5)}
                   />
-                ) : (
-                  // Mostra um gráfico de barras simples para a primeira volta
-                  <BarChart
-                    data={lapTimesData}
-                    barWidth={50}
-                    initialSpacing={100}
-                    barBorderRadius={4}
-                    yAxisOffset={100000}
-                    formatYLabel={(label: string) => millisToTime(Number(label)).substring(0, 5)}
-                    frontColor="#8A2BE2"
-                  />
-                )}
                 <HStack className="justify-around mt-2">
                   <VStack className="items-center">
                     <Text className="text-xs text-gray-500">Tempo Médio</Text>
