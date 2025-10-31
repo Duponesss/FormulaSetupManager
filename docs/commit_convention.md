@@ -26,7 +26,7 @@ Utilize a tabela abaixo para escolher o `emoji` e o `type` apropriados para sua 
 | ✨    | `feat`       | Adiciona uma nova funcionalidade (`feature`).                                                           | `✨ feat(auth): Adiciona login com Google`                   |
 | 🐛    | `fix`        | Corrige um bug em produção ou desenvolvimento.                                                          | `🐛 fix(ui): Corrige quebra de layout no modal de perfil`    |
 | 📚    | `docs`       | Adiciona ou atualiza a documentação do projeto.                                                         | `📚 docs: Adiciona o guia de padronização de commits`        |
-| 💅    | `style`      | Altera a formatação do código, sem mudanças lógicas (linting, prettier, etc.).                          | `💅 style: Formata todos os arquivos com Prettier`          |
+| 💄    | `style`      | Altera a formatação do código, sem mudanças lógicas (linting, prettier, etc.).                          | `💄 style: Formata todos os arquivos com Prettier`          |
 | ♻️    | `refactor`   | Refatora o código, sem adicionar funcionalidades ou corrigir bugs.                                       | `♻️ refactor(services): Simplifica a lógica do serviço de setups` |
 | ⚡️    | `perf`       | Melhora o desempenho da aplicação.                                                                      | `⚡️ perf(list): Otimiza a renderização da lista de setups`    |
 | ✅    | `test`       | Adiciona ou modifica testes (unitários, integração, e2e).                                               | `✅ test(auth): Adiciona testes para o fluxo de login`         |
