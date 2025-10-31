@@ -17,7 +17,8 @@ import { Divider } from '../components/ui/divider';
 
 import { useSetupStore, type Strategy, type PlannedStint } from '../src/stores/setupStore';
 import { SetupCard } from '../src/components/cards/SetupCard';
-import { LineChart, BarChart } from "react-native-gifted-charts";
+import LapTimeInput from '../src/components/inputs/LapTimeInput';
+import { LineChart } from "react-native-gifted-charts";
 
 // --- FUNÇÕES HELPER ---
 // Converte uma string "MM:SS.mls" para milissegundos
@@ -65,8 +66,6 @@ export default function StrategyDetailsScreen() {
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [lapTimeInput, setLapTimeInput] = useState('');
-  const [isSavingLap, setIsSavingLap] = useState(false);
 
   // --- MAPEAMENTO DE IMAGENS (Pirelli para detalhes) ---
   const pirelliTyreImages = useMemo(() => ({
@@ -139,14 +138,13 @@ export default function StrategyDetailsScreen() {
   }, [strategy]);
 
   // --- Função para adicionar tempo de volta ---
-  const handleAddLapTime = async () => {
-    const timeInMillis = timeToMillis(lapTimeInput);
+  const handleAddLapTime = async (timeString: string) => {
+    const timeInMillis = timeToMillis(timeString);
     if (!timeInMillis || !strategy) {
-      // Opcional: mostrar um alerta de formato inválido
-      return;
+      console.error("Formato de tempo inválido:", timeString);
+      throw new Error("Formato de tempo inválido.");
     }
 
-    setIsSavingLap(true);
     const newLap = {
       lapNumber: (strategy.lapTimes?.length || 0) + 1,
       timeInMillis: timeInMillis,
@@ -155,11 +153,9 @@ export default function StrategyDetailsScreen() {
 
     try {
       await updateLapTimes(strategy.id, updatedLapTimes);
-      setLapTimeInput(''); // Limpa o input em caso de sucesso
     } catch (error) {
       console.error("Erro ao salvar tempo de volta:", error);
-    } finally {
-      setIsSavingLap(false);
+      throw error;
     }
   };
 
@@ -354,21 +350,15 @@ export default function StrategyDetailsScreen() {
           <Box className="bg-white p-4 rounded-lg">
             <Heading size="sm" className="mb-2">Análise de Desempenho</Heading>
 
-            {lapTimesData.length > 0 ? (
+            {lapTimesData.length > 1 ? (
               <VStack space="md" className=' p-1'>
-                {lapTimesData.length > 1 ? (
                   <LineChart
                     data={lapTimesData}
                     height={150}
-                    // --- MUDANÇAS NO ESTILO DO GRÁFICO ---
-                    animateOnDataChange // <-- Nova animação fluida!
+                    animateOnDataChange
                     animationDuration={1000}
-                    // Remove o preenchimento de área
-                    // areaChart={false} 
-                    // Estilo da linha principal
                     color="#e2d62b" // Roxo
                     thickness={3}
-                    // Estilo dos pontos de dados (usará as cores que definimos)
                     dataPointsShape="circular"
 
                     // Define o valor mínimo do eixo Y para "dar zoom"
@@ -377,18 +367,6 @@ export default function StrategyDetailsScreen() {
                     // hideRules
                     formatYLabel={(label: string) => millisToTime(Number(label)).substring(0, 5)}
                   />
-                ) : (
-                  // Mostra um gráfico de barras simples para a primeira volta
-                  <BarChart
-                    data={lapTimesData}
-                    barWidth={50}
-                    initialSpacing={100}
-                    barBorderRadius={4}
-                    yAxisOffset={100000}
-                    formatYLabel={(label: string) => millisToTime(Number(label)).substring(0, 5)}
-                    frontColor="#8A2BE2"
-                  />
-                )}
                 <HStack className="justify-around mt-2">
                   <VStack className="items-center">
                     <Text className="text-xs text-gray-500">Tempo Médio</Text>
@@ -407,21 +385,7 @@ export default function StrategyDetailsScreen() {
             )}
 
             {/* Formulário de Input */}
-            <HStack space="md" className="mt-4 pt-4 border-t border-gray-200">
-              <Box className="flex-1">
-                <Input>
-                  <InputField
-                    placeholder="01:34.567"
-                    keyboardType="numeric"
-                    value={lapTimeInput}
-                    onChangeText={setLapTimeInput}
-                  />
-                </Input>
-              </Box>
-              <Button onPress={handleAddLapTime} disabled={isSavingLap}>
-                {isSavingLap ? <Spinner color="white" /> : <ButtonText>Adicionar</ButtonText>}
-              </Button>
-            </HStack>
+            <LapTimeInput onAddLap={handleAddLapTime} />
 
             {/* Nova Lista de Voltas Cadastradas */}
             {strategy?.lapTimes && strategy.lapTimes.length > 0 && (

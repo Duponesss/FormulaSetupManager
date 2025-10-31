@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from "@/src/contexts/AuthContext";
 
@@ -24,16 +24,15 @@ export default function HomeScreen() {
   const router = useRouter();
   const allSetups = useSetupStore((state) => state.allSetups);
   const loading = useSetupStore((state) => state.loadingSetups);
-  const deleteSetupById = useSetupStore((state) => state.deleteSetup);
   const { signOut } = useAuth();
   const debouncedSignOut = useSingleTap(() => signOut());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSetup, setSelectedSetup] = useState<SetupData | null>(null);
 
-  const handleOpenAddToFolderModal = (setup: SetupData) => {
+  const handleOpenAddToFolderModal = useCallback((setup: SetupData) => {
     setSelectedSetup(setup);
     setIsModalOpen(true);
-  };
+  }, []);
 
 
   const handleCreateSetup = useSingleTap(() => {

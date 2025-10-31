@@ -46,7 +46,7 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
           <Heading size="md">Selecionar Setup</Heading>
           <ModalCloseButton><X /></ModalCloseButton>
         </ModalHeader>
-        <ModalBody>
+        <Box className="p-4">
           {/* Campo de Busca */}
           <Input className="mb-4">
             <InputIcon as={Search} className="ml-2" />
@@ -84,7 +84,7 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
               }
             />
           )}
-        </ModalBody>
+        </Box>
         <ModalFooter>
           <Button variant="outline" action="secondary" onPress={onClose}>
             <ButtonText>Cancelar</ButtonText>

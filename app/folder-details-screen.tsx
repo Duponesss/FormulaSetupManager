@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowBigLeft, PencilLine, Trash, X } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList } from 'react-native';
 import {
   AlertDialog,
@@ -22,6 +22,7 @@ import { Text } from '../components/ui/text';
 import { SetupCard } from '../src/components/cards/SetupCard';
 import CreateEditFolderModal from '../src/components/dialogs/CreateEditFolderModal';
 import { SetupData, useSetupStore } from '../src/stores/setupStore';
+import AddToFolderModal from '@/src/components/dialogs/AddToFolderModal';
 
 export default function FolderDetailsScreen() {
   const router = useRouter();
@@ -38,14 +39,13 @@ export default function FolderDetailsScreen() {
   const loadingFolderSetups = useSetupStore(state => state.loadingFolderSetups);
   const getSetupsForFolder = useSetupStore(state => state.getSetupsForFolder);
   const deleteFolder = useSetupStore(state => state.deleteFolder);
-  const deleteSetup = useSetupStore(state => state.deleteSetup);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSetup, setSelectedSetup] = useState<SetupData | null>(null);
   
-    const handleOpenAddToFolderModal = (setup: SetupData) => {
-      setSelectedSetup(setup);
-      setIsModalOpen(true);
-    };
+    const handleOpenAddToFolderModal = useCallback((setup: SetupData) => {
+    setSelectedSetup(setup);
+    setIsModalOpen(true);
+  }, []);
 
   // Busca os setups da pasta quando o folderId estiver disponível
   useEffect(() => {
@@ -150,6 +150,12 @@ export default function FolderDetailsScreen() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddToFolderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        setup={selectedSetup}
+      />
     </Box>
   );
 }
