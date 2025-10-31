@@ -66,8 +66,6 @@ export default function StrategyDetailsScreen() {
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [lapTimeInput, setLapTimeInput] = useState('');
-  const [isSavingLap, setIsSavingLap] = useState(false);
 
   // --- MAPEAMENTO DE IMAGENS (Pirelli para detalhes) ---
   const pirelliTyreImages = useMemo(() => ({
@@ -140,14 +138,13 @@ export default function StrategyDetailsScreen() {
   }, [strategy]);
 
   // --- Função para adicionar tempo de volta ---
-  const handleAddLapTime = async () => {
-    const timeInMillis = timeToMillis(lapTimeInput);
+  const handleAddLapTime = async (timeString: string) => {
+    const timeInMillis = timeToMillis(timeString);
     if (!timeInMillis || !strategy) {
-      // Opcional: mostrar um alerta de formato inválido
-      return;
+      console.error("Formato de tempo inválido:", timeString);
+      throw new Error("Formato de tempo inválido.");
     }
 
-    setIsSavingLap(true);
     const newLap = {
       lapNumber: (strategy.lapTimes?.length || 0) + 1,
       timeInMillis: timeInMillis,
@@ -156,11 +153,9 @@ export default function StrategyDetailsScreen() {
 
     try {
       await updateLapTimes(strategy.id, updatedLapTimes);
-      setLapTimeInput(''); // Limpa o input em caso de sucesso
     } catch (error) {
       console.error("Erro ao salvar tempo de volta:", error);
-    } finally {
-      setIsSavingLap(false);
+      throw error;
     }
   };
 
@@ -355,20 +350,15 @@ export default function StrategyDetailsScreen() {
           <Box className="bg-white p-4 rounded-lg">
             <Heading size="sm" className="mb-2">Análise de Desempenho</Heading>
 
-            {lapTimesData.length > 0 ? (
+            {lapTimesData.length > 1 ? (
               <VStack space="md" className=' p-1'>
                   <LineChart
                     data={lapTimesData}
                     height={150}
-                    // --- MUDANÇAS NO ESTILO DO GRÁFICO ---
-                    animateOnDataChange // <-- Nova animação fluida!
+                    animateOnDataChange
                     animationDuration={1000}
-                    // Remove o preenchimento de área
-                    // areaChart={false} 
-                    // Estilo da linha principal
                     color="#e2d62b" // Roxo
                     thickness={3}
-                    // Estilo dos pontos de dados (usará as cores que definimos)
                     dataPointsShape="circular"
 
                     // Define o valor mínimo do eixo Y para "dar zoom"
@@ -395,21 +385,7 @@ export default function StrategyDetailsScreen() {
             )}
 
             {/* Formulário de Input */}
-            <HStack space="md" className="mt-4 pt-4 border-t border-gray-200">
-              <Box className="flex-1">
-                <Input>
-                  <InputField
-                    placeholder="01:34.567"
-                    keyboardType="numeric"
-                    value={lapTimeInput}
-                    onChangeText={setLapTimeInput}
-                  />
-                </Input>
-              </Box>
-              <Button onPress={handleAddLapTime} disabled={isSavingLap}>
-                {isSavingLap ? <Spinner color="white" /> : <ButtonText>Adicionar</ButtonText>}
-              </Button>
-            </HStack>
+            <LapTimeInput onAddLap={handleAddLapTime} />
 
             {/* Nova Lista de Voltas Cadastradas */}
             {strategy?.lapTimes && strategy.lapTimes.length > 0 && (

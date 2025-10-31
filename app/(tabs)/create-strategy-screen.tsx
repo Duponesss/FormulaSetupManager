@@ -220,9 +220,11 @@ export default function CreateStrategyScreen() {
                     <ArrowLeft />
                 </Pressable>
                 <Heading size="md" className="flex-1 text-center">
-                    {isEditing ? 'Editar Estratégia' : 'Criar Nova Estratégia'}
+                    <Text>
+                        {isEditing ? 'Editar Estratégia' : 'Criar Nova Estratégia'}
+                    </Text>
                 </Heading>
-                <Box className="w-8" /> {/* Espaçador para centralizar o título */}
+                <Box className="w-8" /> 
             </HStack>
 
             <ScrollView className="p-4">
@@ -237,22 +239,30 @@ export default function CreateStrategyScreen() {
 
                             <Select onValueChange={setTrack} selectedValue={track}>
                                 <SelectTrigger>
-                                    <SelectInput placeholder="Selecione a Pista" />
-                                    <ChevronDown className="mr-2" />
+                                    <HStack className="items-center justify-between">
+                                        <SelectInput placeholder="Selecione a Pista" />
+                                        <ChevronDown className="mr-2" />
+                                    </HStack>
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectBackdrop />
                                     <SelectContent>
-                                        <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                                        {gameData?.tracks.map(t => <SelectItem key={t} label={t} value={t} />)}
+                                        <SelectDragIndicatorWrapper>
+                                            <SelectDragIndicator />
+                                        </SelectDragIndicatorWrapper>
+                                        <ScrollView style={{ maxHeight: 600, width: '100%' }}> 
+                                            {gameData?.tracks.map(t => <SelectItem key={t} label={t} value={t} />)}
+                                        </ScrollView>
                                     </SelectContent>
                                 </SelectPortal>
                             </Select>
 
                             <Select onValueChange={handleRaceDistanceChange} selectedValue={raceDistance}>
                                 <SelectTrigger>
-                                    <SelectInput placeholder="Selecione a Distância da Corrida" />
-                                    <ChevronDown className="mr-2" />
+                                    <HStack className="items-center justify-between">
+                                        <SelectInput placeholder="Selecione a Distância da Corrida" />
+                                        <ChevronDown className="mr-2" />
+                                    </HStack>
                                 </SelectTrigger>
                                 <SelectPortal>
                                     <SelectBackdrop />
@@ -358,7 +368,12 @@ export default function CreateStrategyScreen() {
                                                         selectedValue={stint.tyreCompound}
                                                         onValueChange={(value) => updateStintInPlan(planIndex, stintIndex, 'tyreCompound', value)}
                                                     >
-                                                        <SelectTrigger><SelectInput placeholder="Pneu" /><ChevronDown className="mr-2" /></SelectTrigger>
+                                                        <SelectTrigger>
+                                                            <HStack className="items-center justify-between">
+                                                                <SelectInput placeholder="Pneu" />
+                                                                <ChevronDown className="mr-2" />
+                                                            </HStack>
+                                                        </SelectTrigger>
                                                         <SelectPortal><SelectBackdrop /><SelectContent>
                                                             <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
                                                             {tyreCompounds.map(t => <SelectItem key={t} label={t.charAt(0).toUpperCase() + t.slice(1)} value={t} />)}
@@ -450,7 +465,6 @@ export default function CreateStrategyScreen() {
                 </Button>
             </ScrollView>
 
-            {/* Aqui renderizaríamos o modal de seleção de setup */}
             <SelectSetupModal
                 isOpen={isSetupModalOpen}
                 onClose={() => setIsSetupModalOpen(false)}
