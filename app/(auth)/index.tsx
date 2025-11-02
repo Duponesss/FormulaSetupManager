@@ -1,17 +1,19 @@
 import { useAuth } from "../../src/hooks/use-auth";
 import React, { useState } from 'react';
-import { Redirect, useRouter } from "expo-router";
+import { Redirect } from "expo-router";
 import { Box } from '../../components/ui/box';
 import { Button, ButtonText } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
 import { Spinner } from '../../components/ui/spinner';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
 import { Input, InputField } from '../../components/ui/input';
-import { Image } from 'react-native';
+import { Image, ImageBackground } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogCloseButton, AlertDialogFooter, AlertDialogBody } from '../../components/ui/alert-dialog';
+import AppAlertDialog from '../../src/components/dialogs/AppAlertDialog';
+
 
 export default function AuthScreen() {
   const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
@@ -88,50 +90,56 @@ export default function AuthScreen() {
   };
 
   return (
-    <Box className="flex-1 justify-center items-center">
+    <ImageBackground
+      source={require('../../src/assets/images/apex-wallpaper.jpg')}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+    <Box className="flex-1 justify-center items-center bg-black/70">
       <Heading size="xl" className="text-center">
         <Image
-          source={require('../../src/assets/images/apex-logo.png')}
+          source={require('../../src/assets/images/apex-logo-dark.png')}
           className="w-10/12 h-60 mt-0" // Ajuste a largura (w) e altura (h) como desejar
         />
       </Heading>
       <Box className="w-full" style={{ maxWidth: 370 }}>
         <VStack space="lg" className="mb-5">
-          <Text className="text-center font-bold">
+          <Text className="text-center font-bold text-white">
             {isSignUp ? 'Criar nova conta' : 'Entre na sua conta'}
           </Text>
         </VStack>
 
-        <Card className="p-6 mb-6 rounded-xl">
-          <VStack space="md">
-            <Box>
-              <Text className="mb-2">Email</Text>
-              <Input>
-                <InputField
-                  placeholder="Digite seu email"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </Input>
-            </Box>
+        <VStack space="md" className="p-3">
+          <Box>
+            <Text className="mb-2 text-white">Email</Text>
+            <Input className="bg-gray-800/80 border-gray-700">
+              <InputField
+                placeholder="Digite seu email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                className="text-white"
+              />
+            </Input>
+          </Box>
 
-            <Box>
-              <Text className="mb-2">Senha</Text>
-              <Input>
-                <InputField
-                  placeholder="Digite sua senha"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-              </Input>
-            </Box>
-            
-            <VStack className="items-center">
+          <Box>
+            <Text className="mb-2 text-white">Senha</Text>
+            <Input className="bg-gray-800/80 border-gray-700">
+              <InputField
+                placeholder="Digite sua senha"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                className="text-white"
+              />
+            </Input>
+          </Box>
+
+          <VStack className="items-center">
             <Button
-              className="mb-0 mt-8 w-1/2"
+              className="mb-0 mt-8 w-1/2 bg-red-600 pressed:opacity-80"
               onPress={handleEmailAuth}
               disabled={loading}
             >
@@ -139,31 +147,30 @@ export default function AuthScreen() {
                 {loading ? (
                   <HStack space="sm" className="items-center">
                     <Spinner size="small" />
-                    <Text>Carregando...</Text>
+                    <Text className="text-white">Carregando...</Text>
                   </HStack>
                 ) : (
                   isSignUp ? 'Criar Conta' : 'Entrar'
                 )}
               </ButtonText>
             </Button>
-            </VStack>
-
-            <Button
-              variant="link"
-              onPress={() => setIsSignUp(!isSignUp)}
-            >
-              <ButtonText>
-                {isSignUp ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma'}
-              </ButtonText>
-            </Button>
           </VStack>
-        </Card>
+
+          <Button
+            variant="link"
+            onPress={() => setIsSignUp(!isSignUp)}
+          >
+            <ButtonText className="text-white pressed:opacity-70">
+              {isSignUp ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma'}
+            </ButtonText>
+          </Button>
+        </VStack>
 
         <VStack space="md" className="mb-6">
           <HStack className="items-center">
-            <Box className="flex-1" style={{ height: 1 }} />
-            <Text className="px-4">Ou continue com</Text>
-            <Box className="flex-1" style={{ height: 1 }} />
+            <Box className="flex-1 bg-gray-700" style={{ height: 1 }} />
+            <Text className="px-4 text-white">Ou continue com</Text>
+            <Box className="flex-1 bg-gray-700" style={{ height: 1 }} />
           </HStack>
         </VStack>
 
@@ -171,38 +178,33 @@ export default function AuthScreen() {
           <Button
             onPress={handleGoogleSignIn}
             disabled={loading}
-            className="w-1/2"
+            className="w-1/2 border-gray-700 pressed:bg-gray-800 rounded-md"
+            variant="outline"
           >
-            <ButtonText>
-              {loading ? 'Carregando...' : 'Continuar com Google'}
-            </ButtonText>
+            <HStack space="sm" className="items-center">
+              <AntDesign name="google" size={16} color="white" />
+              <ButtonText className="text-white">
+                {loading ? 'Carregando...' : 'Conta Google'}
+              </ButtonText>
+            </HStack>
           </Button>
         </VStack>
 
         <Box className="mt-8">
-          <Text size="xs" className="text-center">
+          <Text size="xs" className="text-center text-gray-500">
             Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade.
           </Text>
         </Box>
       </Box>
 
-      <AlertDialog isOpen={showAlert} onClose={() => setShowAlert(false)}>
-        <AlertDialogBackdrop />
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <Heading>{alertTitle}</Heading>
-            <AlertDialogCloseButton />
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <Text>{alertMessage}</Text>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button onPress={() => setShowAlert(false)}>
-              <ButtonText>OK</ButtonText>
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AppAlertDialog
+          isOpen={showAlert}
+          title={alertTitle}
+          message={alertMessage}
+          onClose={() => setShowAlert(false)}
+          // Sem 'onConfirm', ele mostra só o botão "OK"
+        />
     </Box>
+    </ImageBackground>
   );
 };

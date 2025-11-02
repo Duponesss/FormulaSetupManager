@@ -17,7 +17,7 @@ const teamColors = {
   'Mercedes-AMG Petronas Formula One Team': '#6CD3BF',
   'Aston Martin Aramco Formula One Team': '#006F62',
   'BWT Alpine F1 Team': '#0090FF',
-  'MoneyGram Haas F1 Team': '#B6B6B6',
+  'MoneyGram Haas F1 Team': '#999999',
   'VISA Cash App RB F1 Team': '#6692FF',
   'Williams Racing': '#85b8ff',
   'Kick Sauber F1 Team': '#52E252',
@@ -49,14 +49,19 @@ const DetailRow = ({ icon, text }: { icon: React.ReactNode, text: string }) => (
 interface SetupCardProps {
   item: SetupData;
   onAddToFolder: (item: SetupData) => void;
-  isViewOnly?: boolean; 
+  isViewOnly?: boolean;
 }
 
 export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFolder, isViewOnly = false }) => {
   const router = useRouter();
   const handleCardPress = () => {
-    // Se for apenas visualização, ainda permite ver os detalhes
-    router.push(`/setup-details-screen?setupId=${item.id}`);
+    router.push({
+      pathname: '/setup-details-screen',
+      params: { 
+        setupId: item.id,
+        isViewOnly: isViewOnly ? 'true' : undefined 
+      }
+    });
   };
   console.log(`Renderizando SetupCard: ${item.setupTitle}`);
 
@@ -64,73 +69,85 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
   const teamLogo = teamLogos[item.car as keyof typeof teamLogos] || null;
 
   return (
-    <Pressable 
-      onPress={handleCardPress} 
+    <Pressable
+      onPress={handleCardPress}
       // Fundo branco para melhor contraste, sombra maior e bordas coloridas
-      className="rounded-xl p-4 mb-4 bg-white shadow-lg overflow-hidden border-l-4 border-t-4"
+      className="rounded-xl p-4 mb-5 bg-white shadow-lg overflow-hidden border-l-4 border-t-4"
       style={{
         borderLeftColor: teamColor,
         borderTopColor: teamColor,
       }}
     >
-      {/* SEÇÃO DO CABEÇALHO */}
-      <HStack className="justify-between items-start mb-3">
-        <Text size="lg" className="font-bold flex-1" numberOfLines={1}>{item.setupTitle}</Text>
-        {!isViewOnly && (
-          <HStack space="md">
-            <Pressable
-              className="w-8 h-8 items-center justify-center bg-blue-100 p-1 rounded-lg" // Ajustado para rounded-lg
-              onPress={(e) => { e.stopPropagation(); onAddToFolder(item); }} 
-            >
-              <Bookmark color="#2563EB" />
-            </Pressable>
+      {(props: { pressed: boolean }) => (
+        <Box style={{ opacity: props.pressed ? 0.5 : 1.0 }}>
+          {/* SEÇÃO DO CABEÇALHO */}
+          <HStack className="justify-between items-start mb-3">
+            <Text size="lg" className="font-bold flex-1" numberOfLines={1}>{item.setupTitle}</Text>
+            {!isViewOnly && (
+              <HStack space="md">
+                <Pressable
+                  className="w-8 h-8 items-center justify-center bg-blue-100 p-1 rounded-lg" // Ajustado para rounded-lg
+                  onPress={(e) => { e.stopPropagation(); onAddToFolder(item); }}
+                >
+                  {(props: { pressed: boolean }) => (
+                    <Box
+                      style={{
+                        opacity: props.pressed ? 0.5 : 1.0
+                      }}
+                    >
+                      <Bookmark color="#2563EB" />
+                    </Box>
+                  )}
+                </Pressable>
+              </HStack>
+            )}
           </HStack>
-        )}
-      </HStack>
 
-      {/* SEÇÃO DE DETALHES COM ÍCONES */}
-      <VStack space="sm">
-        <DetailRow 
-          icon={
-            teamLogo ? (
-              <Image source={teamLogo} style={{ width: 20, height: 20 }} contentFit="contain" />
-            ) : (
-              // Fallback se o logo não for encontrado
-              <Text>🚗</Text> 
-            )
-          } 
-          text={item.car} 
-        />
-        <DetailRow 
-          icon={<MapPin size={16} color="#6B7280" />} 
-          text={item.track} 
-        />
-        <DetailRow 
-          icon={<Gamepad2 size={16} color="#6B7280" />} 
-          text={item.controlType} 
-        />
-        <DetailRow 
-          icon={
-            item.condition.toLowerCase().includes('chuva') ? 
-            <CloudRain size={16} color="#6B7280" /> : 
-            <Sun size={16} color="#6B7280" />
-          } 
-          text={item.condition} 
-        />
-      </VStack>
+          {/* SEÇÃO DE DETALHES COM ÍCONES */}
+          <VStack space="sm">
+            <DetailRow
+              icon={
+                teamLogo ? (
+                  <Image source={teamLogo} style={{ width: 20, height: 20 }} contentFit="contain" />
+                ) : (
+                  // Fallback se o logo não for encontrado
+                  <Text>🚗</Text>
+                )
+              }
+              text={item.car}
+            />
+            <DetailRow
+              icon={<MapPin size={16} color="#6B7280" />}
+              text={item.track}
+            />
+            <DetailRow
+              icon={<Gamepad2 size={16} color="#6B7280" />}
+              text={item.controlType}
+            />
+            <DetailRow
+              icon={
+                item.condition.toLowerCase().includes('chuva') ?
+                  <CloudRain size={16} color="#6B7280" /> :
+                  <Sun size={16} color="#6B7280" />
+              }
+              text={item.condition}
+            />
+          </VStack>
 
-      {/* SEÇÃO DE RODAPÉ (DATAS) */}
-      <HStack className="items-center justify-between mt-3 pt-2 border-t border-gray-100">
-        <HStack space="sm" className="items-center">
-            <CalendarDays size={14} color="#9CA3AF" />
-            <Text size="xs" className="text-gray-400">
+          {/* SEÇÃO DE RODAPÉ (DATAS) */}
+          <HStack className="items-center justify-between mt-3 pt-2 border-t border-gray-100">
+            <HStack space="sm" className="items-center">
+              <CalendarDays size={14} color="#9CA3AF" />
+              <Text size="xs" className="text-gray-400">
                 Criado: {item.createdAt ? item.createdAt.toDate().toLocaleDateString('pt-BR') : '—'}
+              </Text>
+            </HStack>
+            <Text size="xs" className="text-gray-400">
+              Atualizado: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}
             </Text>
-        </HStack>
-        <Text size="xs" className="text-gray-400">
-            Atualizado: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}
-        </Text>
-      </HStack>
+          </HStack>
+        </Box>
+      )}
     </Pressable>
   );
 });

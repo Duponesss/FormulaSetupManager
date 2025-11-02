@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
 import { Heading } from '../../components/ui/heading';
 import { Text } from '../../components/ui/text';
 import { Spinner } from '../../components/ui/spinner';
 import { Fab, FabIcon, FabLabel } from '../../components/ui/fab';
 import { AddIcon } from '../../components/ui/icon';
-
+import { VStack } from '../../components/ui/vstack';
 import { useSetupStore } from '../../src/stores/setupStore';
 import FolderCard from '../../src/components/cards/FolderCard';
 import CreateEditFolderModal from '../../src/components/dialogs/CreateEditFolderModal';
@@ -40,39 +40,45 @@ export default function FoldersScreen() {
     }
 
     return (
-        <Box className="flex-1 bg-gray-100">
-            <Heading className="p-4 text-2xl font-bold">Minhas Pastas</Heading>
-
-            {/* 4. Renderiza a lista de pastas ou uma mensagem de "lista vazia" */}
-            {folders.length === 0 ? (
-                <Box className="flex-1 justify-center items-center px-8">
-                    <Text className="text-lg text-center text-gray-500">
-                        Você ainda não criou nenhuma pasta.
-                    </Text>
-                    <Text className="text-center text-gray-500 mt-2">
-                        Toque no botão <FolderPlus size={17} /> para organizar seus setups!
-                    </Text>
-                </Box>
-            ) : (
-                <FlatList
-                    data={folders}
-                    renderItem={({ item }) => <FolderCard folder={item} />}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-                />
-            )}
-
-            {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova pasta */}
-            <Fab
-                size="lg"
-                placement="bottom right"
-                className="bg-red-500 mb-20"
-                onPress={() => setIsModalOpen(true)}
+        <Box className="flex-1">
+            <ImageBackground
+                source={require('../../src/assets/images/apex-wallpaper.jpg')}
+                style={{ flex: 1 }}
+                resizeMode="cover"
             >
-                <FolderPlus color="white" />
-            </Fab>
+                <VStack className="flex-1 bg-black/60">
+                    <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Pastas</Heading>
 
-            {/* 6. Modal de criação de pasta */}
+                    {/* 4. Renderiza a lista de pastas ou uma mensagem de "lista vazia" */}
+                    {folders.length === 0 ? (
+                        <Box className="flex-1 justify-center items-center px-8">
+                            <Text className="text-lg text-center text-gray-500">
+                                Você ainda não criou nenhuma pasta.
+                            </Text>
+                            <Text className="text-center text-gray-500 mt-2">
+                                Toque no botão <FolderPlus size={17} /> para organizar seus setups!
+                            </Text>
+                        </Box>
+                    ) : (
+                        <FlatList
+                            data={folders}
+                            renderItem={({ item }) => <FolderCard folder={item} />}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+                        />
+                    )}
+
+                    {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova pasta */}
+                    <Fab
+                        size="lg"
+                        placement="bottom right"
+                        className="bg-red-500 mb-20"
+                        onPress={() => setIsModalOpen(true)}
+                    >
+                        <FolderPlus color="white" />
+                    </Fab>
+                </VStack>
+            </ImageBackground>
             <CreateEditFolderModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
