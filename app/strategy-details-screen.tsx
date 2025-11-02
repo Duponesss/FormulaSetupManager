@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Image } from 'expo-image';
+import { Image, ImageBackground } from 'expo-image';
 import { Box } from '../components/ui/box';
 import { Heading } from '../components/ui/heading';
 import { Text } from '../components/ui/text';
@@ -10,9 +10,8 @@ import { ScrollView } from '../components/ui/scroll-view';
 import { HStack } from '../components/ui/hstack';
 import { VStack } from '../components/ui/vstack';
 import { Button, ButtonText } from '../components/ui/button';
-import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogCloseButton, AlertDialogFooter, AlertDialogBody } from '../components/ui/alert-dialog';
-import { Input, InputField } from '../components/ui/input';
-import { ArrowLeft, Pencil, Trash2, X } from 'lucide-react-native';
+import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
 import { Divider } from '../components/ui/divider';
 
 import { useSetupStore, type Strategy, type PlannedStint } from '../src/stores/setupStore';
@@ -210,148 +209,177 @@ export default function StrategyDetailsScreen() {
 
   return (
     <Box className="flex-1 bg-gray-100">
-      {/* Cabeçalho Customizado */}
-      <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200 pt-12">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ArrowLeft />
-        </Pressable>
-        <Heading size="md" className="flex-1 text-center" numberOfLines={1}>{strategy.name}</Heading>
-        <HStack space="md">
-          <Pressable onPress={handleEdit} className="p-2">
-            <Pencil size={20} color="blue" />
-          </Pressable>
-          <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
-            <Trash2 size={20} color="red" />
-          </Pressable>
-        </HStack>
-      </HStack>
-
-      <ScrollView className="p-4">
-        <VStack space="lg" className="pb-24">
-          {/* Card de Informações Gerais */}
-          <Box className="bg-white p-4 rounded-lg">
-            <Text className="font-bold">Pista:</Text>
-            <Text className="mb-2">{strategy.track}</Text>
-            <Text className="font-bold">Distância:</Text>
-            <Text>{strategy.raceDistance}</Text>
-          </Box>
-
-          {/* Card do Setup Vinculado */}
-          <Box className="bg-white p-4 rounded-lg">
-            <Heading size="sm" className="mb-2">Setup Vinculado</Heading>
-            {linkedSetup ? (
-              <SetupCard
-                item={linkedSetup}
-                isViewOnly={true}
-                // Passamos funções vazias pois os botões não serão renderizados
-                onAddToFolder={() => { }}
-              />
-            ) : (
-              <Text>Setup não encontrado.</Text>
-            )}
-          </Box>
-
-          {/* Seção de Anotações */}
-          {strategy.notes && (
-            <Box className="bg-white p-4 rounded-lg">
-              <Heading size="sm" className="mb-2">Anotações</Heading>
-              <Text>{strategy.notes}</Text>
-            </Box>
-          )}
-
-          {/* --- SEÇÃO DE PLANOS DE ESTRATÉGIA --- */}
-          <Box className="bg-white p-4 rounded-lg">
-            <Heading size="sm" className="mb-3">Planos de Estratégia</Heading>
-            {strategy.strategyPlans && strategy.strategyPlans.length > 0 ? (
-              <VStack space="md">
-                {strategy.strategyPlans.map((plan, planIndex) => {
-                  const remainingTyres = calculateRemainingTyres(plan);
-                  return (
-                    <Box key={planIndex} className="border border-gray-300 rounded-lg p-3">
-                      <Heading size="xs" className="mb-3">{plan.planLabel}</Heading>
-                      <HStack>
-                        {/* Coluna Esquerda: Stints Planejados */}
-                        <VStack className="flex-1 pr-3 border-r border-gray-200" space="sm">
-                          <Text className="text-xs font-semibold mb-1">Stints Planejados:</Text>
-                          {plan.plannedStints.map((stint, stintIndex) => {
-                            let stintDetailText = '';
-                            // --- LÓGICA DE EXIBIÇÃO DO PRIMEIRO STINT ---
-                            if (stintIndex === 0) {
-                              if (plan.plannedStints.length === 1) {
-                                // Caso 1: Stint Único
-                                stintDetailText = `Voltas: ${strategy.totalRaceLaps || 'N/A'}`;
-                              } else {
-                                // Caso 2: Primeiro de Múltiplos Stints
-                                const nextStintPitLap = plan.plannedStints[1]?.pitStopLap;
-                                stintDetailText = `Voltas: 1 - ${nextStintPitLap || '?'}`; // Ex: Voltas 1 - 18
-                              }
-                            } else {
-                              // --- LÓGICA PARA STINTS SUBSEQUENTES (Janela) ---
-                              stintDetailText = `Janela de parada: Volta ${stint.pitStopLap} - ${stint.pitStopLap + 3}`;
-                            }
-                            // --- FIM DA LÓGICA DE EXIBIÇÃO ---
-
-                            return (
-                              <HStack key={stintIndex} space="sm" className="items-center">
-                                <Image
-                                  // @ts-ignore
-                                  source={pirelliTyreImages[stint.tyreCompound]}
-                                  style={{ width: 25, height: 25 }}
-                                  contentFit="contain"
-                                />
-                                <VStack>
-                                  <Text className="text-sm font-medium">{getTyreName(stint.tyreCompound)}</Text>
-                                  {/* Exibe o texto calculado */}
-                                  <Text className="text-xs text-gray-500">{stintDetailText}</Text>
-                                </VStack>
-                              </HStack>
-                            );
-                          })}
-                          {plan.plannedStints.length === 0 && <Text className="text-xs text-gray-400">Nenhum stint planejado.</Text>}
-
-                          {/* Informações Adicionais */}
-                          <Divider className="my-2" />
-                          <Text className="text-xs">Combustível: <Text className="font-semibold">{plan.fuelLoad.toFixed(1)} voltas</Text></Text>
-                          <Text className="text-xs">Total de Voltas: <Text className="font-semibold">{strategy.totalRaceLaps || 'N/A'}</Text></Text>
-                          <Text className="text-xs">Tempo de Corrida: <Text className="font-semibold">{plan.totalTime}</Text></Text>
-                        </VStack>
-
-                        {/* Coluna Direita: Stints Reservas */}
-                        <VStack className="pl-3" style={{ width: 100 }} space="sm">
-                          <Text className="text-xs font-semibold mb-1">Stints Reservas:</Text>
-                          {(Object.keys(remainingTyres) as Array<keyof typeof remainingTyres>).map(compound => (
-                            remainingTyres[compound] > 0 && (
-                              <HStack key={compound} space="sm" className="items-center">
-                                <Image
-                                  // @ts-ignore
-                                  source={pirelliTyreImages[compound]}
-                                  style={{ width: 20, height: 20 }}
-                                  contentFit="contain"
-                                />
-                                <Text className="text-xs">{getTyreName(compound)}</Text>
-                                <Text className="text-xs font-bold">{remainingTyres[compound]}x</Text>
-                              </HStack>
-                            )
-                          ))}
-                        </VStack>
-                      </HStack>
-                    </Box>
-                  );
-                })}
-              </VStack>
-            ) : (
-              <Box className="h-20 justify-center items-center bg-gray-100 rounded">
-                <Text className="text-gray-500">Nenhum plano de estratégia definido.</Text>
+      <ImageBackground
+        source={require('../src/assets/images/apex-wallpaper.jpg')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        {/* Cabeçalho Customizado */}
+        <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200 pt-12">
+          <Pressable onPress={() => router.back()} className="p-2">
+            {(props: { pressed: boolean }) => (
+              <Box
+                style={{
+                  opacity: props.pressed ? 0.5 : 1.0,
+                }}
+              >
+                <ArrowLeft />
               </Box>
             )}
-          </Box>
+          </Pressable>
+          <Heading size="md" className="flex-1 text-center" numberOfLines={1}>{strategy.name}</Heading>
+          <HStack space="md">
+            <Pressable onPress={handleEdit} className="p-2">
+              {(props: { pressed: boolean }) => (
+                <Box
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <Pencil size={20} color="blue" />
+                </Box>
+              )}
+            </Pressable>
+            <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
+              {(props: { pressed: boolean }) => (
+                <Box
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <Trash2 size={20} color="red" />
+                </Box>
+              )}
+            </Pressable>
+          </HStack>
+        </HStack>
 
-          {/* --- SEÇÃO DE ANÁLISE DE DESEMPENHO --- */}
-          <Box className="bg-white p-4 rounded-lg">
-            <Heading size="sm" className="mb-2">Análise de Desempenho</Heading>
+        <ScrollView className="p-4">
+          <VStack space="lg" className="pb-24">
+            {/* Card de Informações Gerais */}
+            <Box className="bg-white p-4 rounded-lg">
+              <Text className="font-bold">Pista:</Text>
+              <Text className="mb-2">{strategy.track}</Text>
+              <Text className="font-bold">Distância:</Text>
+              <Text>{strategy.raceDistance}</Text>
+            </Box>
 
-            {lapTimesData.length > 1 ? (
-              <VStack space="md" className=' p-1'>
+            {/* Card do Setup Vinculado */}
+            <Box className="bg-white p-4 rounded-lg">
+              <Heading size="sm" className="mb-2">Setup Vinculado</Heading>
+              {linkedSetup ? (
+                <SetupCard
+                  item={linkedSetup}
+                  isViewOnly={true}
+                  // Passamos funções vazias pois os botões não serão renderizados
+                  onAddToFolder={() => { }}
+                />
+              ) : (
+                <Text>Setup não encontrado.</Text>
+              )}
+            </Box>
+
+            {/* Seção de Anotações */}
+            {strategy.notes && (
+              <Box className="bg-white p-4 rounded-lg">
+                <Heading size="sm" className="mb-2">Anotações</Heading>
+                <Text>{strategy.notes}</Text>
+              </Box>
+            )}
+
+            {/* --- SEÇÃO DE PLANOS DE ESTRATÉGIA --- */}
+            <Box className="bg-white p-4 rounded-lg">
+              <Heading size="sm" className="mb-3">Planos de Estratégia</Heading>
+              {strategy.strategyPlans && strategy.strategyPlans.length > 0 ? (
+                <VStack space="md">
+                  {strategy.strategyPlans.map((plan, planIndex) => {
+                    const remainingTyres = calculateRemainingTyres(plan);
+                    return (
+                      <Box key={planIndex} className="border border-gray-300 rounded-lg p-3">
+                        <Heading size="xs" className="mb-3">{plan.planLabel}</Heading>
+                        <HStack>
+                          {/* Coluna Esquerda: Stints Planejados */}
+                          <VStack className="flex-1 pr-3 border-r border-gray-200" space="sm">
+                            <Text className="text-xs font-semibold mb-1">Stints Planejados:</Text>
+                            {plan.plannedStints.map((stint, stintIndex) => {
+                              let stintDetailText = '';
+                              // --- LÓGICA DE EXIBIÇÃO DO PRIMEIRO STINT ---
+                              if (stintIndex === 0) {
+                                if (plan.plannedStints.length === 1) {
+                                  // Caso 1: Stint Único
+                                  stintDetailText = `Voltas: ${strategy.totalRaceLaps || 'N/A'}`;
+                                } else {
+                                  // Caso 2: Primeiro de Múltiplos Stints
+                                  const nextStintPitLap = plan.plannedStints[1]?.pitStopLap;
+                                  stintDetailText = `Voltas: 1 - ${nextStintPitLap || '?'}`; // Ex: Voltas 1 - 18
+                                }
+                              } else {
+                                // --- LÓGICA PARA STINTS SUBSEQUENTES (Janela) ---
+                                stintDetailText = `Janela de parada: Volta ${stint.pitStopLap} - ${stint.pitStopLap + 3}`;
+                              }
+                              // --- FIM DA LÓGICA DE EXIBIÇÃO ---
+
+                              return (
+                                <HStack key={stintIndex} space="sm" className="items-center">
+                                  <Image
+                                    // @ts-ignore
+                                    source={pirelliTyreImages[stint.tyreCompound]}
+                                    style={{ width: 25, height: 25 }}
+                                    contentFit="contain"
+                                  />
+                                  <VStack>
+                                    <Text className="text-sm font-medium">{getTyreName(stint.tyreCompound)}</Text>
+                                    {/* Exibe o texto calculado */}
+                                    <Text className="text-xs text-gray-500">{stintDetailText}</Text>
+                                  </VStack>
+                                </HStack>
+                              );
+                            })}
+                            {plan.plannedStints.length === 0 && <Text className="text-xs text-gray-400">Nenhum stint planejado.</Text>}
+
+                            {/* Informações Adicionais */}
+                            <Divider className="my-2" />
+                            <Text className="text-xs">Combustível: <Text className="font-semibold">{plan.fuelLoad.toFixed(1)} voltas</Text></Text>
+                            <Text className="text-xs">Total de Voltas: <Text className="font-semibold">{strategy.totalRaceLaps || 'N/A'}</Text></Text>
+                            <Text className="text-xs">Tempo de Corrida: <Text className="font-semibold">{plan.totalTime}</Text></Text>
+                          </VStack>
+
+                          {/* Coluna Direita: Stints Reservas */}
+                          <VStack className="pl-3" style={{ width: 100 }} space="sm">
+                            <Text className="text-xs font-semibold mb-1">Stints Reservas:</Text>
+                            {(Object.keys(remainingTyres) as Array<keyof typeof remainingTyres>).map(compound => (
+                              remainingTyres[compound] > 0 && (
+                                <HStack key={compound} space="sm" className="items-center">
+                                  <Image
+                                    // @ts-ignore
+                                    source={pirelliTyreImages[compound]}
+                                    style={{ width: 20, height: 20 }}
+                                    contentFit="contain"
+                                  />
+                                  <Text className="text-xs">{getTyreName(compound)}</Text>
+                                  <Text className="text-xs font-bold">{remainingTyres[compound]}x</Text>
+                                </HStack>
+                              )
+                            ))}
+                          </VStack>
+                        </HStack>
+                      </Box>
+                    );
+                  })}
+                </VStack>
+              ) : (
+                <Box className="h-20 justify-center items-center bg-gray-100 rounded">
+                  <Text className="text-gray-500">Nenhum plano de estratégia definido.</Text>
+                </Box>
+              )}
+            </Box>
+
+            {/* --- SEÇÃO DE ANÁLISE DE DESEMPENHO --- */}
+            <Box className="bg-white p-4 rounded-lg">
+              <Heading size="sm" className="mb-2">Análise de Desempenho</Heading>
+
+              {lapTimesData.length > 1 ? (
+                <VStack space="md" className=' p-1'>
                   <LineChart
                     data={lapTimesData}
                     height={150}
@@ -367,67 +395,57 @@ export default function StrategyDetailsScreen() {
                     // hideRules
                     formatYLabel={(label: string) => millisToTime(Number(label)).substring(0, 5)}
                   />
-                <HStack className="justify-around mt-2">
-                  <VStack className="items-center">
-                    <Text className="text-xs text-gray-500">Tempo Médio</Text>
-                    <Text className="font-bold">{averageTime ? millisToTime(averageTime) : 'N/A'}</Text>
-                  </VStack>
-                  <VStack className="items-center">
-                    <Text className="text-xs text-gray-500">Consistência (Desvio)</Text>
-                    <Text className="font-bold">±{standardDeviation ? (standardDeviation / 1000).toFixed(3) : 'N/A'}s</Text>
-                  </VStack>
-                </HStack>
-              </VStack>
-            ) : (
-              <Text className="text-gray-500 text-center py-4">
-                Adicione pelo menos 2 voltas para ver a análise.
-              </Text>
-            )}
-
-            {/* Formulário de Input */}
-            <LapTimeInput onAddLap={handleAddLapTime} />
-
-            {/* Nova Lista de Voltas Cadastradas */}
-            {strategy?.lapTimes && strategy.lapTimes.length > 0 && (
-              <VStack className="mt-4 pt-4 border-t border-gray-200">
-                {strategy.lapTimes.map(lap => (
-                  <HStack key={lap.lapNumber} className="justify-between items-center py-1">
-                    <Text>Volta {lap.lapNumber}: <Text className="font-bold">{millisToTime(lap.timeInMillis)}</Text></Text>
-                    <Pressable onPress={() => handleDeleteLap(lap.lapNumber)} className="p-1">
-                      <Trash2 size={16} color="red" />
-                    </Pressable>
+                  <HStack className="justify-around mt-2">
+                    <VStack className="items-center">
+                      <Text className="text-xs text-gray-500">Tempo Médio</Text>
+                      <Text className="font-bold">{averageTime ? millisToTime(averageTime) : 'N/A'}</Text>
+                    </VStack>
+                    <VStack className="items-center">
+                      <Text className="text-xs text-gray-500">Consistência (Desvio)</Text>
+                      <Text className="font-bold">±{standardDeviation ? (standardDeviation / 1000).toFixed(3) : 'N/A'}s</Text>
+                    </VStack>
                   </HStack>
-                ))}
-              </VStack>
-            )}
-          </Box>
+                </VStack>
+              ) : (
+                <Text className="text-gray-500 text-center py-4">
+                  Adicione pelo menos 2 voltas para ver a análise.
+                </Text>
+              )}
 
-        </VStack>
-      </ScrollView>
+              {/* Formulário de Input */}
+              <LapTimeInput onAddLap={handleAddLapTime} />
+
+              {/* Nova Lista de Voltas Cadastradas */}
+              {strategy?.lapTimes && strategy.lapTimes.length > 0 && (
+                <VStack className="mt-4 pt-4 border-t border-gray-200">
+                  {strategy.lapTimes.map(lap => (
+                    <HStack key={lap.lapNumber} className="justify-between items-center py-1">
+                      <Text>Volta {lap.lapNumber}: <Text className="font-bold">{millisToTime(lap.timeInMillis)}</Text></Text>
+                      <Pressable onPress={() => handleDeleteLap(lap.lapNumber)} className="p-1">
+                        <Trash2 size={16} color="red" />
+                      </Pressable>
+                    </HStack>
+                  ))}
+                </VStack>
+              )}
+            </Box>
+
+          </VStack>
+        </ScrollView>
+      </ImageBackground>
 
       {/* Diálogo de Confirmação de Exclusão */}
-      <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setIsDeleteAlertOpen(false)}>
-        <AlertDialogBackdrop />
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <Heading>Excluir Estratégia</Heading>
-            <AlertDialogCloseButton><X /></AlertDialogCloseButton>
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <Text>
-              Você tem certeza que deseja excluir a estratégia "{strategy.name}"? Esta ação não pode ser desfeita.
-            </Text>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button variant="outline" action="secondary" onPress={() => setIsDeleteAlertOpen(false)} className="mr-3">
-              <ButtonText>Cancelar</ButtonText>
-            </Button>
-            <Button action="negative" onPress={handleDelete}>
-              <ButtonText>Excluir</ButtonText>
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AppAlertDialog
+        isOpen={isDeleteAlertOpen}
+        onClose={() => setIsDeleteAlertOpen(false)}
+        title="Excluir Estratégia"
+        // Usa a variável 'strategy' para a mensagem dinâmica
+        message={`Você tem certeza que deseja excluir a estratégia "${strategy.name}"? Esta ação não pode ser desfeita.`}
+        // Passa a função de confirmação
+        onConfirm={handleDelete}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+      />
     </Box>
   );
 }

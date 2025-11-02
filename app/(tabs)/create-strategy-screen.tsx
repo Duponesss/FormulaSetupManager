@@ -216,8 +216,16 @@ export default function CreateStrategyScreen() {
         <Box className="flex-1 bg-gray-100">
             {/* Cabeçalho Customizado */}
             <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200 pt-12">
-                <Pressable onPress={() => router.back()} className="p-2">
-                    <ArrowLeft />
+                <Pressable onPress={() => router.push('/strategies-screen')} className="p-2">
+                    {(props: { pressed: boolean }) => (
+                        <Box 
+                            style={{
+                                opacity: props.pressed ? 0.5 : 1.0,
+                            }}
+                        >
+                            <ArrowLeft />
+                        </Box>
+                    )}
                 </Pressable>
                 <Heading size="md" className="flex-1 text-center">
                     <Text>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
 import { Heading } from '../../components/ui/heading';
 import { Text } from '../../components/ui/text';
@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { useSetupStore } from '../../src/stores/setupStore';
 import StrategyCard from '../../src/components/cards/StrategyCard';
 import { ClipboardPlus } from 'lucide-react-native';
+import { VStack } from '@/components/ui/vstack';
 
 export default function StrategiesScreen() {
   const router = useRouter();
@@ -37,39 +38,47 @@ export default function StrategiesScreen() {
 
   return (
     <Box className="flex-1 bg-gray-100">
-      <Heading className="p-4 text-2xl font-bold">Minhas Estratégias</Heading>
-
-      {/* 4. Renderiza a lista de estratégias ou uma mensagem de "lista vazia" */}
-      {strategies.length === 0 ? (
-        <Box className="flex-1 justify-center items-center px-8">
-          <Text className="text-lg text-center text-gray-500">
-            Nenhuma estratégia criada.
-          </Text>
-          <Text className="text-center text-gray-500 mt-2">
-            Toque no botão <ClipboardPlus size={16} /> para planejar sua próxima corrida!
-          </Text>
-        </Box>
-      ) : (
-        <FlatList
-          data={strategies}
-          renderItem={({ item }) => <StrategyCard strategy={item} />}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-        />
-      )}
-
-      {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova estratégia */}
-      <Fab
-        size="lg"
-        placement="bottom right"
-        className="bg-red-500 mb-20"
-        onPress={() => {
-          // Navega para a tela de criação (que faremos a seguir)
-          router.push('/create-strategy-screen');
-        }}
+      <ImageBackground
+        source={require('../../src/assets/images/apex-wallpaper.jpg')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
       >
-        <ClipboardPlus color="white" />
-      </Fab>
+        <VStack className="flex-1 bg-black/60">
+          <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Estratégias</Heading>
+        
+        {/* 4. Renderiza a lista de estratégias ou uma mensagem de "lista vazia" */}
+        {strategies.length === 0 ? (
+          <Box className="flex-1 justify-center items-center px-8">
+            <Text className="text-lg text-center text-gray-500">
+              Nenhuma estratégia criada.
+            </Text>
+            <Text className="text-center text-gray-500 mt-2">
+              Toque no botão <ClipboardPlus size={16} /> para planejar sua próxima corrida!
+            </Text>
+          </Box>
+        ) : (
+          <FlatList
+            data={strategies}
+            renderItem={({ item }) => <StrategyCard strategy={item} />}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+          />
+        )}
+
+        {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova estratégia */}
+        <Fab
+          size="lg"
+          placement="bottom right"
+          className="bg-red-500 mb-20"
+          onPress={() => {
+            // Navega para a tela de criação (que faremos a seguir)
+            router.push('/create-strategy-screen');
+          }}
+        >
+          <ClipboardPlus color="white" />
+        </Fab>
+        </VStack>
+      </ImageBackground>
     </Box>
   );
 }

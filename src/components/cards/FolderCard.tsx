@@ -4,7 +4,7 @@ import { Text } from '../../../components/ui/text';
 import { HStack } from '../../../components/ui/hstack';
 import { VStack } from '../../../components/ui/vstack';
 import { useRouter } from 'expo-router';
-import { Globe, Lock } from 'lucide-react-native'; 
+import { Box, Globe, Lock } from 'lucide-react-native';
 import { type Folder } from '../../stores/setupStore';
 
 interface FolderCardProps {
@@ -31,34 +31,39 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
     : '—';
 
   return (
+    // 3. O Pressable agora usa a "render prop"
     <Pressable
       className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md"
       onPress={handlePress}
     >
-      <VStack space="md">
-        {/* Seção do Título e Privacidade */}
-        <HStack className="justify-between items-center">
-          <Text className="font-bold text-lg flex-1" numberOfLines={1}>
-            {folder.name}
-          </Text>
-          <HStack className="items-center space-x-2">
-            {folder.isPublic ? (
-              <Globe color="green" size={16} />
-            ) : (
-              <Lock color="red" size={16} />
-            )}
-            <Text className="text-xs text-gray-500">
-              {folder.isPublic ? 'Pública' : 'Privada'}
+      {(props: { pressed: boolean }) => (
+        <VStack space="md" style={{ opacity: props.pressed ? 0.7 : 1.0 }}>
+          {/* Seção do Título e Privacidade */}
+          <HStack className="justify-between items-center">
+            {/* Usa 'folder.name' */}
+            <Text className="font-bold text-lg flex-1" numberOfLines={1}>
+              {folder.name}
             </Text>
+            <HStack className="items-center space-x-2">
+              {/* Usa 'folder.isPublic' */}
+              {folder.isPublic ? (
+                <Globe color="green" size={16} />
+              ) : (
+                <Lock color="red" size={16} />
+              )}
+              <Text className="text-xs text-gray-500 m-1">
+                {folder.isPublic ? 'Pública' : 'Privada'}
+              </Text>
+            </HStack>
           </HStack>
-        </HStack>
 
-        {/* Seção das Datas */}
-        <HStack className="justify-between items-center">
-          <Text className="text-xs text-gray-500">Criado: {createdAtFormatted}</Text>
-          <Text className="text-xs text-gray-500">Atualizado: {updatedAtFormatted}</Text>
-        </HStack>
-      </VStack>
+          {/* Seção das Datas */}
+          <HStack className="justify-between items-center">
+            <Text className="text-xs text-gray-500">Criado: {createdAtFormatted}</Text>
+            <Text className="text-xs text-gray-500">Atualizado: {updatedAtFormatted}</Text>
+          </HStack>
+        </VStack>
+      )}
     </Pressable>
   );
 };

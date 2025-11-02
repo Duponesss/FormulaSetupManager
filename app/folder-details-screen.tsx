@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowBigLeft, PencilLine, Trash, X } from 'lucide-react-native';
 import React, { useEffect, useState, useCallback } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, ImageBackground } from 'react-native';
 import {
   AlertDialog,
   AlertDialogBackdrop,
@@ -39,10 +39,10 @@ export default function FolderDetailsScreen() {
   const loadingFolderSetups = useSetupStore(state => state.loadingFolderSetups);
   const getSetupsForFolder = useSetupStore(state => state.getSetupsForFolder);
   const deleteFolder = useSetupStore(state => state.deleteFolder);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedSetup, setSelectedSetup] = useState<SetupData | null>(null);
-  
-    const handleOpenAddToFolderModal = useCallback((setup: SetupData) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSetup, setSelectedSetup] = useState<SetupData | null>(null);
+
+  const handleOpenAddToFolderModal = useCallback((setup: SetupData) => {
     setSelectedSetup(setup);
     setIsModalOpen(true);
   }, []);
@@ -76,23 +76,56 @@ export default function FolderDetailsScreen() {
 
   return (
     <Box className="flex-1 bg-gray-100">
+      <ImageBackground
+        source={require('../src/assets/images/apex-wallpaper.jpg')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
       {/* Cabeçalho Customizado */}
       <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200">
-        <Pressable onPress={() => router.back()} className="p-2">
-        <ArrowBigLeft />
-        </Pressable>
-        <Heading size="md" className="flex-1 text-center">{folderName}</Heading>
-        <HStack space="md">
-          <Pressable onPress={() => setIsEditModalOpen(true)} className="p-2">
-            <PencilLine color="blue" />
+        <HStack className='flex items-center mt-2'>
+          <Pressable onPress={() => router.back()} className="p-2">
+            {(props: { pressed: boolean }) => (
+                  <Box 
+                    style={{
+                      opacity: props.pressed ? 0.5 : 1.0,
+                    }}
+                  >
+                    <ArrowBigLeft />
+                  </Box>
+                )}
           </Pressable>
-          <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
-            <Trash color="red" />
-          </Pressable>
+          <Heading size="md" className="flex-1 text-center">{folderName}</Heading>
+
+          <HStack space="md">
+            <Pressable onPress={() => setIsEditModalOpen(true)} className="p-2">
+              {(props: { pressed: boolean }) => (
+                <Box 
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <PencilLine color="blue" />
+                </Box>
+              )}
+            </Pressable>
+            <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
+              {(props: { pressed: boolean }) => (
+                <Box 
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <Trash color="red" />
+                </Box>
+              )}
+            </Pressable>
+          </HStack>
         </HStack>
       </HStack>
 
       {/* Corpo da Tela */}
+      <Box className="flex-1 bg-black/60">
       {loadingFolderSetups ? (
         <Box className="flex-1 justify-center items-center">
           <Spinner size="large" />
@@ -122,7 +155,8 @@ export default function FolderDetailsScreen() {
           folderToEdit={currentFolder}
         />
       )}
-
+      </Box>
+      </ImageBackground>
       {/* Diálogo de Confirmação de Exclusão */}
       <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setIsDeleteAlertOpen(false)}>
         <AlertDialogBackdrop />
@@ -130,7 +164,7 @@ export default function FolderDetailsScreen() {
           <AlertDialogHeader>
             <Heading>Excluir Pasta</Heading>
             <AlertDialogCloseButton>
-            <X />
+              <X />
             </AlertDialogCloseButton>
           </AlertDialogHeader>
           <AlertDialogBody>

@@ -9,8 +9,13 @@ import { Pressable } from '../../components/ui/pressable';
 import { ScrollView } from '../../components/ui/scroll-view';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import { Picker } from '@react-native-picker/picker';
+import {
+  Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop,
+  SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem
+} from '../../components/ui/select';
+import { ChevronDown } from 'lucide-react-native';
 import { useSetupStore } from '../../src/stores/setupStore';
+import { ImageBackground } from 'react-native';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -43,81 +48,135 @@ export default function SearchScreen() {
 
   return (
     <Box className="flex-1 bg-white">
-      <Box className="pt-12 pb-4 px-6 border-b border-neutral-200">
-        <HStack className="items-center justify-between">
-          <Heading size="xl">Buscar Setups</Heading>
-          <Pressable onPress={() => router.back()}>
-            <Text size="2xl">×</Text>
-          </Pressable>
-        </HStack>
-      </Box>
+      <ImageBackground
+        source={require('../../src/assets/images/apex-wallpaper.jpg')}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
 
-      <ScrollView className="flex-1">
-        <VStack space="xl" className="p-6">
-          {/* Pickers para cada filtro */}
-          <FormControl>
-            <Text className="font-medium mb-2">Carro</Text>
-            <Box className="border border-gray-300 rounded-lg overflow-hidden">
-              <Picker
-                selectedValue={filters.car}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, car: value }))}
-              >
-                <Picker.Item label="Qualquer Carro" value="" />
-                {carOptions.map(item => <Picker.Item key={item} label={item} value={item} />)}
-              </Picker>
-            </Box>
-          </FormControl>
+        <Box className="pt-12 pb-4 px-6 bg-black/70">
+          <HStack className="items-center justify-between">
+            <Heading size="xl" className="text-white">Buscar Setups</Heading>
+          </HStack>
+        </Box>
+        <Box className="flex-1 bg-black/60">
+          <ScrollView className="flex-1">
+            <VStack space="xl" className="p-6">
 
-          {/* Picker de Pista */}
-          <FormControl>
-            <Text className="font-medium mb-2">Circuito</Text>
-            <Box className="border border-gray-300 rounded-lg overflow-hidden">
-              <Picker
-                selectedValue={filters.track}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, track: value }))}
-              >
-                <Picker.Item label="Qualquer Circuito" value="" />
-                {trackOptions.map(item => <Picker.Item key={item} label={item} value={item} />)}
-              </Picker>
-            </Box>
-          </FormControl>
+              <FormControl>
+                <Text className="font-medium mb-2 text-white">Carro</Text>
+                <Select
+                  selectedValue={filters.car}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, car: value }))}
+                >
+                  <SelectTrigger className="bg-gray-800/80 border-gray-700">
+                    <SelectInput
+                      placeholder="Qualquer Carro"
+                      style={{ color: 'white' }}
+                      placeholderTextColor="#c7cbd2"
+                    />
+                    <ChevronDown className="mr-3" color="gray" />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                      <ScrollView style={{ maxHeight: 400 }}>
+                        <SelectItem label="Qualquer Carro" value="" />
+                        {carOptions.map(item => <SelectItem key={item} label={item} value={item} />)}
+                      </ScrollView>
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </FormControl>
 
-          {/* Picker de Tipo de Controle */}
-          <FormControl>
-            <Text className="font-medium mb-2">Tipo de Controle</Text>
-            <Box className="border border-gray-300 rounded-lg overflow-hidden">
-              <Picker
-                selectedValue={filters.controlType}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, controlType: value }))}
-              >
-                <Picker.Item label="Qualquer Tipo" value="" />
-                {controlTypes.map(item => <Picker.Item key={item} label={item} value={item} />)}
-              </Picker>
-            </Box>
-          </FormControl>
+              <FormControl>
+                <Text className="font-medium mb-2 text-white">Circuito</Text>
+                <Select
+                  selectedValue={filters.track}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, track: value }))}
+                >
+                  <SelectTrigger className="bg-gray-800/80 border-gray-700">
+                    <SelectInput
+                      placeholder="Qualquer Circuito"
+                      style={{ color: 'white' }}
+                      placeholderTextColor="#c7cbd2"
+                    />
+                    <ChevronDown className="mr-3" color="gray" />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                      <ScrollView style={{ maxHeight: 400 }}>
+                        <SelectItem label="Qualquer Circuito" value="" />
+                        {trackOptions.map(item => <SelectItem key={item} label={item} value={item} />)}
+                      </ScrollView>
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </FormControl>
 
-          {/* Picker de Condições */}
-          <FormControl>
-            <Text className="font-medium mb-2">Condições Climáticas</Text>
-            <Box className="border border-gray-300 rounded-lg overflow-hidden">
-              <Picker
-                selectedValue={filters.condition}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, condition: value }))}
-              >
-                <Picker.Item label="Qualquer Condição" value="" />
-                {conditionOptions.map(item => <Picker.Item key={item} label={item} value={item} />)}
-              </Picker>
-            </Box>
-          </FormControl>
+              <FormControl>
+                <Text className="font-medium mb-2 text-white">Tipo de Controle</Text>
+                <Select
+                  selectedValue={filters.controlType}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, controlType: value }))}
+                >
+                  <SelectTrigger className="bg-gray-800/80 border-gray-700">
+                    <SelectInput
+                      placeholder="Qualquer Tipo"
+                      style={{ color: 'white' }}
+                      placeholderTextColor="#c7cbd2"
+                    />
+                    <ChevronDown className="mr-3" color="gray" />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                      <SelectItem label="Qualquer Tipo" value="" />
+                      {controlTypes.map(item => <SelectItem key={item} label={item} value={item} />)}
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </FormControl>
 
-        </VStack>
-      </ScrollView>
+              <FormControl>
+                <Text className="font-medium mb-2 text-white">Condições Climáticas</Text>
+                <Select
+                  selectedValue={filters.condition}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, condition: value }))}
+                >
+                  <SelectTrigger className="bg-gray-800/80 border-gray-700">
+                    <SelectInput
+                      placeholder="Qualquer Condição"
+                      style={{ color: 'white' }}
+                      placeholderTextColor="#c7cbd2"
+                    />
+                    <ChevronDown className="mr-3" color="gray" />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
+                      <SelectItem label="Qualquer Condição" value="" />
+                      {conditionOptions.map(item => <SelectItem key={item} label={item} value={item} />)}
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </FormControl>
 
-      <Box className="p-6 border-t border-neutral-200">
-        <Button onPress={handleApplyFilters}>
-          <ButtonText>Aplicar Filtros</ButtonText>
-        </Button>
-      </Box>
+            </VStack>
+          </ScrollView>
+
+          <Box className="p-6 border-t border-neutral-200">
+            <Button onPress={handleApplyFilters}>
+              <ButtonText>Aplicar Filtros</ButtonText>
+            </Button>
+          </Box>
+        </Box>
+      </ImageBackground>
     </Box>
   );
 }
