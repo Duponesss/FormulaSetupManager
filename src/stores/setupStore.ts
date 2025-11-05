@@ -319,8 +319,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     await batch.commit();
   },
 
-  // --- AÇÕES PARA RELACIONAMENTO SETUP-PASTA ---
-
   getSetupsForFolder: async (folderId) => {
     set({ loadingFolderSetups: true, folderSetups: [] });
     try {
@@ -350,7 +348,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // Busca os IDs de todas as pastas em que um setup específico se encontra
   getFoldersForSetup: async (setupId) => {
     const user = auth.currentUser;
     if (!user) return;
@@ -370,7 +367,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // Sincroniza as pastas de um setup com base na seleção do usuário no modal
   updateSetupFolders: async (setupId, newFolderIds) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
@@ -378,10 +374,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     const currentFolderIds = get().setupFolderIds;
     const batch = writeBatch(db);
 
-    // 1. Determina quais pastas precisam ser ADICIONADAS
     const foldersToAdd = newFolderIds.filter(id => !currentFolderIds.includes(id));
-    
-    // 2. Determina quais pastas precisam ser REMOVIDAS
     const foldersToRemove = currentFolderIds.filter(id => !newFolderIds.includes(id));
 
     // Adiciona as novas entradas
@@ -413,7 +406,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     await batch.commit();
   },
 
-  // --- AÇÃO PARA OUVIR ESTRATÉGIAS ---
   listenToUserStrategies: () => {
     if (unsubscribeFromStrategies) unsubscribeFromStrategies();
     const user = auth.currentUser;
@@ -434,10 +426,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     return unsubscribe;
   },
 
-  // As funções createStrategy e updateStrategy precisam ser ajustadas
-  // quando implementarmos o formulário, para garantir que os dados
-  // passados (strategyData) correspondam à nova interface Strategy.
-  // Por enquanto, a assinatura delas pode permanecer a mesma.
   createStrategy: async (strategyData) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");

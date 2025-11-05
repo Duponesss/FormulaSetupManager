@@ -52,11 +52,11 @@ export default function FoldersScreen() {
                     {/* 4. Renderiza a lista de pastas ou uma mensagem de "lista vazia" */}
                     {folders.length === 0 ? (
                         <Box className="flex-1 justify-center items-center px-8">
-                            <Text className="text-lg text-center text-gray-500">
+                            <Text className="text-lg text-center text-white">
                                 Você ainda não criou nenhuma pasta.
                             </Text>
-                            <Text className="text-center text-gray-500 mt-2">
-                                Toque no botão <FolderPlus size={17} /> para organizar seus setups!
+                            <Text className="text-center text-white mt-2">
+                                Toque no botão <FolderPlus size={17} color="white" /> para organizar seus setups!
                             </Text>
                         </Box>
                     ) : (
