@@ -4,14 +4,12 @@ import {
   AlertDialogBackdrop,
   AlertDialogContent,
   AlertDialogHeader,
-  AlertDialogCloseButton,
   AlertDialogFooter,
   AlertDialogBody,
 } from '../../../components/ui/alert-dialog';
 import { Heading } from '../../../components/ui/heading';
 import { Text } from '../../../components/ui/text';
 import { Button, ButtonText } from '../../../components/ui/button';
-import { X } from 'lucide-react-native';
 
 interface AppAlertDialogProps {
   isOpen: boolean;
@@ -44,9 +42,6 @@ const AppAlertDialog: React.FC<AppAlertDialogProps> = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <Heading>{title}</Heading>
-          <AlertDialogCloseButton onPress={onClose}>
-            <X />
-          </AlertDialogCloseButton>
         </AlertDialogHeader>
         <AlertDialogBody>
           <Text>{message}</Text>
