@@ -1,6 +1,18 @@
 import { create } from 'zustand';
-import { db, auth } from '../services/firebaseConfig';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId } from 'firebase/firestore';
+import { db, auth, storage } from '../services/firebaseConfig';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId, setDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+
+// Interface para o perfil do usuário
+export interface UserProfile {
+  uid: string;
+  email: string;
+  username: string; 
+  profilePictureUrl?: string; 
+  gamertagPSN?: string; // PlayStation Network
+  gamertagXbox?: string; // Xbox Live
+  gamertagPC?: string;   // (ex: Steam, EA ID)
+}
 
 // Define a interface para todos os dados do formulário
 export interface SetupData {
@@ -118,6 +130,11 @@ export interface GameData {
 
 // Define a interface do store, incluindo os dados e as ações
 interface SetupState {
+  userProfile: UserProfile | null;
+  loadingProfile: boolean;
+  listenToUserProfile: (uid: string) => (() => void);
+  uploadProfilePicture: (imageUri: string) => Promise<void>;
+  
   formData: SetupData;
   updateField: (field: keyof SetupData, value: string | number) => void;
   loadFormWithExistingSetup: (setupId: string) => void;
@@ -161,12 +178,16 @@ interface SetupState {
   updateLapTimes: (strategyId: string, lapTimes: Strategy['lapTimes']) => Promise<void>;
 }
 
+let unsubscribeFromProfile: (() => void) | null = null;
 let unsubscribeFromSetups: (() => void) | null = null;
 let unsubscribeFromFolders: (() => void) | null = null;
 let unsubscribeFromStrategies: (() => void) | null = null;
 
+
 // Cria o hook do store
 export const useSetupStore = create<SetupState>((set, get) => ({
+  userProfile: null,
+  loadingProfile: true,
   formData: formInitialState,
   allSetups: [],
   gameData: null,
@@ -181,6 +202,62 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   strategies: [],
   loadingStrategies: true,
 
+  listenToUserProfile: (uid) => {
+    if (unsubscribeFromProfile) unsubscribeFromProfile();
+    
+    const docRef = doc(db, "users", uid);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        set({ userProfile: docSnap.data() as UserProfile, loadingProfile: false });
+      } else {
+        set({ userProfile: null, loadingProfile: false });
+      }
+    }, (error) => {
+      console.error("Erro ao ouvir perfil de usuário:", error);
+      set({ loadingProfile: false });
+    });
+    
+    unsubscribeFromProfile = unsubscribe;
+    return unsubscribe;
+  },
+
+  uploadProfilePicture: async (imageUri: string) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    try {
+      // 1. Converte a imagem URI (file://...) em um Blob
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+
+      // 2. Cria uma referência no Firebase Storage
+      // Ex: 'profilePictures/user_uid_123.jpg'
+      const fileExtension = imageUri.split('.').pop() || 'jpg';
+      const storageRef = ref(storage, `profilePictures/${user.uid}/profile.${fileExtension}`);
+
+      // 3. Faz o upload do arquivo
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+
+      // Aguarda o upload ser concluído
+      await uploadTask;
+
+      // 4. Pega a URL de download pública
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+      // 5. Atualiza o documento do usuário no Firestore com a nova URL
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, {
+        profilePictureUrl: downloadURL
+      });
+      
+      // O listener 'listenToUserProfile' fará o set({ userProfile: ... }) automaticamente
+
+    } catch (error) {
+      console.error("Erro ao fazer upload da foto:", error);
+      throw new Error("Não foi possível salvar a foto de perfil.");
+    }
+  },
+  
   updateField: (field, value) => set(state => ({ formData: { ...state.formData, [field]: value } })),
   loadFormWithExistingSetup: (setupId) => {
     const setupToEdit = get().allSetups.find(s => s.id === setupId);

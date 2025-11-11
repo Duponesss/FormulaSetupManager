@@ -102,8 +102,8 @@ export default function HomeScreen() {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
                 <Box className="items-center py-12">
-                  <Text size="lg" className="mb-2">Nenhum setup cadastrado</Text>
-                  <Text className="text-center">Crie um novo setup clicando no botão +</Text>
+                  <Text size="lg" className="mb-2 text-white">Nenhum setup cadastrado</Text>
+                  <Text className="text-center text-white">Crie um novo setup clicando no botão +</Text>
                 </Box>
               }
             />

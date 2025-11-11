@@ -49,11 +49,11 @@ export default function StrategiesScreen() {
         {/* 4. Renderiza a lista de estratégias ou uma mensagem de "lista vazia" */}
         {strategies.length === 0 ? (
           <Box className="flex-1 justify-center items-center px-8">
-            <Text className="text-lg text-center text-gray-500">
+            <Text className="text-lg text-center text-white">
               Nenhuma estratégia criada.
             </Text>
-            <Text className="text-center text-gray-500 mt-2">
-              Toque no botão <ClipboardPlus size={16} /> para planejar sua próxima corrida!
+            <Text className="text-center text-white mt-2">
+              Toque no botão <ClipboardPlus size={16} color="white" /> para planejar sua próxima corrida!
             </Text>
           </Box>
         ) : (
