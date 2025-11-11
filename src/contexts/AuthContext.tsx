@@ -5,10 +5,12 @@ import {
   onAuthStateChanged,
   signInWithCredential,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../services/firebaseConfig';
+import { auth, db } from '../services/firebaseConfig';
+import { doc, setDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
 
 // Conditional import for Google Sign-in (only works in development builds)
@@ -24,8 +26,9 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,9 +70,7 @@ const FAKE_USER: User = {
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // O estado inicial agora depende do nosso interruptor
   const [user, setUser] = useState<User | null>(MOCK_AUTH_IN_DEV ? FAKE_USER : null);
-  // O 'loading' começa como 'false' no modo de simulação para um arranque mais rápido
   const [loading, setLoading] = useState(!MOCK_AUTH_IN_DEV);
 
   useEffect(() => {
@@ -124,9 +125,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, password: string, username: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Cria o usuário no Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Cria o documento de perfil no Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        username: username,
+        profilePictureUrl: "" 
+      });
+
     } catch (error) {
       throw error;
     }
@@ -138,7 +150,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await GoogleSignin.signOut();
       }
       await firebaseSignOut(auth);
-      router.push('/(auth)');
+      router.replace('/login');
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
     } catch (error) {
       throw error;
     }
@@ -151,6 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signInWithEmail,
     signUpWithEmail,
     signOut,
+    sendPasswordReset,
   };
 
   return (
