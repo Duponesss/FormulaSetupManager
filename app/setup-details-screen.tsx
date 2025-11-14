@@ -18,7 +18,7 @@ import { Progress, ProgressFilledTrack } from '../components/ui/progress';
 import {
   Car, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, SlidersHorizontal,
   Wind, Cog, Settings2, ArrowDownUp, Gauge, AlignVerticalSpaceAround, CircleDashed,
-  X,
+  X, User, Globe, Lock
 } from 'lucide-react-native';
 import { Spinner } from "@/components/ui/spinner";
 
@@ -59,26 +59,37 @@ export default function SetupDetailsScreen() {
   const { setupId } = params;
   const isViewOnly = params.isViewOnly === 'true';
   const allSetups = useSetupStore((state) => state.allSetups);
+  const setup = useSetupStore((state) => {
+    let s = state.allSetups.find((s) => s.id === setupId);
+    if (s) return s;
+    // Fallback para caso o setup esteja visível via 'folderSetups'
+    s = state.folderSetups.find((s) => s.id === setupId); 
+    if (s) return s;
+    // Fallback para caso venha da busca pública (será usado na Fase 3)
+    s = state.publicSetups.find((s) => s.id === setupId);
+    if (s) return s;
+    return null;
+  });
   const deleteSetup = useSetupStore((state) => state.deleteSetup);
   const gameData = useSetupStore((state) => state.gameData);
   const loadingGameData = useSetupStore((state) => state.loadingGameData);
-  const [setup, setSetup] = useState<SetupData | null>(null);
+  // const [setup, setSetup] = useState<SetupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
 
-  useEffect(() => {
-    if (setupId) {
-      const foundSetup = allSetups.find((s) => s.id === setupId);
-      if (foundSetup) {
-        setSetup(foundSetup);
-      } else {
-        console.warn(`Setup com id ${setupId} não encontrado no store.`);
-      }
-    }
-  }, [setupId, allSetups]);
+  // useEffect(() => {
+  //   if (setupId) {
+  //     const foundSetup = allSetups.find((s) => s.id === setupId);
+  //     if (foundSetup) {
+  //       setSetup(foundSetup);
+  //     } else {
+  //       console.warn(`Setup com id ${setupId} não encontrado no store.`);
+  //     }
+  //   }
+  // }, [setupId, allSetups]);
 
   const handleDelete = async () => {
     if (!setupId) return;
@@ -193,6 +204,34 @@ export default function SetupDetailsScreen() {
             <Heading size="xl" className="mb-4" style={{ color: teamColor }}>
               {setup.setupTitle}
             </Heading>
+
+            <DetailRow
+              label="Piloto"
+              value={setup.authorName || 'Desconhecido'}
+              icon={
+                setup.authorPhotoUrl ? (
+                   <Image 
+                     source={{ uri: setup.authorPhotoUrl }} 
+                     style={{ width: 24, height: 24, borderRadius: 12 }} 
+                     contentFit="cover"
+                   />
+                ) : (
+                   <User size={20} color="#6B7280" />
+                )
+              }
+            />
+
+             <DetailRow
+              label="Visibilidade"
+              value={setup.isPublic ? "Público" : "Privado"}
+              icon={
+                setup.isPublic ? (
+                   <Globe size={20} color="#16a34a" /> // Verde
+                ) : (
+                   <Lock size={20} color="#6B7280" /> // Cinza
+                )
+              }
+            />
 
             <DetailRow
               label="Carro"

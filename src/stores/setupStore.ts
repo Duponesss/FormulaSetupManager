@@ -26,6 +26,13 @@ export interface SetupData {
   track: string;
   condition: string;
   notes: string;
+  isPublic: boolean;
+  authorName?: string;      // Para exibir sem buscar na tabela users
+  authorPhotoUrl?: string;  // Para exibir avatar na lista
+  rating: number;           // Média 0-5
+  ratingCount: number;      // Total de votos
+  totalDownloads: number;   // Quantas vezes foi copiado
+  originalSetupId?: string | null; // Se for cópia, guarda o ID do pai
   frontWing: number;
   rearWing: number;
   diffAdjustmentOn: number;
@@ -110,14 +117,39 @@ export interface Strategy {
 
 // Valores iniciais para um novo setup
 const formInitialState: SetupData = {
-  setupTitle: '', controlType: '', car: '', team: '', track: '', condition: '', notes: '', 
-  frontWing: 25, rearWing: 25, 
-  diffAdjustmentOn: 55, diffAdjustmentOff: 55, engineBraking: 50, 
-  frontCamber: -3.0, rearCamber: -1.5, frontToeOut: 0.25, rearToeIn: 0.25, 
-  frontSuspension: 21, rearSuspension: 21, frontAntiRollBar: 11, rearAntiRollBar: 11, 
-  frontRideHeight: 25, rearRideHeight: 70, 
-  brakePressure: 90, frontBrakeBias: 60, 
-  frontRightTyrePressure: 26.0, frontLeftTyrePressure: 26.0, rearRightTyrePressure: 23.5, rearLeftTyrePressure: 23.5,
+  setupTitle: '', 
+  controlType: '', 
+  car: '', 
+  team: '', 
+  track: '', 
+  condition: '', 
+  notes: '',
+  isPublic: false, // Privado por padrão
+  rating: 0,
+  ratingCount: 0,
+  totalDownloads: 0,
+  originalSetupId: null, 
+  frontWing: 25, 
+  rearWing: 25, 
+  diffAdjustmentOn: 55, 
+  diffAdjustmentOff: 55, 
+  engineBraking: 50, 
+  frontCamber: -3.0, 
+  rearCamber: -1.5, 
+  frontToeOut: 0.25, 
+  rearToeIn: 0.25, 
+  frontSuspension: 21, 
+  rearSuspension: 21, 
+  frontAntiRollBar: 11, 
+  rearAntiRollBar: 11, 
+  frontRideHeight: 25, 
+  rearRideHeight: 70, 
+  brakePressure: 90, 
+  frontBrakeBias: 60, 
+  frontRightTyrePressure: 26.0, 
+  frontLeftTyrePressure: 26.0, 
+  rearRightTyrePressure: 23.5, 
+  rearLeftTyrePressure: 23.5,
 };
 
 export interface GameData {
@@ -136,7 +168,7 @@ interface SetupState {
   uploadProfilePicture: (imageUri: string) => Promise<void>;
   
   formData: SetupData;
-  updateField: (field: keyof SetupData, value: string | number) => void;
+  updateField: (field: keyof SetupData, value: string | number | boolean) => void;
   loadFormWithExistingSetup: (setupId: string) => void;
   resetForm: () => void;
 
@@ -288,24 +320,38 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   saveSetup: async (setupData) => {const user = auth.currentUser;
     if (!user) throw new Error("Utilizador não autenticado para salvar o setup.");
     
+    // Pegamos o perfil atual do estado da Store para salvar o nome/foto junto
+    // Isso evita leituras extras no banco quando formos listar os setups
+    const currentProfile = get().userProfile;
+    
     // Remove o ID do objeto principal para não o salvar como um campo no documento
     const { id, ...data } = setupData;
+
+    const dataToSave = {
+      ...data,
+      userId: user.uid,
+      updatedAt: Timestamp.now(),
+      // Garante que isPublic seja booleano
+      isPublic: Boolean(data.isPublic),
+      // Atualiza o nome/foto caso o usuário tenha mudado (opcional, mas recomendado)
+      authorName: currentProfile?.username || "Piloto Desconhecido",
+      authorPhotoUrl: currentProfile?.profilePictureUrl || null,
+    };
 
     if (id) {
       // ATUALIZAR SETUP EXISTENTE
       const docRef = doc(db, "setups", id);
-      await updateDoc(docRef, {
-        ...data,
-        userId: user.uid, // Garante que o userId está sempre correto
-        updatedAt: Timestamp.now(),
-      });
+      await updateDoc(docRef, dataToSave);
     } else {
       // CRIAR NOVO SETUP
+      // Inicializa contadores apenas na criação
       await addDoc(collection(db, "setups"), {
-        ...data,
-        userId: user.uid,
+        ...dataToSave,
         createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        rating: 0,
+        ratingCount: 0,
+        totalDownloads: 0,
+        originalSetupId: null,
       });
     }
   },
