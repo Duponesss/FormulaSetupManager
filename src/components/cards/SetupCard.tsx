@@ -7,7 +7,7 @@ import { Pressable } from '../../../components/ui/pressable';
 import { useRouter } from 'expo-router';
 import { type SetupData } from '../../stores/setupStore';
 import { Image } from 'expo-image';
-import { Bookmark, MapPin, Gamepad2, Sun, CloudRain, CalendarDays } from 'lucide-react-native';
+import { Bookmark, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, Globe, Lock } from 'lucide-react-native';
 
 // --- MAPEAMENTO DE CORES DAS EQUIPES ---
 const teamColors = {
@@ -71,7 +71,6 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
   return (
     <Pressable
       onPress={handleCardPress}
-      // Fundo branco para melhor contraste, sombra maior e bordas coloridas
       className="rounded-xl p-4 mb-5 bg-white shadow-lg overflow-hidden border-l-4 border-t-4"
       style={{
         borderLeftColor: teamColor,
@@ -132,6 +131,17 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
               }
               text={item.condition}
             />
+            {!isViewOnly && (
+              <HStack 
+                space="xs" 
+                className={`px-2 py-1 rounded-md self-start mb-2 items-center ${item.isPublic ? 'bg-green-100' : 'bg-gray-100'}`}
+              >
+                 {item.isPublic ? <Globe size={10} color="#15803d" /> : <Lock size={10} color="#4b5563" />}
+                 <Text className={`text-xs font-bold ${item.isPublic ? 'text-green-700' : 'text-gray-600'}`}>
+                   {item.isPublic ? 'Público' : 'Privado'}
+                 </Text>
+              </HStack>
+            )}
           </VStack>
 
           {/* SEÇÃO DE RODAPÉ (DATAS) */}

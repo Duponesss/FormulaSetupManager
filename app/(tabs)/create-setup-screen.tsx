@@ -16,13 +16,14 @@ import {
   SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem
 } from '../../components/ui/select';
 import { ScrollView } from '../../components/ui/scroll-view';
+import { Switch } from '../../components/ui/switch';
 import { ChevronDown } from 'lucide-react-native';
 import AppAlertDialog from '../../src/components/dialogs/AppAlertDialog';
 import { FlatList, ImageBackground } from 'react-native';
 import { Spinner } from '@/components/ui/spinner';
 
 type FormSectionItem = {
-  type: 'header' | 'input' | 'picker' | 'textarea' | 'slider' | 'footer';
+  type: 'header' | 'input' | 'picker' | 'textarea' | 'slider' | 'footer' | 'switch';
   id: string;
   label?: string;
   title?: string;
@@ -32,6 +33,7 @@ type FormSectionItem = {
   step?: number;
   unit?: string;
   suffix?: string;
+  description?: string;
 };
 
 const SliderComponent = React.memo(({
@@ -162,6 +164,7 @@ export default function CreateSetupScreen() {
       { type: 'picker', id: 'controlType', label: 'Tipo de Controle', options: controlTypes },
       { type: 'picker', id: 'condition', label: 'Condições', options: conditionOptions },
       { type: 'textarea', id: 'notes', label: 'Observações' },
+      { type: 'switch', id: 'isPublic', label: 'Tornar Setup Público ?', description: 'Permite que a comunidade veja e avalie seu setup.' },
 
       { type: 'header', id: 'aero_header', title: 'Aerodinâmica' },
       {
@@ -413,6 +416,26 @@ export default function CreateSetupScreen() {
                           placeholderTextColor="#c7cbd2"
                         />
                       </Textarea>
+                    </Box>
+                  </Box>
+                );
+
+              case 'switch':
+                return (
+                  <Box className="p-2 mb-2">
+                    <Box className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 flex-row justify-between items-center">
+                      <Box className="flex-1 mr-4">
+                        <Text className="font-bold text-white text-lg">{item.label}</Text>
+                        <Text className="text-gray-400 text-sm mt-1">{item.description}</Text>
+                      </Box>
+                      <Switch
+                        size="md"
+                        isDisabled={loading}
+                        value={formData.isPublic}
+                        onValueChange={(val) => updateField('isPublic', val)}
+                        trackColor={{ false: '#767577', true: '#dc2626' }} // Vermelho F1
+                        thumbColor={formData.isPublic ? '#fca5a5' : '#f4f3f4'}
+                      />
                     </Box>
                   </Box>
                 );
