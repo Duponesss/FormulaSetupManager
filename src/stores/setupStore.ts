@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { db, auth, storage } from '../services/firebaseConfig';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId, setDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId, setDoc, limit, orderBy,
+  type DocumentSnapshot, startAfter
+ } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 
 // Interface para o perfil do usuário
@@ -208,6 +210,17 @@ interface SetupState {
   updateStrategy: (strategyId: string, strategyData: Partial<Strategy>) => Promise<void>; 
   deleteStrategy: (strategyId: string) => Promise<void>;
   updateLapTimes: (strategyId: string, lapTimes: Strategy['lapTimes']) => Promise<void>;
+
+  publicSetups: SetupData[];
+  loadingPublicSetups: boolean;      // Loading inicial
+  loadingMoreSetups: boolean;        // Loading do "Carregar Mais"
+  lastSetupDoc: DocumentSnapshot | null; // Referência para paginação
+  hasMoreSetups: boolean;              // Para saber se desativa o botão
+  currentSearchFilters: Record<string, string | undefined> | null; // Para lembrar os filtros
+
+  searchPublicSetups: (filters?: Record<string, string | undefined>) => Promise<void>;
+  fetchMorePublicSetups: () => Promise<void>;
+  cloneSetup: (setup: SetupData) => Promise<void>;
 }
 
 let unsubscribeFromProfile: (() => void) | null = null;
@@ -233,6 +246,12 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   loadingSetupFolders: false,
   strategies: [],
   loadingStrategies: true,
+  publicSetups: [],
+  loadingPublicSetups: false,
+  loadingMoreSetups: false,
+  lastSetupDoc: null,
+  hasMoreSetups: true,
+  currentSearchFilters: null,
 
   listenToUserProfile: (uid) => {
     if (unsubscribeFromProfile) unsubscribeFromProfile();
@@ -315,6 +334,152 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     });
     unsubscribeFromSetups = unsubscribe;
     return unsubscribe;
+  },
+
+  // --- NOVA FUNÇÃO: BUSCA PÚBLICA ---
+  searchPublicSetups: async (filters) => {
+    // 1. Ativa o loading principal e reseta tudo
+    set({ 
+      loadingPublicSetups: true, 
+      publicSetups: [], 
+      lastSetupDoc: null, 
+      hasMoreSetups: true,
+      currentSearchFilters: filters // Salva os filtros para o "Carregar Mais"
+    });
+    
+    try {
+      const setupsRef = collection(db, "setups");
+      let q = query(setupsRef, where("isPublic", "==", true));
+
+      // Aplicando filtros
+      if (filters?.car) {
+        q = query(q, where("car", "==", filters.car));
+      }
+      if (filters?.track) {
+        q = query(q, where("track", "==", filters.track));
+      }
+      if (filters?.controlType) {
+        q = query(q, where("controlType", "==", filters.controlType));
+      }
+      if (filters?.condition) {
+        q = query(q, where("condition", "==", filters.condition));
+      }
+
+      // 3. Aplica ordenação e limite (os 10 que você pediu)
+      q = query(q, orderBy("createdAt", "desc"), limit(10));
+
+      const snapshot = await getDocs(q);
+      const setups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
+      
+      // 4. Salva o último documento pego para usar no "startAfter"
+      const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      
+      set({ 
+        publicSetups: setups, 
+        lastSetupDoc: lastDoc || null,
+        hasMoreSetups: snapshot.docs.length === 10, // Se veio menos de 10, não há mais
+        loadingPublicSetups: false 
+      });
+
+    } catch (error) {
+      console.error("Erro ao buscar setups públicos:", error);
+      set({ loadingPublicSetups: false });
+    }
+  },
+
+  // --- NOVA FUNÇÃO: CARREGAR MAIS ---
+  fetchMorePublicSetups: async () => {
+    const { 
+      currentSearchFilters: filters, 
+      lastSetupDoc, 
+      loadingMoreSetups, 
+      hasMoreSetups 
+    } = get();
+
+    // Se já estiver carregando, ou não tiver mais, ou não tiver um ponto de partida, não faz nada
+    if (loadingMoreSetups || !hasMoreSetups || !lastSetupDoc) return;
+
+    set({ loadingMoreSetups: true });
+
+    try {
+      const setupsRef = collection(db, "setups");
+      let q = query(setupsRef, where("isPublic", "==", true));
+
+      // REAPLICA OS MESMOS FILTROS DA BUSCA INICIAL
+      if (filters?.car) {
+        q = query(q, where("car", "==", filters.car));
+      }
+      if (filters?.track) {
+        q = query(q, where("track", "==", filters.track));
+      }
+      if (filters?.controlType) {
+        q = query(q, where("controlType", "==", filters.controlType));
+      }
+      if (filters?.condition) {
+        q = query(q, where("condition", "==", filters.condition));
+      }
+
+      // A MÁGICA: Começa *depois* do último que pegamos e busca mais 10
+      q = query(q, 
+        orderBy("createdAt", "desc"), 
+        startAfter(lastSetupDoc), // <-- Paginação
+        limit(10)
+      );
+
+      const snapshot = await getDocs(q);
+      const newSetups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
+      const newLastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      set(state => ({
+        publicSetups: [...state.publicSetups, ...newSetups], // Adiciona os novos ao final da lista
+        lastSetupDoc: newLastDoc || null,
+        hasMoreSetups: snapshot.docs.length === 10,
+        loadingMoreSetups: false
+      }));
+
+    } catch (error) {
+      console.error("Erro ao carregar mais setups:", error);
+      set({ loadingMoreSetups: false });
+    }
+  },
+
+  // --- NOVA FUNÇÃO: CLONAR SETUP ---
+  cloneSetup: async (originalSetup) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado para clonar.");
+
+    const currentProfile = get().userProfile;
+    
+    // Remove o ID original para criar um novo
+    const { id, ...data } = originalSetup; 
+
+    const setupCopy = {
+      ...data,
+      userId: user.uid, // O novo dono é o usuário atual
+      isPublic: false,  // A cópia é sempre privada por padrão
+      originalSetupId: id, // Guarda a referência de onde veio
+      setupTitle: `${data.setupTitle} (Cópia)`, // Indica que é uma cópia
+
+      // Reseta as estatísticas da comunidade para a nova cópia
+      rating: 0,
+      ratingCount: 0,
+      totalDownloads: 0,
+      
+      // Define o autor da *cópia* como o usuário atual
+      authorName: currentProfile?.username || "Piloto Desconhecido",
+      authorPhotoUrl: currentProfile?.profilePictureUrl || null,
+
+      // Define novas datas de criação/atualização
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+
+    // Salva o novo documento na coleção 'setups'
+    await addDoc(collection(db, "setups"), setupCopy);
+    
+    // Opcional (Fase 4 - Polimento): 
+    // Aqui poderíamos usar uma Cloud Function/Transaction para incrementar
+    // o `totalDownloads` do setup *original* (originalSetup.id)
   },
 
   saveSetup: async (setupData) => {const user = auth.currentUser;
