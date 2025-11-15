@@ -81,7 +81,7 @@ export default function SearchScreen() {
                     <SelectBackdrop />
                     <SelectContent>
                       <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                      <ScrollView style={{ maxHeight: 400 }}>
+                      <ScrollView style={{ maxHeight: 400, width: '100%' }}>
                         <SelectItem label="Qualquer Carro" value="" />
                         {carOptions.map(item => <SelectItem key={item} label={item} value={item} />)}
                       </ScrollView>
@@ -108,7 +108,7 @@ export default function SearchScreen() {
                     <SelectBackdrop />
                     <SelectContent>
                       <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                      <ScrollView style={{ maxHeight: 400 }}>
+                      <ScrollView style={{ maxHeight: 400, width: '100%' }}>
                         <SelectItem label="Qualquer Circuito" value="" />
                         {trackOptions.map(item => <SelectItem key={item} label={item} value={item} />)}
                       </ScrollView>

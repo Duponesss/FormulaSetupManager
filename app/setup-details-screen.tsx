@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { Box } from '../components/ui/box';
-import { Button, ButtonText } from '../components/ui/button';
+import { Button, ButtonText, ButtonIcon } from '../components/ui/button';
 import { Divider } from '../components/ui/divider';
 import { Heading } from '../components/ui/heading';
 import { HStack } from '../components/ui/hstack';
@@ -18,7 +18,7 @@ import { Progress, ProgressFilledTrack } from '../components/ui/progress';
 import {
   Car, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, SlidersHorizontal,
   Wind, Cog, Settings2, ArrowDownUp, Gauge, AlignVerticalSpaceAround, CircleDashed,
-  X, User, Globe, Lock
+  X, User, Globe, Lock, Copy
 } from 'lucide-react-native';
 import { Spinner } from "@/components/ui/spinner";
 
@@ -59,37 +59,28 @@ export default function SetupDetailsScreen() {
   const { setupId } = params;
   const isViewOnly = params.isViewOnly === 'true';
   const allSetups = useSetupStore((state) => state.allSetups);
-  const setup = useSetupStore((state) => {
-    let s = state.allSetups.find((s) => s.id === setupId);
-    if (s) return s;
-    // Fallback para caso o setup esteja visível via 'folderSetups'
-    s = state.folderSetups.find((s) => s.id === setupId); 
-    if (s) return s;
-    // Fallback para caso venha da busca pública (será usado na Fase 3)
-    s = state.publicSetups.find((s) => s.id === setupId);
-    if (s) return s;
-    return null;
-  });
+  const folderSetups = useSetupStore((state) => state.folderSetups);
+  const publicSetups = useSetupStore((state) => state.publicSetups);
+  const userProfile = useSetupStore((state) => state.userProfile);
   const deleteSetup = useSetupStore((state) => state.deleteSetup);
+  const cloneSetup = useSetupStore((state) => state.cloneSetup);
   const gameData = useSetupStore((state) => state.gameData);
   const loadingGameData = useSetupStore((state) => state.loadingGameData);
-  // const [setup, setSetup] = useState<SetupData | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const setup = React.useMemo(() => {
+    if (!setupId) return null;
+    return (
+      allSetups.find((s) => s.id === setupId) ||
+      folderSetups.find((s) => s.id === setupId) ||
+      publicSetups.find((s) => s.id === setupId) ||
+      null
+    );
+  }, [setupId, allSetups, folderSetups, publicSetups]);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-
-  // useEffect(() => {
-  //   if (setupId) {
-  //     const foundSetup = allSetups.find((s) => s.id === setupId);
-  //     if (foundSetup) {
-  //       setSetup(foundSetup);
-  //     } else {
-  //       console.warn(`Setup com id ${setupId} não encontrado no store.`);
-  //     }
-  //   }
-  // }, [setupId, allSetups]);
 
   const handleDelete = async () => {
     if (!setupId) return;
@@ -111,8 +102,26 @@ export default function SetupDetailsScreen() {
     router.push({ pathname: '/create-setup-screen', params: { setupId } });
   };
 
+  // --- CLONAR SETUP ---
+  const handleClone = async () => {
+    if (!setup) return;
+    try {
+      await cloneSetup(setup);
+      setAlertTitle('Sucesso!');
+      setAlertMessage('Setup copiado para "Meus Setups".');
+      setShowAlert(true);
+    } catch (error) {
+      console.error("Erro ao clonar:", error);
+      setAlertTitle('Erro');
+      setAlertMessage('Não foi possível copiar o setup.');
+      setShowAlert(true);
+    }
+  };
+
   const debouncedHandleEdit = useSingleTap(handleEditNavigation);
   const debouncedConfirmDeletion = useSingleTap(confirmDeletion);
+
+  const isOwner = setup?.userId === userProfile?.uid;
 
   const SetupStatRow = ({
     label, value, icon, min, max, suffix = ''
@@ -163,8 +172,8 @@ export default function SetupDetailsScreen() {
 
   if (!setup) {
     return (
-      <Box className="flex-1 justify-center items-center">
-        <Text>Setup não encontrado</Text>
+      <Box className="flex-1 justify-center items-center bg-black/80">
+        <Text className="text-white">Setup não encontrado</Text>
       </Box>
     );
   }
@@ -210,25 +219,25 @@ export default function SetupDetailsScreen() {
               value={setup.authorName || 'Desconhecido'}
               icon={
                 setup.authorPhotoUrl ? (
-                   <Image 
-                     source={{ uri: setup.authorPhotoUrl }} 
-                     style={{ width: 24, height: 24, borderRadius: 12 }} 
-                     contentFit="cover"
-                   />
+                  <Image
+                    source={{ uri: setup.authorPhotoUrl }}
+                    style={{ width: 24, height: 24, borderRadius: 12 }}
+                    contentFit="cover"
+                  />
                 ) : (
-                   <User size={20} color="#6B7280" />
+                  <User size={20} color="#6B7280" />
                 )
               }
             />
 
-             <DetailRow
+            <DetailRow
               label="Visibilidade"
               value={setup.isPublic ? "Público" : "Privado"}
               icon={
                 setup.isPublic ? (
-                   <Globe size={20} color="#16a34a" /> // Verde
+                  <Globe size={20} color="#16a34a" /> // Verde
                 ) : (
-                   <Lock size={20} color="#6B7280" /> // Cinza
+                  <Lock size={20} color="#6B7280" /> // Cinza
                 )
               }
             />
@@ -331,7 +340,8 @@ export default function SetupDetailsScreen() {
 
         </ScrollView>
         {/* Action Buttons */}
-        {!isViewOnly && (
+        {/* CASO 1: EU SOU O DONO E NÃO ESTOU em isViewOnly */}
+        {isOwner && !isViewOnly && (
           <Box className="bg-black/60">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
@@ -339,7 +349,7 @@ export default function SetupDetailsScreen() {
                   className="flex-1 p-2 rounded-xl"
                   onPress={debouncedHandleEdit}
                 >
-                  <ButtonText>Editar Setup</ButtonText>
+                  <ButtonText className="text-white">Editar Setup</ButtonText>
                 </Button>
                 <Button
                   className="flex-1 p-2 bg-red-500 rounded-xl"
@@ -352,6 +362,25 @@ export default function SetupDetailsScreen() {
             </VStack>
           </Box>
         )}
+
+        {/* CASO 2: EU NÃO SOU O DONO (e o setup carregou) */}
+        {!isOwner && setup && (
+          <Box className="bg-black/60">
+            <VStack space="md" className="m-10 mb-10">
+              <HStack space="md">
+                <Button
+                  className="flex-1 p-2 bg-green-600 rounded-xl"
+                  onPress={handleClone}
+                >
+                  <ButtonIcon as={Copy} className="mr-2" />
+                  <ButtonText className="text-white font-bold" size="lg">Copiar para Meus Setups</ButtonText>
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        )}
+        {/* CASO 3: SOU O DONO, MAS ESTOU EM isViewOnly (ex: tela de estratégia) */}
+        {/* Nenhum botão é mostrado */}
       </ImageBackground>
       {/* Modal de Confirmação de Exclusão */}
       <AppAlertDialog
@@ -373,6 +402,10 @@ export default function SetupDetailsScreen() {
           setShowAlert(false);
           if (alertTitle === 'Setup não encontrado.') {
             router.back();
+          }
+          if (alertTitle === 'Sucesso!') {
+            // Navegue para a tela inicial (Meus Setups)
+            router.push('/(tabs)'); 
           }
         }}
         okText="OK"
