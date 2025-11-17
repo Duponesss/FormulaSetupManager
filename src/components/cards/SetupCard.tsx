@@ -7,7 +7,8 @@ import { Pressable } from '../../../components/ui/pressable';
 import { useRouter } from 'expo-router';
 import { type SetupData } from '../../stores/setupStore';
 import { Image } from 'expo-image';
-import { Bookmark, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, Globe, Lock } from 'lucide-react-native';
+import { Bookmark, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, Globe, Lock, Star } from 'lucide-react-native';
+import StarRatingDisplay from '../display/StarRatingDisplay';
 
 // --- MAPEAMENTO DE CORES DAS EQUIPES ---
 const teamColors = {
@@ -57,9 +58,9 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
   const handleCardPress = () => {
     router.push({
       pathname: '/setup-details-screen',
-      params: { 
+      params: {
         setupId: item.id,
-        isViewOnly: isViewOnly ? 'true' : undefined 
+        isViewOnly: isViewOnly ? 'true' : undefined
       }
     });
   };
@@ -132,14 +133,14 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
               text={item.condition}
             />
             {!isViewOnly && (
-              <HStack 
-                space="xs" 
+              <HStack
+                space="xs"
                 className={`px-2 py-1 rounded-md self-start mb-2 items-center ${item.isPublic ? 'bg-green-100' : 'bg-gray-100'}`}
               >
-                 {item.isPublic ? <Globe size={10} color="#15803d" /> : <Lock size={10} color="#4b5563" />}
-                 <Text className={`text-xs font-bold ${item.isPublic ? 'text-green-700' : 'text-gray-600'}`}>
-                   {item.isPublic ? 'Público' : 'Privado'}
-                 </Text>
+                {item.isPublic ? <Globe size={10} color="#15803d" /> : <Lock size={10} color="#4b5563" />}
+                <Text className={`text-xs font-bold ${item.isPublic ? 'text-green-700' : 'text-gray-600'}`}>
+                  {item.isPublic ? 'Público' : 'Privado'}
+                </Text>
               </HStack>
             )}
           </VStack>
@@ -152,8 +153,17 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
                 Criado: {item.createdAt ? item.createdAt.toDate().toLocaleDateString('pt-BR') : '—'}
               </Text>
             </HStack>
-            <Text size="xs" className="text-gray-400">
-              Atualizado: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}
+            <HStack space="sm" className="items-center">
+              <CalendarDays size={14} color="#9CA3AF" />
+              <Text size="xs" className="text-gray-400">
+                Atualizado: {item.updatedAt ? item.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}
+              </Text>
+            </HStack>
+          </HStack>
+          <HStack space="xs" className="items-center mt-2">
+            <StarRatingDisplay rating={item.rating || 0} size={20} />
+            <Text className="text-gray-500 text-sm ml-1">
+              ({item.ratingCount || 0} {item.ratingCount === 1 ? 'voto' : 'votos'})
             </Text>
           </HStack>
         </Box>

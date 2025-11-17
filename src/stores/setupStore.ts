@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { db, auth, storage } from '../services/firebaseConfig';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId, setDoc, limit, orderBy,
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs, getDoc, writeBatch, documentId, setDoc, limit, orderBy, runTransaction, increment,
   type DocumentSnapshot, startAfter
  } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
@@ -162,6 +162,12 @@ export interface GameData {
   validationRules: any;
 }
 
+export interface RatingDoc {
+  setupId: string;
+  userId: string;
+  rating: number;
+}
+
 // Define a interface do store, incluindo os dados e as ações
 interface SetupState {
   userProfile: UserProfile | null;
@@ -221,6 +227,9 @@ interface SetupState {
   searchPublicSetups: (filters?: Record<string, string | undefined>) => Promise<void>;
   fetchMorePublicSetups: () => Promise<void>;
   cloneSetup: (setup: SetupData) => Promise<void>;
+  rateSetup: (setupId: string, ratingValue: number) => Promise<void>;
+  myRatings: { [setupId: string]: number | null }; // Cache dos votos do usuário
+  fetchMyRating: (setupId: string) => Promise<void>; // Ação para buscar o voto
 }
 
 let unsubscribeFromProfile: (() => void) | null = null;
@@ -252,6 +261,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   lastSetupDoc: null,
   hasMoreSetups: true,
   currentSearchFilters: null,
+  myRatings: {},
 
   listenToUserProfile: (uid) => {
     if (unsubscribeFromProfile) unsubscribeFromProfile();
@@ -480,6 +490,117 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     // Opcional (Fase 4 - Polimento): 
     // Aqui poderíamos usar uma Cloud Function/Transaction para incrementar
     // o `totalDownloads` do setup *original* (originalSetup.id)
+  },
+
+  fetchMyRating: async (setupId) => {
+    const user = auth.currentUser;
+    if (!user) return; // Se não está logado, não há voto
+
+    // Se já temos no cache, não busca de novo
+    if (get().myRatings[setupId] !== undefined) {
+      return;
+    }
+
+    try {
+      const ratingDocId = `${setupId}_${user.uid}`;
+      const ratingRef = doc(db, "ratings", ratingDocId);
+      const ratingDoc = await getDoc(ratingRef);
+
+      if (ratingDoc.exists()) {
+        // Voto encontrado, salva no cache
+        const myVote = ratingDoc.data() as RatingDoc;
+        set((state) => ({
+          myRatings: { ...state.myRatings, [setupId]: myVote.rating },
+        }));
+      } else {
+        // Voto não encontrado, salva null no cache
+        set((state) => ({
+          myRatings: { ...state.myRatings, [setupId]: null },
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao buscar minha avaliação:", error);
+    }
+  },
+
+  // --- FUNÇÃO rateSetup (TOTALMENTE MODIFICADA) ---
+  rateSetup: async (setupId, ratingValue) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    // 1. Define as duas referências de documento que vamos usar
+    const setupRef = doc(db, "setups", setupId);
+    const ratingDocId = `${setupId}_${user.uid}`;
+    const ratingRef = doc(db, "ratings", ratingDocId);
+
+    let newAverageRating: number = 0;
+    let newRatingCount: number = 0;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        // 2. Lê os dois documentos *dentro* da transação
+        const setupDoc = await transaction.get(setupRef);
+        const myRatingDoc = await transaction.get(ratingRef);
+
+        if (!setupDoc.exists()) {
+          throw new Error("Este setup não existe mais!");
+        }
+
+        const setupData = setupDoc.data();
+        const oldRatingSum = setupData.rating * setupData.ratingCount;
+
+        const isNewVote = !myRatingDoc.exists();
+        const oldVoteValue = isNewVote ? 0 : (myRatingDoc.data() as RatingDoc).rating;
+
+        // 3. Calcula a nova média
+        if (isNewVote) {
+          // Usuário está votando pela primeira vez
+          newRatingCount = setupData.ratingCount + 1;
+          const newRatingSum = oldRatingSum + ratingValue;
+          newAverageRating = newRatingSum / newRatingCount;
+        } else {
+          // Usuário está *atualizando* o voto
+          newRatingCount = setupData.ratingCount; // Contagem não muda
+          const newRatingSum = (oldRatingSum - oldVoteValue) + ratingValue;
+          newAverageRating = newRatingSum / newRatingCount;
+        }
+
+        // 4. Atualiza os dois documentos na transação
+        transaction.update(setupRef, {
+          rating: newAverageRating,
+          ratingCount: newRatingCount,
+        });
+        
+        transaction.set(ratingRef, { // .set() (cria ou sobrescreve)
+          setupId: setupId,
+          userId: user.uid,
+          rating: ratingValue,
+        });
+      });
+
+      console.log("Avaliação (re)calculada e registrada!");
+
+      // 5. Atualiza o estado local (Zustand)
+      set((state) => {
+        const updateSetupInList = (list: SetupData[]) => 
+          list.map(s => 
+            s.id === setupId 
+              ? { ...s, rating: newAverageRating, ratingCount: newRatingCount } 
+              : s
+          );
+        
+        return {
+          myRatings: { ...state.myRatings, [setupId]: ratingValue }, // Atualiza o cache do meu voto
+          allSetups: updateSetupInList(state.allSetups),
+          folderSetups: updateSetupInList(state.folderSetups),
+          publicSetups: updateSetupInList(state.publicSetups),
+        };
+      });
+
+    } catch (error) {
+      console.error("Erro na transação de avaliação: ", error);
+      throw new Error("Não foi possível salvar sua avaliação.");
+    }
   },
 
   saveSetup: async (setupData) => {const user = auth.currentUser;
