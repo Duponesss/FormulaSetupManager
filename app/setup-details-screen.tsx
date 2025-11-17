@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { Box } from '../components/ui/box';
 import { Button, ButtonText, ButtonIcon } from '../components/ui/button';
@@ -15,10 +15,11 @@ import { useSetupStore, type SetupData } from '../src/stores/setupStore';
 import { Image } from 'expo-image';
 import { ImageBackground } from 'react-native';
 import { Progress, ProgressFilledTrack } from '../components/ui/progress';
+import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
 import {
   Car, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, SlidersHorizontal,
   Wind, Cog, Settings2, ArrowDownUp, Gauge, AlignVerticalSpaceAround, CircleDashed,
-  X, User, Globe, Lock, Copy
+  X, User, Globe, Lock, Copy, Star
 } from 'lucide-react-native';
 import { Spinner } from "@/components/ui/spinner";
 
@@ -58,6 +59,7 @@ export default function SetupDetailsScreen() {
   const params = useLocalSearchParams<{ setupId: string, isViewOnly?: string }>();
   const { setupId } = params;
   const isViewOnly = params.isViewOnly === 'true';
+
   const allSetups = useSetupStore((state) => state.allSetups);
   const folderSetups = useSetupStore((state) => state.folderSetups);
   const publicSetups = useSetupStore((state) => state.publicSetups);
@@ -66,6 +68,9 @@ export default function SetupDetailsScreen() {
   const cloneSetup = useSetupStore((state) => state.cloneSetup);
   const gameData = useSetupStore((state) => state.gameData);
   const loadingGameData = useSetupStore((state) => state.loadingGameData);
+  const rateSetup = useSetupStore((state) => state.rateSetup);
+  const fetchMyRating = useSetupStore((state) => state.fetchMyRating);
+  const myRating = useSetupStore((state) => (setupId ? state.myRatings[setupId] : null) || 0);
 
   const setup = React.useMemo(() => {
     if (!setupId) return null;
@@ -102,7 +107,6 @@ export default function SetupDetailsScreen() {
     router.push({ pathname: '/create-setup-screen', params: { setupId } });
   };
 
-  // --- CLONAR SETUP ---
   const handleClone = async () => {
     if (!setup) return;
     try {
@@ -122,6 +126,37 @@ export default function SetupDetailsScreen() {
   const debouncedConfirmDeletion = useSingleTap(confirmDeletion);
 
   const isOwner = setup?.userId === userProfile?.uid;
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (setupId && !isOwner) {
+        fetchMyRating(setupId);
+      }
+    }, [setupId, isOwner, fetchMyRating]) 
+  );
+
+  const StarRatingInput = ({ onRate, value }: { onRate: (value: number) => void, value: number }) => {
+    const [hoverRating, setHoverRating] = useState(0); 
+    const displayRating = hoverRating || value;
+    return (
+      <HStack space="md">
+        {[1, 2, 3, 4, 5].map((index) => (
+          <Pressable 
+            key={index} 
+            onPress={() => onRate(index)}
+            onPressIn={() => setHoverRating(index)}
+            onPressOut={() => setHoverRating(0)}
+          >
+            <Star 
+              size={32} 
+              color="#f59e0b" 
+              fill={index <= displayRating ? "#f59e0b" : "none"} 
+            />
+          </Pressable>
+        ))}
+      </HStack>
+    );
+  };
 
   const SetupStatRow = ({
     label, value, icon, min, max, suffix = ''
@@ -264,7 +299,40 @@ export default function SetupDetailsScreen() {
               value={setup.updatedAt ? setup.updatedAt.toDate().toLocaleDateString('pt-BR') : '—'}
               icon={<SlidersHorizontal size={16} color="#6B7280" />}
             />
+            <HStack className="items-center mt-4" space="sm">
+              <StarRatingDisplay rating={setup.rating || 0} size={20} />
+              <Text className="text-gray-500 text-sm ml-1">
+                ({setup.ratingCount || 0} {setup.ratingCount === 1 ? 'voto' : 'votos'})
+              </Text>
+            </HStack>
           </Box>
+
+          {/* Card de Avaliação (Input) */}
+        {!isOwner && (
+            <Box className="rounded-xl p-6 mb-6 bg-gray-50 border border-gray-700">
+              <Heading size="lg" className="mb-4 text-black">
+                {myRating > 0 ? "Sua Avaliação" : "Avalie este Setup"}
+              </Heading>
+              <Box className="items-center">
+                <StarRatingInput
+                  value={myRating}
+                  onRate={async (value) => {
+                    if (!setup) return;
+                    try {
+                      await rateSetup(setup.id!, value);
+                      setAlertTitle("Obrigado!");
+                      setAlertMessage("Sua avaliação foi registrada.");
+                      setShowAlert(true);
+                    } catch (e: any) {
+                      setAlertTitle("Erro");
+                      setAlertMessage(e.message || "Não foi possível salvar.");
+                      setShowAlert(true);
+                    }
+                  }} 
+                />
+              </Box>
+            </Box>
+          )}
 
           {/* Card de Observações */}
           {setup.notes && (
