@@ -51,6 +51,7 @@ interface SetupCardProps {
   item: SetupData;
   onAddToFolder: (item: SetupData) => void;
   isViewOnly?: boolean;
+  isPublicSearch?: boolean;
 }
 
 export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFolder, isViewOnly = false }) => {

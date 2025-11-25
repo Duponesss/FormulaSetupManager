@@ -71,6 +71,7 @@ export default function SetupDetailsScreen() {
   const rateSetup = useSetupStore((state) => state.rateSetup);
   const fetchMyRating = useSetupStore((state) => state.fetchMyRating);
   const myRating = useSetupStore((state) => (setupId ? state.myRatings[setupId] : null) || 0);
+  const topRatedSetups = useSetupStore((state) => state.topRatedSetups);
 
   const setup = React.useMemo(() => {
     if (!setupId) return null;
@@ -78,6 +79,7 @@ export default function SetupDetailsScreen() {
       allSetups.find((s) => s.id === setupId) ||
       folderSetups.find((s) => s.id === setupId) ||
       publicSetups.find((s) => s.id === setupId) ||
+      topRatedSetups.find((s) => s.id === setupId) ||
       null
     );
   }, [setupId, allSetups, folderSetups, publicSetups]);
@@ -132,25 +134,25 @@ export default function SetupDetailsScreen() {
       if (setupId && !isOwner) {
         fetchMyRating(setupId);
       }
-    }, [setupId, isOwner, fetchMyRating]) 
+    }, [setupId, isOwner, fetchMyRating])
   );
 
   const StarRatingInput = ({ onRate, value }: { onRate: (value: number) => void, value: number }) => {
-    const [hoverRating, setHoverRating] = useState(0); 
+    const [hoverRating, setHoverRating] = useState(0);
     const displayRating = hoverRating || value;
     return (
       <HStack space="md">
         {[1, 2, 3, 4, 5].map((index) => (
-          <Pressable 
-            key={index} 
+          <Pressable
+            key={index}
             onPress={() => onRate(index)}
             onPressIn={() => setHoverRating(index)}
             onPressOut={() => setHoverRating(0)}
           >
-            <Star 
-              size={32} 
-              color="#f59e0b" 
-              fill={index <= displayRating ? "#f59e0b" : "none"} 
+            <Star
+              size={32}
+              color="#f59e0b"
+              fill={index <= displayRating ? "#f59e0b" : "none"}
             />
           </Pressable>
         ))}
@@ -249,21 +251,31 @@ export default function SetupDetailsScreen() {
               {setup.setupTitle}
             </Heading>
 
-            <DetailRow
-              label="Piloto"
-              value={setup.authorName || 'Desconhecido'}
-              icon={
-                setup.authorPhotoUrl ? (
-                  <Image
-                    source={{ uri: setup.authorPhotoUrl }}
-                    style={{ width: 24, height: 24, borderRadius: 12 }}
-                    contentFit="cover"
+            <Pressable onPress={() => router.push({ pathname: '/(tabs)/profile-screen', params: { userId: setup.userId } })}>
+              {(props: { pressed: boolean }) => (
+                <Box
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <DetailRow
+                    label="Piloto"
+                    value={setup.authorName || 'Desconhecido'}
+                    icon={
+                      setup.authorPhotoUrl ? (
+                        <Image
+                          source={{ uri: setup.authorPhotoUrl }}
+                          style={{ width: 24, height: 24, borderRadius: 12 }}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <User size={20} color="#6B7280" />
+                      )
+                    }
                   />
-                ) : (
-                  <User size={20} color="#6B7280" />
-                )
-              }
-            />
+                </Box>
+              )}
+            </Pressable>
 
             <DetailRow
               label="Visibilidade"
@@ -308,7 +320,7 @@ export default function SetupDetailsScreen() {
           </Box>
 
           {/* Card de Avaliação (Input) */}
-        {!isOwner && (
+          {!isOwner && (
             <Box className="rounded-xl p-6 mb-6 bg-gray-50 border border-gray-700">
               <Heading size="lg" className="mb-4 text-black">
                 {myRating > 0 ? "Sua Avaliação" : "Avalie este Setup"}
@@ -328,7 +340,7 @@ export default function SetupDetailsScreen() {
                       setAlertMessage(e.message || "Não foi possível salvar.");
                       setShowAlert(true);
                     }
-                  }} 
+                  }}
                 />
               </Box>
             </Box>
@@ -473,7 +485,7 @@ export default function SetupDetailsScreen() {
           }
           if (alertTitle === 'Sucesso!') {
             // Navegue para a tela inicial (Meus Setups)
-            router.push('/(tabs)'); 
+            router.push('/(tabs)');
           }
         }}
         okText="OK"
