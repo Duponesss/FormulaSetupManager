@@ -5,11 +5,16 @@ import { useSetupStore } from "../src/stores/setupStore";
 import { useEffect } from "react";
 import { Box } from '../components/ui/box';
 import { Spinner } from '../components/ui/spinner';
-import { SplashScreen } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import '../global.css';
 import { Text } from '../components/ui/text';
 
 SplashScreen.preventAutoHideAsync();
+
+SplashScreen.setOptions({
+  duration: 400,
+  fade: true,
+});
 
 function RootNavigation() {
   const router = useRouter();
