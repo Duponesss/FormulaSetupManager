@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import { CircleUserRound, Folder, House, Search, Wrench, ClipboardList } from 'lucide-react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-
 import { View, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect } from 'react';
+import { useSetupStore } from '@/src/stores/setupStore';
+import { useAuth } from '@/src/hooks/use-auth';
 
 const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
@@ -66,6 +68,31 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
 };
 
 export default function TabsLayout() {
+  const { user } = useAuth();
+  const listenToUserSetups = useSetupStore((state) => state.listenToUserSetups);
+  const listenToUserFolders = useSetupStore((state) => state.listenToUserFolders);
+  const listenToUserStrategies = useSetupStore((state) => state.listenToUserStrategies);
+
+  useEffect(() => {
+    let unsubSetups = () => { };
+    let unsubFolders = () => { };
+    let unsubStrategies = () => { };
+
+    if (user) {
+      console.log("Iniciando listeners globais...");
+      unsubSetups = listenToUserSetups();
+      unsubFolders = listenToUserFolders();
+      unsubStrategies = listenToUserStrategies();
+    }
+
+    return () => {
+      console.log("Limpando listeners...");
+      unsubSetups();
+      unsubFolders();
+      unsubStrategies();
+    };
+  }, [user]);
+
   return (
     <Tabs
       initialRouteName="index"
