@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowBigLeft, PencilLine, Trash, X } from 'lucide-react-native';
+import { ArrowBigLeft, ArrowLeft, PencilLine, Trash, X } from 'lucide-react-native';
 import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
 import {
@@ -91,7 +91,7 @@ export default function FolderDetailsScreen() {
                       opacity: props.pressed ? 0.5 : 1.0,
                     }}
                   >
-                    <ArrowBigLeft />
+                    <ArrowLeft />
                   </Box>
                 )}
           </Pressable>

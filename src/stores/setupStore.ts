@@ -11,9 +11,11 @@ export interface UserProfile {
   email: string;
   username: string; 
   profilePictureUrl?: string; 
-  gamertagPSN?: string; // PlayStation Network
-  gamertagXbox?: string; // Xbox Live
-  gamertagPC?: string;   // (ex: Steam, EA ID)
+  gamertagPSN?: string; 
+  gamertagXbox?: string; 
+  gamertagPC?: string;   
+  followersCount?: number;
+  followingCount?: number;
 }
 
 // Define a interface para todos os dados do formulário
@@ -174,6 +176,16 @@ interface SetupState {
   loadingProfile: boolean;
   listenToUserProfile: (uid: string) => (() => void);
   uploadProfilePicture: (imageUri: string) => Promise<void>;
+  viewedUserProfile: UserProfile | null; 
+  loadingViewedProfile: boolean;
+  isFollowing: boolean;
+  fetchUserProfile: (uid: string) => Promise<void>;
+  checkIfFollowing: (targetUserId: string) => Promise<void>;
+  followUser: (targetUserId: string) => Promise<void>;
+  unfollowUser: (targetUserId: string) => Promise<void>;
+  userList: UserProfile[];
+  loadingUserList: boolean;
+  fetchUserList: (userId: string, type: 'followers' | 'following') => Promise<void>;
   
   formData: SetupData;
   updateField: (field: keyof SetupData, value: string | number | boolean) => void;
@@ -230,6 +242,10 @@ interface SetupState {
   rateSetup: (setupId: string, ratingValue: number) => Promise<void>;
   myRatings: { [setupId: string]: number | null }; // Cache dos votos do usuário
   fetchMyRating: (setupId: string) => Promise<void>; // Ação para buscar o voto
+
+  topRatedSetups: SetupData[];
+  loadingTopRated: boolean;
+  fetchTopRatedSetups: () => Promise<void>;
 }
 
 let unsubscribeFromProfile: (() => void) | null = null;
@@ -262,6 +278,13 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   hasMoreSetups: true,
   currentSearchFilters: null,
   myRatings: {},
+  topRatedSetups: [],
+  loadingTopRated: false,
+  viewedUserProfile: null,
+  loadingViewedProfile: false,
+  isFollowing: false,
+  userList: [],
+  loadingUserList: false,
 
   listenToUserProfile: (uid) => {
     if (unsubscribeFromProfile) unsubscribeFromProfile();
@@ -874,5 +897,169 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       lapTimes: lapTimes,
       updatedAt: Timestamp.now(), // Atualiza a data de modificação
     });
+  },
+
+  fetchTopRatedSetups: async () => {
+    // Evita recarregar se já tiver dados (opcional, mas bom para performance inicial)
+    if (get().topRatedSetups.length > 0) return; 
+    
+    set({ loadingTopRated: true });
+    try {
+      const setupsRef = collection(db, "setups");
+      // Query: Públicos, Ordenados por Rating (maior para menor), Top 5
+      const q = query(
+        setupsRef, 
+        where("isPublic", "==", true), 
+        orderBy("rating", "desc"), 
+        limit(5)
+      );
+
+      const snapshot = await getDocs(q);
+      const setups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
+      
+      set({ topRatedSetups: setups, loadingTopRated: false });
+    } catch (error) {
+      console.error("Erro ao buscar top setups:", error);
+      set({ loadingTopRated: false });
+    }
+  },
+
+  fetchUserProfile: async (uid) => {
+    set({ loadingViewedProfile: true, viewedUserProfile: null });
+    try {
+      const userDoc = await getDoc(doc(db, "users", uid));
+      if (userDoc.exists()) {
+        set({ viewedUserProfile: userDoc.data() as UserProfile });
+      }
+    } catch (error) {
+      console.error("Erro ao buscar perfil:", error);
+    } finally {
+      set({ loadingViewedProfile: false });
+    }
+  },
+
+  // --- VERIFICAR SE SIGO ---
+  checkIfFollowing: async (targetUserId) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+    
+    // Verifica na subcoleção se existe um documento
+    const docRef = doc(db, "users", currentUser.uid, "following", targetUserId);
+    const docSnap = await getDoc(docRef);
+    set({ isFollowing: docSnap.exists() });
+  },
+
+  // --- SEGUIR USUÁRIO (TRANSAÇÃO) ---
+  followUser: async (targetUserId) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("Usuário não logado");
+
+    const myRef = doc(db, "users", currentUser.uid);
+    const targetRef = doc(db, "users", targetUserId);
+    
+    // Referências das subcoleções (relações)
+    const myFollowingRef = doc(db, "users", currentUser.uid, "following", targetUserId);
+    const targetFollowerRef = doc(db, "users", targetUserId, "followers", currentUser.uid);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const myDoc = await transaction.get(myRef);
+        const targetDoc = await transaction.get(targetRef);
+
+        if (!targetDoc.exists()) throw new Error("Usuário alvo não existe");
+
+        // 1. Cria os documentos de relação
+        transaction.set(myFollowingRef, { since: Timestamp.now() });
+        transaction.set(targetFollowerRef, { since: Timestamp.now() });
+
+        // 2. Atualiza contadores (Atomicamente)
+        const newMyFollowingCount = (myDoc.data()?.followingCount || 0) + 1;
+        const newTargetFollowerCount = (targetDoc.data()?.followersCount || 0) + 1;
+
+        transaction.update(myRef, { followingCount: newMyFollowingCount });
+        transaction.update(targetRef, { followersCount: newTargetFollowerCount });
+      });
+
+      // Atualiza estado local
+      set({ isFollowing: true });
+      
+      // Se estivermos vendo o perfil, atualiza o contador visualmente
+      const viewed = get().viewedUserProfile;
+      if (viewed && viewed.uid === targetUserId) {
+        set({ viewedUserProfile: { ...viewed, followersCount: (viewed.followersCount || 0) + 1 } });
+      }
+
+    } catch (error) {
+      console.error("Erro ao seguir:", error);
+      throw error;
+    }
+  },
+
+  // --- DEIXAR DE SEGUIR (TRANSAÇÃO) ---
+  unfollowUser: async (targetUserId) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("Usuário não logado");
+
+    const myRef = doc(db, "users", currentUser.uid);
+    const targetRef = doc(db, "users", targetUserId);
+    const myFollowingRef = doc(db, "users", currentUser.uid, "following", targetUserId);
+    const targetFollowerRef = doc(db, "users", targetUserId, "followers", currentUser.uid);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const myDoc = await transaction.get(myRef);
+        const targetDoc = await transaction.get(targetRef);
+
+        // 1. Remove relações
+        transaction.delete(myFollowingRef);
+        transaction.delete(targetFollowerRef);
+
+        // 2. Decrementa contadores (evita negativo)
+        const newMyFollowingCount = Math.max(0, (myDoc.data()?.followingCount || 0) - 1);
+        const newTargetFollowerCount = Math.max(0, (targetDoc.data()?.followersCount || 0) - 1);
+
+        transaction.update(myRef, { followingCount: newMyFollowingCount });
+        transaction.update(targetRef, { followersCount: newTargetFollowerCount });
+      });
+
+      set({ isFollowing: false });
+
+      const viewed = get().viewedUserProfile;
+      if (viewed && viewed.uid === targetUserId) {
+        set({ viewedUserProfile: { ...viewed, followersCount: Math.max(0, (viewed.followersCount || 0) - 1) } });
+      }
+
+    } catch (error) {
+      console.error("Erro ao deixar de seguir:", error);
+      throw error;
+    }
+  },
+
+  fetchUserList: async (userId, type) => {
+    set({ loadingUserList: true, userList: [] });
+    try {
+      const collectionRef = collection(db, "users", userId, type);
+      const snapshot = await getDocs(collectionRef);
+      
+      if (snapshot.empty) {
+        set({ userList: [], loadingUserList: false });
+        return;
+      }
+
+      const userIds = snapshot.docs.map(doc => doc.id);
+      
+      const userPromises = userIds.map(id => getDoc(doc(db, "users", id)));
+      const userDocs = await Promise.all(userPromises);
+
+      const usersData = userDocs
+        .filter(doc => doc.exists())
+        .map(doc => doc.data() as UserProfile);
+
+      set({ userList: usersData, loadingUserList: false });
+
+    } catch (error) {
+      console.error("Erro ao buscar lista de usuários:", error);
+      set({ loadingUserList: false });
+    }
   },
 }));
