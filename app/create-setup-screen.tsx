@@ -1,25 +1,25 @@
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
+import { useSetupStore, type SetupData } from '../src/stores/setupStore';
 
-import { Box } from '../../components/ui/box';
-import { Button, ButtonText } from '../../components/ui/button';
-import { Heading } from '../../components/ui/heading';
-import { HStack } from '../../components/ui/hstack';
-import { Input, InputField } from '../../components/ui/input';
-import { Text } from '../../components/ui/text';
-import { Textarea, TextareaInput } from '../../components/ui/textarea';
-import { Slider, SliderThumb, SliderTrack, SliderFilledTrack } from '../../components/ui/slider';
-import { FormControl, FormControlError, FormControlErrorText } from '../../components/ui/form-control';
+import { Box } from '../components/ui/box';
+import { Button, ButtonText } from '../components/ui/button';
+import { Heading } from '../components/ui/heading';
+import { HStack } from '../components/ui/hstack';
+import { Input, InputField } from '../components/ui/input';
+import { Text } from '../components/ui/text';
+import { Textarea, TextareaInput } from '../components/ui/textarea';
+import { Slider, SliderThumb, SliderTrack, SliderFilledTrack } from '../components/ui/slider';
+import { FormControl, FormControlError, FormControlErrorText } from '../components/ui/form-control';
 import {
   Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop,
   SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem
-} from '../../components/ui/select';
-import { ScrollView } from '../../components/ui/scroll-view';
-import { Switch } from '../../components/ui/switch';
-import { ChevronDown } from 'lucide-react-native';
-import AppAlertDialog from '../../src/components/dialogs/AppAlertDialog';
-import { FlatList, ImageBackground } from 'react-native';
+} from '../components/ui/select';
+import { ScrollView } from '../components/ui/scroll-view';
+import { Switch } from '../components/ui/switch';
+import { ArrowLeft, ChevronDown } from 'lucide-react-native';
+import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
+import { FlatList, ImageBackground, Pressable } from 'react-native';
 import { Spinner } from '@/components/ui/spinner';
 
 type FormSectionItem = {
@@ -318,13 +318,24 @@ export default function CreateSetupScreen() {
   return (
     <Box className="flex-1">
       <ImageBackground
-        source={require('../../src/assets/images/apex-wallpaper.jpg')}
+        source={require('@/src/assets/images/apex-wallpaper.jpg')}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
         {/* Header */}
         <Box className="pt-12 pb-4 px-6 bg-black/70">
-          <HStack className="items-center justify-between">
+          <HStack className="items-center">
+            <Pressable onPress={() => router.back()} className="p-2">
+              {(props: { pressed: boolean }) => (
+                <Box
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <ArrowLeft color="white" />
+                </Box>
+              )}
+            </Pressable>
             <Heading className="text-white " size="xl">{isEditMode ? 'Editar Setup' : 'Novo Setup'}</Heading>
           </HStack>
         </Box>

@@ -7,10 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
-
-  // ordem visual personalizada (índices das rotas do state.routes)
-  const visualOrder = [1, 2, 0, 3, 4, 5];
-  // nesse exemplo: Busca, Criar Setup, Home, Pastas, Estratégias, Perfil
+  const visualOrder = [1, 2, 0, 3, 4];
 
   return (
     <View
@@ -75,54 +72,41 @@ export default function TabsLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        // tabBarActiveTintColor: '#E10600',
-        // tabBarInactiveTintColor: 'gray',
-        // tabBarStyle: {
-        //     backgroundColor: '#1F1F1F',
-        //     borderTopWidth: 0,
-        // }
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: '',
           tabBarIcon: ({ color }) => <House color={color} size={30} />,
         }}
       />
       <Tabs.Screen
         name="search-setup-screen"
         options={{
-          title: 'Busca',
+          title: '',
           tabBarIcon: ({ color }) => <Search color={color} size={30} />,
 
         }}
       />
       <Tabs.Screen
-        name="create-setup-screen"
-        options={{
-          title: 'Criar Setup',
-          tabBarIcon: ({ color }) => <Wrench color={color} size={30} />,
-        }}
-      />
-      <Tabs.Screen
         name="folders-screen"
         options={{
-          title: 'Pastas',
+          title: '',
           tabBarIcon: ({ color }) => <Folder color={color} size={30} />,
         }}
       />
       <Tabs.Screen
         name="strategies-screen"
         options={{
-          title: 'Estratégias',
+          title: '',
           tabBarIcon: ({ color }) => <ClipboardList color={color} size={30} />,
         }}
       />
       <Tabs.Screen
         name="profile-screen"
         options={{
-          title: 'Perfil',
+          title: '',
           tabBarIcon: ({ color }) => <CircleUserRound color={color} size={30} />,
         }}
       />
