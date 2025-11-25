@@ -1,16 +1,14 @@
-import { useAuth } from "../../src/hooks/use-auth";
+import { useAuth } from "@/src/hooks/use-auth";
 import React, { useState } from 'react';
 import { useRouter } from "expo-router";
-import { Box } from '../../components/ui/box';
-import { Button, ButtonText } from '../../components/ui/button';
-import { Heading } from '../../components/ui/heading';
-import { HStack } from '../../components/ui/hstack';
-import { Spinner } from '../../components/ui/spinner';
-import { Text } from '../../components/ui/text';
-import { VStack } from '../../components/ui/vstack';
-import { Input, InputField } from '../../components/ui/input';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { Input, InputField } from '@/components/ui/input';
 import { Image, ImageBackground } from 'react-native';
-import AppAlertDialog from '../../src/components/dialogs/AppAlertDialog';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 
 export default function RegisterScreen() {
     const { signUpWithEmail } = useAuth();
@@ -36,7 +34,6 @@ export default function RegisterScreen() {
     };
 
     const handleEmailSignUp = async () => {
-        // Validação agora inclui o nome de usuário
         if (!email || !password || !username) {
             showAlertDialog('Campos incompletos', 'Por favor, preencha nome de usuário, email e senha.');
             return;
@@ -44,9 +41,7 @@ export default function RegisterScreen() {
 
         setLoading(true);
         try {
-            // Passa o novo nome de usuário para a função de cadastro
             await signUpWithEmail(email, password, username);
-            // O redirecionamento será tratado pelo listener de autenticação
         } catch (error: any) {
             console.error('Erro de autenticação:', error);
             let errorMessage = 'Erro ao fazer autenticação';

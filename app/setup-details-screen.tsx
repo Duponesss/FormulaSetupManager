@@ -23,7 +23,6 @@ import {
 } from 'lucide-react-native';
 import { Spinner } from "@/components/ui/spinner";
 
-// --- MAPEAMENTO DE CORES DAS EQUIPES ---
 const teamColors = {
   'Oracle Red Bull Racing': '#3671C6',
   'Scuderia Ferrari HP': '#DC0000',
@@ -35,10 +34,9 @@ const teamColors = {
   'VISA Cash App RB F1 Team': '#6692FF',
   'Williams Racing': '#85b8ff',
   'Kick Sauber F1 Team': '#52E252',
-  'default': '#E5E7EB', // Um cinza padrão para fallback
+  'default': '#E5E7EB', 
 };
 
-// --- MAPEAMENTO DE LOGOS DAS EQUIPES ---
 const teamLogos = {
   'Oracle Red Bull Racing': require('../src/assets/images/redbull.png'),
   'Scuderia Ferrari HP': require('../src/assets/images/ferrari.png'),
@@ -130,7 +128,7 @@ export default function SetupDetailsScreen() {
   const confirmDeletion = () => setShowDeleteModal(true);
 
   const handleEditNavigation = () => {
-    console.log('EDITANDO SETUP COM setupId:', setupId);
+    // console.log('EDITANDO SETUP COM setupId:', setupId);
     router.push({ pathname: '/create-setup-screen', params: { setupId } });
   };
 
@@ -191,7 +189,6 @@ export default function SetupDetailsScreen() {
     label: string, value: number, icon: React.ReactNode,
     min: number, max: number, suffix?: string
   }) => {
-    // Calcula a porcentagem para a barra de progresso
     const progressValue = ((value - min) / (max - min)) * 100;
     return (
       <VStack className="py-2">
@@ -318,9 +315,9 @@ export default function SetupDetailsScreen() {
               value={setup.isPublic ? "Público" : "Privado"}
               icon={
                 setup.isPublic ? (
-                  <Globe size={20} color="#16a34a" /> // Verde
+                  <Globe size={20} color="#16a34a" /> 
                 ) : (
-                  <Lock size={20} color="#6B7280" /> // Cinza
+                  <Lock size={20} color="#6B7280" /> 
                 )
               }
             />
@@ -456,7 +453,6 @@ export default function SetupDetailsScreen() {
 
         </ScrollView>
         {/* Action Buttons */}
-        {/* CASO 1: EU SOU O DONO E NÃO ESTOU em isViewOnly */}
         {isOwner && !isViewOnly && (
           <Box className="bg-black/60">
             <VStack space="md" className="m-10 mb-10">
@@ -479,7 +475,6 @@ export default function SetupDetailsScreen() {
           </Box>
         )}
 
-        {/* CASO 2: EU NÃO SOU O DONO (e o setup carregou) */}
         {!isOwner && setup && (
           <Box className="bg-black/60">
             <VStack space="md" className="m-10 mb-10">
@@ -495,8 +490,6 @@ export default function SetupDetailsScreen() {
             </VStack>
           </Box>
         )}
-        {/* CASO 3: SOU O DONO, MAS ESTOU EM isViewOnly (ex: tela de estratégia) */}
-        {/* Nenhum botão é mostrado */}
       </ImageBackground>
       {/* Modal de Confirmação de Exclusão */}
       <AppAlertDialog
@@ -520,7 +513,6 @@ export default function SetupDetailsScreen() {
             router.back();
           }
           if (alertTitle === 'Sucesso!') {
-            // Navegue para a tela inicial (Meus Setups)
             router.push('/(tabs)');
           }
         }}

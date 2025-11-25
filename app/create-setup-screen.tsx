@@ -1,24 +1,24 @@
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSetupStore, type SetupData } from '../src/stores/setupStore';
+import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
 
-import { Box } from '../components/ui/box';
-import { Button, ButtonText } from '../components/ui/button';
-import { Heading } from '../components/ui/heading';
-import { HStack } from '../components/ui/hstack';
-import { Input, InputField } from '../components/ui/input';
-import { Text } from '../components/ui/text';
-import { Textarea, TextareaInput } from '../components/ui/textarea';
-import { Slider, SliderThumb, SliderTrack, SliderFilledTrack } from '../components/ui/slider';
-import { FormControl, FormControlError, FormControlErrorText } from '../components/ui/form-control';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Input, InputField } from '@/components/ui/input';
+import { Text } from '@/components/ui/text';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { Slider, SliderThumb, SliderTrack, SliderFilledTrack } from '@/components/ui/slider';
+import { FormControl, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
 import {
   Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop,
   SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem
-} from '../components/ui/select';
-import { ScrollView } from '../components/ui/scroll-view';
-import { Switch } from '../components/ui/switch';
+} from '@/components/ui/select';
+import { ScrollView } from '@/components/ui/scroll-view';
+import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, ChevronDown } from 'lucide-react-native';
-import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { FlatList, ImageBackground, Pressable } from 'react-native';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -39,7 +39,7 @@ type FormSectionItem = {
 const SliderComponent = React.memo(({
   label,
   value,
-  onFinalChange, // Função para atualizar o store global 
+  onFinalChange, 
   min,
   max,
   step,
@@ -57,7 +57,6 @@ const SliderComponent = React.memo(({
 }) => {
   const [localValue, setLocalValue] = useState(value);
 
-  // Sincroniza o estado local se o valor global mudar (ex: ao carregar um setup)
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
@@ -71,8 +70,8 @@ const SliderComponent = React.memo(({
       </HStack>
       <Slider
         value={localValue}
-        onChange={setLocalValue} // onChange atualiza apenas o estado local
-        onChangeEnd={onFinalChange} // onChangeEnd atualiza o store global
+        onChange={setLocalValue}
+        onChangeEnd={onFinalChange} 
         minValue={min} maxValue={max} step={step}
       >
         <SliderTrack>
@@ -86,15 +85,12 @@ const SliderComponent = React.memo(({
 
 
 export default function CreateSetupScreen() {
-  // console.log('OBJETO DE ROTA RECEBIDO:', JSON.stringify(route, null, 2));
   const router = useRouter();
   const { setupId } = useLocalSearchParams<{ setupId?: string }>();
-  // Conecta-se ao store e pega os dados e ações necessárias
   const formData = useSetupStore((state) => state.formData);
   const gameData = useSetupStore((state) => state.gameData);
   const loadingGameData = useSetupStore((state) => state.loadingGameData);
 
-  // 2. Pega as AÇÕES (funções) de forma estável com getState(), sem causar re-renderizações.
   const { updateField, loadFormWithExistingSetup, resetForm, saveSetup } = useSetupStore.getState();
 
   const [loading, setLoading] = useState(false);
@@ -144,7 +140,6 @@ export default function CreateSetupScreen() {
     }
   };
 
-  // Dados para os selects
   const carOptions = useMemo(() => gameData?.teams.map(t => t.teamName) || [], [gameData]);
   const trackOptions = useMemo(() => gameData?.tracks || [], [gameData]);
   const controlTypes = useMemo(() => ['Controle', 'Volante'] as const, []);
@@ -152,8 +147,8 @@ export default function CreateSetupScreen() {
 
   const formSections: FormSectionItem[] = useMemo(() => {
     const rules = gameData?.validationRules;
-    console.log("RULES RECEBIDAS:", JSON.stringify(rules, null, 2));
-    if (!rules) return []; // Retorna vazio se as regras ainda não carregaram
+    // console.log("RULES RECEBIDAS:", JSON.stringify(rules, null, 2));
+    if (!rules) return []; 
 
     return [
 
@@ -397,7 +392,6 @@ export default function CreateSetupScreen() {
                           <SelectBackdrop />
                           <SelectContent>
                             <SelectDragIndicatorWrapper><SelectDragIndicator /></SelectDragIndicatorWrapper>
-                            {/* ScrollView para listas longas (pistas, carros) */}
                             <ScrollView style={{ maxHeight: 400, width: '100%' }}>
                               {(item.options as readonly string[]).map((opt) => (
                                 <SelectItem key={opt} label={opt} value={opt} />
@@ -444,7 +438,7 @@ export default function CreateSetupScreen() {
                         isDisabled={loading}
                         value={formData.isPublic}
                         onValueChange={(val) => updateField('isPublic', val)}
-                        trackColor={{ false: '#767577', true: '#dc2626' }} // Vermelho F1
+                        trackColor={{ false: '#767577', true: '#dc2626' }} 
                         thumbColor={formData.isPublic ? '#fca5a5' : '#f4f3f4'}
                       />
                     </Box>

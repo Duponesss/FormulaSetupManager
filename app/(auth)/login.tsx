@@ -47,9 +47,9 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      console.log('Fazendo login...');
+      // console.log('Fazendo login...');
       await signInWithEmail(email, password);
-      console.log('Login realizado com sucesso!');
+      // console.log('Login realizado com sucesso!');
     } catch (error: any) {
       console.error('Erro de autenticação:', error);
       let errorMessage = 'Erro ao fazer autenticação';
@@ -146,7 +146,7 @@ export default function LoginScreen() {
 
             <Button
               variant="link"
-              onPress={() => router.push('/register')} // Link para /register
+              onPress={() => router.push('/register')} 
             >
               <ButtonText className="text-white pressed:opacity-70">
                 Não tem conta? Criar uma
@@ -154,7 +154,7 @@ export default function LoginScreen() {
             </Button>
             <Button
               variant="link"
-              onPress={() => router.push('/reset-password')} // Link para /reset-password
+              onPress={() => router.push('/reset-password')} 
             >
               <ButtonText className="text-gray-400 pressed:opacity-70 text-xs">
                 Esqueceu sua senha?

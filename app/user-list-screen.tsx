@@ -27,7 +27,6 @@ export default function UserListScreen() {
     }, [userId, type]);
 
     const handleUserPress = (targetId: string) => {
-        // Navega para o perfil do usuário clicado
         router.push({
             pathname: '/(tabs)/profile-screen',
             params: { userId: targetId }
@@ -43,7 +42,6 @@ export default function UserListScreen() {
         >
             {({ pressed }) => (
                 <HStack space="md" className={`items-center ${pressed ? 'opacity-60' : 'opacity-100'}`}>
-                    {/* Avatar Pequeno */}
                     {item.profilePictureUrl ? (
                         <Image
                             source={{ uri: item.profilePictureUrl }}

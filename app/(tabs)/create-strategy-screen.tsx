@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
-import { Box } from '../../components/ui/box';
-import { Heading } from '../../components/ui/heading';
-import { Text } from '../../components/ui/text';
-import { Pressable } from '../../components/ui/pressable';
-import { ScrollView } from '../../components/ui/scroll-view';
-import { Input, InputField } from '../../components/ui/input';
-import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from '../../components/ui/select';
-import { Textarea, TextareaInput } from '../../components/ui/textarea';
-import { Button, ButtonText } from '../../components/ui/button';
-import { Spinner } from '../../components/ui/spinner';
-import { HStack } from '../../components/ui/hstack';
+import { Box } from '@/components/ui/box';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { Pressable } from '@/components/ui/pressable';
+import { ScrollView } from '@/components/ui/scroll-view';
+import { Input, InputField } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from '@/components/ui/select';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { HStack } from '@/components/ui/hstack';
 import { ArrowLeft, ChevronDown, Trash2, X } from 'lucide-react-native';
-import { type Strategy, useSetupStore, StrategyPlan, PlannedStint } from '../../src/stores/setupStore';
+import { type Strategy, useSetupStore, StrategyPlan, PlannedStint } from '@/src/stores/setupStore';
 import { VStack } from '@/components/ui/vstack';
-import SelectSetupModal from '../../src/components/dialogs/SelectSetupModal';
+import SelectSetupModal from '@/src/components/dialogs/SelectSetupModal';
 
-// Converte uma string "MM:SS.mls" para milissegundos
 const timeToMillis = (time: string): number | null => {
     const parts = time.match(/(\d{2}):(\d{2})\.(\d{3})/);
     if (!parts) return null;
@@ -25,11 +24,9 @@ const timeToMillis = (time: string): number | null => {
     return (minutes * 60 + seconds) * 1000 + millis;
 };
 
-// Tipo para os pneus disponíveis (incluindo inter e wet)
 type AvailableTyres = Strategy['initialAvailableTyres'];
 type TyreCompound = PlannedStint['tyreCompound'];
 
-// Mapeamento para as imagens do formulário
 const formTyreImages = {
     soft: require('../../src/assets/images/soft_tyre.png'),
     medium: require('../../src/assets/images/medium_tyre.png'),
@@ -44,24 +41,22 @@ export default function CreateStrategyScreen() {
     const params = useLocalSearchParams<{ strategyId?: string }>();
     const isEditing = !!params.strategyId;
 
-    // Conecta à store para pegar os dados necessários
     const allSetups = useSetupStore(state => state.allSetups);
     const gameData = useSetupStore(state => state.gameData);
     const createStrategy = useSetupStore(state => state.createStrategy);
     const updateStrategy = useSetupStore(state => state.updateStrategy);
     const strategies = useSetupStore(state => state.strategies);
 
-    // Estados do formulário
     const [name, setName] = useState('');
     const [track, setTrack] = useState('');
     const [raceDistance, setRaceDistance] = useState<Strategy['raceDistance'] | ''>('');
     const [notes, setNotes] = useState('');
     const [selectedSetupId, setSelectedSetupId] = useState<string | null>(null);
-    const [totalRaceLaps, setTotalRaceLaps] = useState(''); // Input de voltas totais
+    const [totalRaceLaps, setTotalRaceLaps] = useState('');
     const [initialAvailableTyres, setInitialAvailableTyres] = useState<AvailableTyres>({
-        soft: 2, medium: 2, hard: 2, intermediate: 2, wet: 2 // Valores iniciais padrão
+        soft: 2, medium: 2, hard: 2, intermediate: 2, wet: 2
     });
-    const [strategyPlans, setStrategyPlans] = useState<StrategyPlan[]>([]); // Array para Planos A, B, C
+    const [strategyPlans, setStrategyPlans] = useState<StrategyPlan[]>([]);
 
     const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -71,15 +66,14 @@ export default function CreateStrategyScreen() {
         setRaceDistance(value as Strategy['raceDistance']);
     };
 
-    // Adiciona um novo plano (A, B ou C) se houver menos de 3
     const addStrategyPlan = () => {
         if (strategyPlans.length < 3) {
-            const nextPlanLabel = `Plano ${String.fromCharCode(65 + strategyPlans.length)}`; // A, B, C
+            const nextPlanLabel = `Plano ${String.fromCharCode(65 + strategyPlans.length)}`;
             setStrategyPlans([
                 ...strategyPlans,
                 {
                     planLabel: nextPlanLabel,
-                    plannedStints: [], // Começa sem stints
+                    plannedStints: [],
                     fuelLoad: 0,
                     totalTime: '00:00.000',
                 }
@@ -87,10 +81,8 @@ export default function CreateStrategyScreen() {
         }
     };
 
-    // Remove um plano pelo índice
     const removeStrategyPlan = (planIndex: number) => {
         let plans = strategyPlans.filter((_, index) => index !== planIndex);
-        // Reajusta os labels (A, B, C...)
         plans = plans.map((plan, index) => ({
             ...plan,
             planLabel: `Plano ${String.fromCharCode(65 + index)}`
@@ -98,7 +90,6 @@ export default function CreateStrategyScreen() {
         setStrategyPlans(plans);
     };
 
-    // Adiciona um stint a um plano específico (máximo 3 stints)
     const addStintToPlan = (planIndex: number) => {
         const currentPlan = strategyPlans[planIndex];
         if (currentPlan && currentPlan.plannedStints.length < 3) {
@@ -109,22 +100,19 @@ export default function CreateStrategyScreen() {
         }
     };
 
-    // Remove um stint de um plano específico
     const removeStintFromPlan = (planIndex: number, stintIndex: number) => {
         const updatedPlans = [...strategyPlans];
         updatedPlans[planIndex].plannedStints.splice(stintIndex, 1);
         setStrategyPlans(updatedPlans);
     };
 
-    // Atualiza um campo dentro de um stint específico
     const updateStintInPlan = (planIndex: number, stintIndex: number, field: keyof PlannedStint, value: string | number) => {
         const updatedPlans = [...strategyPlans];
-        // @ts-ignore - Confiança na tipagem, embora dinâmica
+        // @ts-ignore
         updatedPlans[planIndex].plannedStints[stintIndex][field] = value;
         setStrategyPlans(updatedPlans);
     };
 
-    // Atualiza um campo do Plano (fuelLoad, totalTime)
     const updatePlanField = (planIndex: number, field: keyof StrategyPlan, value: string | number) => {
         const updatedPlans = [...strategyPlans];
         // @ts-ignore
@@ -132,17 +120,15 @@ export default function CreateStrategyScreen() {
         setStrategyPlans(updatedPlans);
     }
 
-    // Atualiza a quantidade de pneus disponíveis
     const updateAvailableTyreCount = (compound: keyof AvailableTyres, value: string) => {
         const count = parseInt(value, 10);
         if (!isNaN(count) && count >= 0) {
             setInitialAvailableTyres(prev => ({ ...prev, [compound]: count }));
-        } else if (value === '') { // Permite apagar o campo
+        } else if (value === '') {
             setInitialAvailableTyres(prev => ({ ...prev, [compound]: 0 }));
         }
     };
 
-    // Lógica para preencher o formulário em modo de edição
     useEffect(() => {
         if (isEditing && strategies.length > 0) {
             const strategyToEdit = strategies.find(s => s.id === params.strategyId);
@@ -164,7 +150,6 @@ export default function CreateStrategyScreen() {
             setErrorMessage('Preencha as informações gerais, setup, voltas totais e adicione pelo menos um plano.');
             return;
         }
-        // Validação adicional pode ser feita aqui (ex: formato do tempo, combustível)
 
         setIsSaving(true);
         setErrorMessage('');
@@ -173,9 +158,8 @@ export default function CreateStrategyScreen() {
             const finalTotalRaceLaps = parseInt(totalRaceLaps, 10);
             if (isNaN(finalTotalRaceLaps)) throw new Error("Número de voltas inválido");
 
-            // Valida e converte combustível e tempo para cada plano
             const validatedPlans = strategyPlans.map(plan => {
-                const fuel = parseFloat(String(plan.fuelLoad).replace(',', '.')); // Garante formato numérico
+                const fuel = parseFloat(String(plan.fuelLoad).replace(',', '.'));
                 if (isNaN(fuel)) throw new Error(`Carga de combustível inválida no ${plan.planLabel}`);
                 if (!timeToMillis(plan.totalTime)) throw new Error(`Tempo total inválido no ${plan.planLabel}`);
                 return { ...plan, fuelLoad: fuel };
@@ -190,8 +174,8 @@ export default function CreateStrategyScreen() {
                 setupId: selectedSetupId,
                 totalRaceLaps: finalTotalRaceLaps,
                 initialAvailableTyres,
-                strategyPlans: validatedPlans, // Usa os planos validados
-                lapTimes: isEditing ? (strategies.find(s => s.id === params.strategyId)?.lapTimes || []) : [], // Mantém os tempos de volta se estiver editando
+                strategyPlans: validatedPlans,
+                lapTimes: isEditing ? (strategies.find(s => s.id === params.strategyId)?.lapTimes || []) : [],
             };
 
             if (isEditing) {
@@ -287,7 +271,6 @@ export default function CreateStrategyScreen() {
                     <Box className="bg-white p-4 rounded-lg">
                         <Heading size="sm" className="mb-4">Setup Vinculado</Heading>
                         {!selectedSetup ? (
-                            // Se nenhum setup estiver selecionado, mostra o botão grande
                             <Pressable
                                 className="border border-gray-300 p-3 rounded-md items-center"
                                 onPress={() => setIsSetupModalOpen(true)}
@@ -295,7 +278,6 @@ export default function CreateStrategyScreen() {
                                 <Text>Clique para selecionar um setup</Text>
                             </Pressable>
                         ) : (
-                            // Se um setup estiver selecionado, mostra os detalhes e botões de ação
                             <Box className="border border-green-300 bg-green-50 p-3 rounded-md">
                                 <HStack className="justify-between items-center">
                                     <VStack className="flex-1">
@@ -401,7 +383,6 @@ export default function CreateStrategyScreen() {
                                                         </Input>
                                                     </VStack>
                                                 ) : (
-                                                    // Espaçador para manter o alinhamento quando o input está oculto
                                                     <Box className="w-24" />
                                                 )}
                                                 <Pressable onPress={() => removeStintFromPlan(planIndex, stintIndex)} className="pb-2">
@@ -433,7 +414,7 @@ export default function CreateStrategyScreen() {
                                                 <Input size="sm">
                                                     <InputField
                                                         placeholder="MM:SS.mls"
-                                                        keyboardType="numbers-and-punctuation" // Melhor teclado
+                                                        keyboardType="numbers-and-punctuation"
                                                         value={plan.totalTime}
                                                         onChangeText={(value) => updatePlanField(planIndex, 'totalTime', value)}
                                                     />
@@ -478,7 +459,7 @@ export default function CreateStrategyScreen() {
                 onClose={() => setIsSetupModalOpen(false)}
                 onSelect={(id) => {
                     setSelectedSetupId(id);
-                    setIsSetupModalOpen(false); // Fecha o modal após a seleção
+                    setIsSetupModalOpen(false);
                 }}
             />
         </Box>

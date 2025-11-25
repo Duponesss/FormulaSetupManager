@@ -17,14 +17,11 @@ export default function SetupDeepLinkHandler() {
         const success = await fetchSetupById(id);
         
         if (success) {
-          // Se achou, redireciona para os detalhes
-          // isPublicSearch=true garante que mostre o botão de Clonar e não Editar
           router.replace({
             pathname: '/setup-details-screen',
             params: { setupId: id, isViewOnly: 'false' } 
           });
         } else {
-          // Se não achou (erro ou deletado), volta pra home
           alert("Setup não encontrado ou link inválido.");
           router.replace('/(tabs)');
         }

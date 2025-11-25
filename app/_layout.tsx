@@ -27,12 +27,10 @@ function RootNavigation() {
     let unsubscribeSetups: (() => void) | null = null;
     let unsubscribeProfile: (() => void) | null = null;
     if (user) {
-      // Se o usuário está logado, ouve os setups E o perfil dele
       unsubscribeSetups = listenToUserSetups();
-      unsubscribeProfile = listenToUserProfile(user.uid); // <-- Adicionado
+      unsubscribeProfile = listenToUserProfile(user.uid); 
     }
     return () => {
-      // Limpa os listeners ao deslogar
       if (unsubscribeSetups) unsubscribeSetups();
       if (unsubscribeProfile) unsubscribeProfile();
     };
@@ -44,23 +42,13 @@ function RootNavigation() {
   useEffect(() => {
     const inAuthGroup = segments[0] === '(auth)';
 
-    // Espera TUDO carregar (autenticação E dados do jogo)
     if (!isAuthLoading && isDataReady) {
-      // 1. Esconde o splash screen
       SplashScreen.hideAsync();
-
-      // 2. Lógica de Redirecionamento
       if (user && inAuthGroup) {
-        // CASO: Usuário logado (ou acabou de se cadastrar) E está nas telas de auth
-        // AÇÃO: Redireciona para a home do app
         router.replace('/(tabs)'); 
       } else if (!user && !inAuthGroup) {
-        // CASO: Usuário deslogado E NÃO está nas telas de auth (ex: estava no app e foi deslogado)
-        // AÇÃO: Redireciona para o login
         router.replace('/login');
       }
-      // Se user && !inAuthGroup (logado e no app) -> não faz nada
-      // Se !user && inAuthGroup (deslogado e no login) -> não faz nada
     }
   }, [user, isAuthLoading, isDataReady, segments, router]);
 

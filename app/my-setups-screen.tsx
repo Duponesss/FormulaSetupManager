@@ -21,7 +21,7 @@ import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, Selec
 
 
 export default function MySetupsScreen() {
-    console.log('Renderizando MySetupsScreen...');
+    // console.log('Renderizando MySetupsScreen...');
     const router = useRouter();
     const allSetups = useSetupStore((state) => state.allSetups);
     const gameData = useSetupStore((state) => state.gameData);
@@ -161,9 +161,9 @@ export default function MySetupsScreen() {
                                 />
                             )}
                             keyExtractor={(item) => item.id!}
-                            initialNumToRender={5} // Renderiza um número menor de itens no carregamento inicial da tela
-                            windowSize={11} // Define o tamanho da "janela" de renderização.
-                            removeClippedSubviews={true} // Remove os itens que saem da janela de renderização da memória.
+                            initialNumToRender={5} 
+                            windowSize={11} 
+                            removeClippedSubviews={true} 
                             showsVerticalScrollIndicator={false}
                             ListEmptyComponent={
                                 <Box className="items-center py-12">

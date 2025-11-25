@@ -19,8 +19,6 @@ import { SetupCard } from '../src/components/cards/SetupCard';
 import LapTimeInput from '../src/components/inputs/LapTimeInput';
 import { LineChart } from "react-native-gifted-charts";
 
-// --- FUNÇÕES HELPER ---
-// Converte uma string "MM:SS.mls" para milissegundos
 const timeToMillis = (time: string): number | null => {
   const parts = time.match(/(\d{2}):(\d{2})\.(\d{3})/);
   if (!parts) return null;
@@ -28,17 +26,14 @@ const timeToMillis = (time: string): number | null => {
   return (minutes * 60 + seconds) * 1000 + millis;
 };
 
-// Converte milissegundos de volta para "MM:SS.mls"
 const millisToTime = (millis: number): string => {
-  const totalMillis = Math.round(millis); // Garante que estamos trabalhando com um inteiro
+  const totalMillis = Math.round(millis);
   const minutes = Math.floor(totalMillis / 60000);
   const seconds = Math.floor((totalMillis % 60000) / 1000);
-  // Arredonda o resto dos milissegundos para evitar casas decimais extras
   const remainingMillis = Math.round(totalMillis % 1000);
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(remainingMillis).padStart(3, '0')}`;
 };
 
-// Nova helper para nomes dos pneus
 const getTyreName = (compound: PlannedStint['tyreCompound']): string => {
   switch (compound) {
     case 'soft': return 'Macio';
@@ -55,18 +50,15 @@ export default function StrategyDetailsScreen() {
   const params = useLocalSearchParams<{ strategyId: string }>();
   const { strategyId } = params;
 
-  // Conecta-se ao store
   const strategies = useSetupStore(state => state.strategies);
   const allSetups = useSetupStore(state => state.allSetups);
   const deleteStrategy = useSetupStore(state => state.deleteStrategy);
   const updateLapTimes = useSetupStore(state => state.updateLapTimes);
 
-  // Estados locais
   const [strategy, setStrategy] = useState<Strategy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
-  // --- MAPEAMENTO DE IMAGENS (Pirelli para detalhes) ---
   const pirelliTyreImages = useMemo(() => ({
     soft: require('../src/assets/images/soft_pirelli_tyre.png'),
     medium: require('../src/assets/images/medium_pirelli_tyre.png'),
@@ -75,7 +67,6 @@ export default function StrategyDetailsScreen() {
     wet: require('../src/assets/images/wet_pirelli_tyre.png'),
   }), []);
 
-  // Busca a estratégia específica quando a tela carrega
   useEffect(() => {
     const foundStrategy = strategies.find(s => s.id === strategyId);
     if (foundStrategy) {
@@ -84,26 +75,23 @@ export default function StrategyDetailsScreen() {
     setIsLoading(false);
   }, [strategyId, strategies]);
 
-  // Encontra o setup vinculado a esta estratégia
   const linkedSetup = strategy ? allSetups.find(s => s.id === strategy.setupId) : null;
 
   const handleEdit = () => {
-    // Navega para a tela de criação em modo de edição
     router.push(`/create-strategy-screen?strategyId=${strategyId}`);
   };
 
   const handleDelete = async () => {
     if (strategyId) {
-      console.log("Deletando estratégia...");
+      // console.log("Deletando estratégia...");
       await deleteStrategy(strategyId);
       setIsDeleteAlertOpen(false);
       router.back();
     }
   };
 
-  // --- Cálculos para tempos de volta com useMemo ---
   const { lapTimesData, averageTime, standardDeviation } = useMemo(() => {
-    if (!strategy?.lapTimes || strategy.lapTimes.length < 1) { // Mudança para < 1
+    if (!strategy?.lapTimes || strategy.lapTimes.length < 1) {
       return { lapTimesData: [], averageTime: null, standardDeviation: null };
     }
 
@@ -112,12 +100,12 @@ export default function StrategyDetailsScreen() {
     const maxLap = Math.max(...lapValues);
 
     const chartData = strategy.lapTimes.map(lap => {
-      let dataPointColor = '#34D399'; // Verde (consistente)
+      let dataPointColor = '#34D399';
 
       if (lap.timeInMillis === minLap) {
-        dataPointColor = '#8A2BE2'; // Roxo (volta mais rápida)
+        dataPointColor = '#8A2BE2';
       } else if (lap.timeInMillis === maxLap) {
-        dataPointColor = '#EF4444'; // Vermelho (volta mais lenta)
+        dataPointColor = '#EF4444';
       }
 
       return {
@@ -136,7 +124,6 @@ export default function StrategyDetailsScreen() {
     return { lapTimesData: chartData, averageTime: avg, standardDeviation: stdDev };
   }, [strategy]);
 
-  // --- Função para adicionar tempo de volta ---
   const handleAddLapTime = async (timeString: string) => {
     const timeInMillis = timeToMillis(timeString);
     if (!timeInMillis || !strategy) {
@@ -158,11 +145,9 @@ export default function StrategyDetailsScreen() {
     }
   };
 
-  // --- Função para deletar uma volta ---
   const handleDeleteLap = async (lapNumberToDelete: number) => {
     if (!strategy) return;
 
-    // Filtra a volta a ser removida e renumera as subsequentes
     const updatedLapTimes = strategy.lapTimes
       .filter(lap => lap.lapNumber !== lapNumberToDelete)
       .map((lap, index) => ({
@@ -177,8 +162,6 @@ export default function StrategyDetailsScreen() {
     }
   };
 
-  // --- LÓGICA PARA CALCULAR PNEUS RESERVAS ---
-  // Esta função será chamada para CADA plano
   const calculateRemainingTyres = (plan: Strategy['strategyPlans'][0]): Strategy['initialAvailableTyres'] => {
     const initial = strategy?.initialAvailableTyres || { soft: 0, medium: 0, hard: 0, intermediate: 0, wet: 0 };
     const used = plan.plannedStints.reduce((acc, stint) => {
@@ -188,7 +171,7 @@ export default function StrategyDetailsScreen() {
 
     const remaining: Strategy['initialAvailableTyres'] = { soft: 0, medium: 0, hard: 0, intermediate: 0, wet: 0 };
     for (const compound in initial) {
-      // @ts-ignore - Confiança na iteração
+      // @ts-ignore
       remaining[compound] = Math.max(0, initial[compound] - (used[compound] || 0));
     }
     return remaining;
@@ -271,7 +254,6 @@ export default function StrategyDetailsScreen() {
                 <SetupCard
                   item={linkedSetup}
                   isViewOnly={true}
-                  // Passamos funções vazias pois os botões não serão renderizados
                   onAddToFolder={() => { }}
                 />
               ) : (
@@ -303,22 +285,16 @@ export default function StrategyDetailsScreen() {
                             <Text className="text-xs font-semibold mb-1">Stints Planejados:</Text>
                             {plan.plannedStints.map((stint, stintIndex) => {
                               let stintDetailText = '';
-                              // --- LÓGICA DE EXIBIÇÃO DO PRIMEIRO STINT ---
                               if (stintIndex === 0) {
                                 if (plan.plannedStints.length === 1) {
-                                  // Caso 1: Stint Único
                                   stintDetailText = `Voltas: ${strategy.totalRaceLaps || 'N/A'}`;
                                 } else {
-                                  // Caso 2: Primeiro de Múltiplos Stints
                                   const nextStintPitLap = plan.plannedStints[1]?.pitStopLap;
-                                  stintDetailText = `Voltas: 1 - ${nextStintPitLap || '?'}`; // Ex: Voltas 1 - 18
+                                  stintDetailText = `Voltas: 1 - ${nextStintPitLap || '?'}`;
                                 }
                               } else {
-                                // --- LÓGICA PARA STINTS SUBSEQUENTES (Janela) ---
                                 stintDetailText = `Janela de parada: Volta ${stint.pitStopLap} - ${stint.pitStopLap + 3}`;
                               }
-                              // --- FIM DA LÓGICA DE EXIBIÇÃO ---
-
                               return (
                                 <HStack key={stintIndex} space="sm" className="items-center">
                                   <Image
@@ -385,14 +361,11 @@ export default function StrategyDetailsScreen() {
                     height={150}
                     animateOnDataChange
                     animationDuration={1000}
-                    color="#e2d62b" // Roxo
+                    color="#e2d62b"
                     thickness={3}
                     dataPointsShape="circular"
-
-                    // Define o valor mínimo do eixo Y para "dar zoom"
                     yAxisOffset={67000}
                     xAxisThickness={0}
-                    // hideRules
                     formatYLabel={(label: string) => millisToTime(Number(label)).substring(0, 5)}
                   />
                   <HStack className="justify-around mt-2">
@@ -439,9 +412,7 @@ export default function StrategyDetailsScreen() {
         isOpen={isDeleteAlertOpen}
         onClose={() => setIsDeleteAlertOpen(false)}
         title="Excluir Estratégia"
-        // Usa a variável 'strategy' para a mensagem dinâmica
         message={`Você tem certeza que deseja excluir a estratégia "${strategy.name}"? Esta ação não pode ser desfeita.`}
-        // Passa a função de confirmação
         onConfirm={handleDelete}
         confirmText="Excluir"
         cancelText="Cancelar"

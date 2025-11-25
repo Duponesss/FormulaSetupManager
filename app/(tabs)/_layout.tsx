@@ -79,14 +79,14 @@ export default function TabsLayout() {
     let unsubStrategies = () => { };
 
     if (user) {
-      console.log("Iniciando listeners globais...");
+      // console.log("Iniciando listeners globais...");
       unsubSetups = listenToUserSetups();
       unsubFolders = listenToUserFolders();
       unsubStrategies = listenToUserStrategies();
     }
 
     return () => {
-      console.log("Limpando listeners...");
+      // console.log("Limpando listeners...");
       unsubSetups();
       unsubFolders();
       unsubStrategies();

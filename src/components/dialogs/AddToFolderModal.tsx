@@ -20,25 +20,21 @@ interface AddToFolderModalProps {
 }
 
 const AddToFolderModal: React.FC<AddToFolderModalProps> = ({ isOpen, onClose, setup }) => {
-  // Pega os dados e ações da store
   const folders = useSetupStore(state => state.folders);
   const setupFolderIds = useSetupStore(state => state.setupFolderIds);
   const loadingSetupFolders = useSetupStore(state => state.loadingSetupFolders);
   const getFoldersForSetup = useSetupStore(state => state.getFoldersForSetup);
   const updateSetupFolders = useSetupStore(state => state.updateSetupFolders);
 
-  // Estado interno para gerenciar os checkboxes selecionados
   const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
-  // Efeito para buscar as pastas do setup quando o modal abre
   useEffect(() => {
     if (isOpen && setup?.id) {
       getFoldersForSetup(setup.id);
     }
   }, [isOpen, setup, getFoldersForSetup]);
 
-  // Efeito para popular os checkboxes com base nos dados buscados
   useEffect(() => {
     if (!loadingSetupFolders) {
       setSelectedFolderIds(new Set(setupFolderIds));
@@ -88,7 +84,6 @@ const AddToFolderModal: React.FC<AddToFolderModalProps> = ({ isOpen, onClose, se
                   className="my-2"
                 >
                   <CheckboxIndicator className="mr-2">
-                    {/* 4. Corrige o CheckboxIcon para exibir o ícone de 'check' */}
                     <CheckboxIcon as={Check} />
                   </CheckboxIndicator>
                   <CheckboxLabel>{item.name}</CheckboxLabel>

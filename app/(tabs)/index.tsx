@@ -19,14 +19,12 @@ export default function HomeScreen() {
   const { signOut } = useAuth();
   const userProfile = useSetupStore((state) => state.userProfile);
 
-  // Dados para a lista de populares
   const topRatedSetups = useSetupStore((state) => state.topRatedSetups);
   const loadingTopRated = useSetupStore((state) => state.loadingTopRated);
   const fetchTopRatedSetups = useSetupStore((state) => state.fetchTopRatedSetups);
 
   const [showLogoutAlert, setShowLogoutAlert] = React.useState(false);
 
-  // Carrega os destaques ao entrar
   useEffect(() => {
     fetchTopRatedSetups();
   }, []);
@@ -37,7 +35,6 @@ export default function HomeScreen() {
     setShowLogoutAlert(false);
   };
 
-  // Botão de ação rápida (Componente interno para organizar)
   const QuickAction = ({ title, icon, color, onPress, subtitle }: any) => (
     <Pressable onPress={onPress} className="flex-1">
       {({ pressed }) => (
@@ -98,7 +95,7 @@ export default function HomeScreen() {
                 subtitle="Crie e compartilhe"
                 icon={<Plus color="#ef4444" size={24} />}
                 color="#ef4444"
-                onPress={() => router.push('/create-setup-screen')} // Rota atualizada (fora das tabs)
+                onPress={() => router.push('/create-setup-screen')}
               />
               <QuickAction
                 title="Meus Setups"
@@ -127,8 +124,8 @@ export default function HomeScreen() {
                   <SetupCard
                     key={item.id}
                     item={item}
-                    onAddToFolder={() => { }} // Na home não precisamos dessa ação por enquanto
-                    isPublicSearch={true} // Garante que abra como visualização pública
+                    onAddToFolder={() => { }}
+                    isPublicSearch={true}
                   />
                 ))}
                 {topRatedSetups.length === 0 && (

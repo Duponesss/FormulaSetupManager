@@ -1,12 +1,12 @@
 import React from 'react';
-import { Pressable } from '../../../components/ui/pressable';
-import { Text } from '../../../components/ui/text';
-import { HStack } from '../../../components/ui/hstack';
-import { VStack } from '../../../components/ui/vstack';
+import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
+import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
 import { useRouter } from 'expo-router';
-import { type Strategy } from '../../stores/setupStore'; // Importaremos a nova interface
+import { type Strategy } from '../../stores/setupStore';
 import { ClipboardList, Flag, Route } from 'lucide-react-native';
-import { Box } from '../../../components/ui/box';
+import { Box } from '@/components/ui/box';
 
 interface StrategyCardProps {
   strategy: Strategy;
@@ -15,12 +15,10 @@ interface StrategyCardProps {
 const StrategyCard: React.FC<StrategyCardProps> = React.memo(({ strategy }) => {
   const router = useRouter();
 
-  // Navega para a tela de detalhes da estratégia, que está na raiz do app
   const handlePress = () => {
     router.push(`/strategy-details-screen?strategyId=${strategy.id}`);
   };
 
-  // Formata as datas
   const createdAtFormatted = strategy.createdAt
     ? strategy.createdAt.toDate().toLocaleDateString('pt-BR')
     : '—';

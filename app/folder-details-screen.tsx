@@ -29,11 +29,9 @@ export default function FolderDetailsScreen() {
   const params = useLocalSearchParams<{ folderId: string; folderName: string }>();
   const { folderId, folderName } = params;
 
-  // Estados locais para controlar os modais/diálogos
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
-  // Conecta ao Zustand store para pegar estados e ações
   const folders = useSetupStore(state => state.folders);
   const folderSetups = useSetupStore(state => state.folderSetups);
   const loadingFolderSetups = useSetupStore(state => state.loadingFolderSetups);
@@ -47,21 +45,18 @@ export default function FolderDetailsScreen() {
     setIsModalOpen(true);
   }, []);
 
-  // Busca os setups da pasta quando o folderId estiver disponível
   useEffect(() => {
     if (folderId) {
       getSetupsForFolder(folderId);
     }
   }, [folderId, getSetupsForFolder]);
 
-  // Encontra os dados completos da pasta para passar para o modal de edição
   const currentFolder = folders.find(f => f.id === folderId);
 
-  // Função para deletar a pasta e voltar para a tela anterior
   const handleDeleteFolder = async () => {
     if (folderId) {
       await deleteFolder(folderId);
-      router.back(); // Volta para a lista de pastas
+      router.back(); 
     }
     setIsDeleteAlertOpen(false);
   };

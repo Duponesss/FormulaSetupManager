@@ -17,17 +17,13 @@ export default function ResultsScreen() {
   const router = useRouter();
   const handleGoBack = () => {
     if (router.canGoBack()) {
-      // Se houver uma tela anterior na pilha, volte para ela.
       router.back();
     } else {
-      // Se não houver, navegue para a tela principal da aba (Home).
       router.push('/(tabs)');
     }
   };
-  // Obtém os filtros que foram passados como parâmetros na navegação
   const params = useLocalSearchParams<{ car?: string; track?: string; condition?: string; controlType?: string; }>();
 
-  // Obtém a lista completa de setups e a função de apagar do nosso store
   const publicSetups = useSetupStore((state) => state.publicSetups);
   const loadingPublicSetups = useSetupStore((state) => state.loadingPublicSetups);
   const loadingMoreSetups = useSetupStore((state) => state.loadingMoreSetups);
@@ -38,10 +34,10 @@ export default function ResultsScreen() {
   const handleAddToFolder = (item: SetupData) => {};
   
   const filtersJSON = JSON.stringify(params);
-  console.log("Filtros JSON:", filtersJSON);
+  // console.log("Filtros JSON:", filtersJSON);
   
   useEffect(() => {
-    console.log("Executando busca com filtros:", filtersJSON);
+    // console.log("Executando busca com filtros:", filtersJSON);
     const filtersObject = JSON.parse(filtersJSON);
     const filters = {
       car: filtersObject.car || undefined,
@@ -73,7 +69,6 @@ export default function ResultsScreen() {
       );
     }
     
-    // Só mostra o "Fim" se a lista não estiver vazia
     if (!loadingPublicSetups && publicSetups.length > 0) {
       return (
         <Box className="py-4 items-center">
@@ -82,7 +77,7 @@ export default function ResultsScreen() {
       );
     }
 
-    return null; // Não mostra nada se estiver vazio ou carregando pela primeira vez
+    return null;
   };
 
   return (

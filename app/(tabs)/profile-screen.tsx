@@ -8,7 +8,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { useSetupStore } from '@/src/stores/setupStore';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { Camera, Save, X, ArrowLeft, UserPlus, UserCheck, User } from 'lucide-react-native'; // Novos ícones
+import { Camera, Save, X, ArrowLeft, UserPlus, UserCheck } from 'lucide-react-native';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { VStack } from '@/components/ui/vstack';
 import { Input, InputField } from '@/components/ui/input';
@@ -18,19 +18,17 @@ import { db } from '@/src/services/firebaseConfig';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { HStack } from '@/components/ui/hstack';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator } from 'react-native'; // Para o loading do botão seguir
+import { ActivityIndicator } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ userId?: string }>(); // Recebe ID opcional
-  const { user } = useAuth(); // user do AuthContext (para pegar o ID atual)
+  const params = useLocalSearchParams<{ userId?: string }>();
+  const { user } = useAuth();
 
-  // --- DADOS DA STORE (MEU PERFIL) ---
   const userProfile = useSetupStore(state => state.userProfile);
   const loadingProfile = useSetupStore(state => state.loadingProfile);
   const uploadProfilePicture = useSetupStore(state => state.uploadProfilePicture);
 
-  // --- DADOS DA STORE (SISTEMA SOCIAL - FASE 4B) ---
   const viewedUserProfile = useSetupStore(state => state.viewedUserProfile);
   const loadingViewedProfile = useSetupStore(state => state.loadingViewedProfile);
   const fetchUserProfile = useSetupStore(state => state.fetchUserProfile);
@@ -39,11 +37,10 @@ export default function ProfileScreen() {
   const followUser = useSetupStore(state => state.followUser);
   const unfollowUser = useSetupStore(state => state.unfollowUser);
 
-  // --- ESTADOS LOCAIS ---
   const [isUploading, setIsUploading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [followLoading, setFollowLoading] = useState(false); // Loading do botão seguir
+  const [followLoading, setFollowLoading] = useState(false); 
 
   const [gamertagPSN, setGamertagPSN] = useState('');
   const [gamertagXbox, setGamertagXbox] = useState('');
@@ -53,16 +50,10 @@ export default function ProfileScreen() {
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
 
-  // --- LÓGICA DE IDENTIFICAÇÃO ---
-  // É meu perfil se: não tem userId na URL OU o userId da URL é igual ao meu UID logado
   const isMyProfile = !params.userId || params.userId === user?.uid;
 
-  // Define qual objeto de dados mostrar na tela
   const profileToDisplay = isMyProfile ? userProfile : viewedUserProfile;
 
-  // --- EFEITOS ---
-
-  // 1. Carregar dados do visitante (se necessário)
   useEffect(() => {
     if (!isMyProfile && params.userId) {
       fetchUserProfile(params.userId);
@@ -70,7 +61,6 @@ export default function ProfileScreen() {
     }
   }, [params.userId, isMyProfile]);
 
-  // 2. Preenche os campos de edição (Apenas quando é MEU perfil)
   useEffect(() => {
     if (isMyProfile && userProfile) {
       setGamertagPSN(userProfile.gamertagPSN || '');
@@ -78,8 +68,6 @@ export default function ProfileScreen() {
       setGamertagPC(userProfile.gamertagPC || '');
     }
   }, [userProfile, isMyProfile]);
-
-  // --- AÇÕES ---
 
   const handleFollowToggle = async () => {
     if (!profileToDisplay?.uid) return;
@@ -100,7 +88,7 @@ export default function ProfileScreen() {
   };
 
   const handlePickImage = async () => {
-    if (!isMyProfile) return; // Segurança extra
+    if (!isMyProfile) return; 
 
     const mediaLibraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (mediaLibraryPermission.status !== 'granted') {
@@ -112,7 +100,7 @@ export default function ProfileScreen() {
       mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5, // Reduzi um pouco para otimizar
+      quality: 0.5, 
     });
 
     if (result.canceled) return;
@@ -164,9 +152,6 @@ export default function ProfileScreen() {
     setIsEditing(false);
   };
 
-  // --- RENDERIZAÇÃO ---
-
-  // Loading inicial (Meu ou Visitante)
   if (loadingProfile || (!isMyProfile && loadingViewedProfile)) {
     return (
       <Box className="flex-1 justify-center items-center bg-gray-900">
@@ -214,7 +199,7 @@ export default function ProfileScreen() {
               style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: '#262626', borderWidth: 2, borderColor: '#ef4444' }}
               contentFit="cover"
             />
-            {/* Botão de Câmera (SÓ SE FOR MEU PERFIL) */}
+            {/* Botão de Câmera */}
             {isMyProfile && (
               <Pressable
                 className="absolute -bottom-2 -right-2 bg-red-600 p-3 rounded-full border-4 border-gray-900"
@@ -270,7 +255,6 @@ export default function ProfileScreen() {
           {/* --- BOTÕES DE AÇÃO PRINCIPAL --- */}
           <Box className="w-full px-6 mb-2">
             {isMyProfile ? (
-              // MODO DONO: Editar / Salvar / Cancelar
               isEditing ? (
                 <HStack space="md">
                   <Button variant="outline" action="secondary" onPress={handleCancelEdit} className="flex-1">
@@ -288,7 +272,6 @@ export default function ProfileScreen() {
                 </Button>
               )
             ) : (
-              // MODO VISITANTE: Seguir / Deixar de Seguir
               <Button
                 className={`w-full rounded-xl ${isFollowing ? 'bg-gray-700' : 'bg-red-600'}`}
                 onPress={handleFollowToggle}
@@ -311,7 +294,6 @@ export default function ProfileScreen() {
             <Heading size="md" className="text-white">Gamertags</Heading>
 
             {isMyProfile && isEditing ? (
-              // MODO EDIÇÃO (Só aparece para o dono)
               <>
                 <Input className="bg-gray-800/80 border-gray-700">
                   <InputField placeholder="ID da PlayStation" value={gamertagPSN} onChangeText={setGamertagPSN} className="text-white" />
@@ -324,7 +306,6 @@ export default function ProfileScreen() {
                 </Input>
               </>
             ) : (
-              // MODO LEITURA (Para dono ou visitante)
               <Box className="bg-gray-800/80 rounded-lg p-4">
                 <VStack space="md">
                   <Text className="text-gray-400">PlayStation: <Text className="text-white">{profileToDisplay.gamertagPSN || 'N/A'}</Text></Text>

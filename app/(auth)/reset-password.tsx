@@ -1,14 +1,13 @@
-import { useAuth } from "../../src/hooks/use-auth";
+import { useAuth } from "@/src/hooks/use-auth";
 import React, { useState } from 'react';
 import { useRouter } from "expo-router";
-import { Box } from '../../components/ui/box';
-import { Button, ButtonText } from '../../components/ui/button';
-import { Heading } from '../../components/ui/heading';
-import { Input, InputField } from '../../components/ui/input';
-import { Text } from '../../components/ui/text';
-import { VStack } from '../../components/ui/vstack';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Input, InputField } from '@/components/ui/input';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { ImageBackground } from 'react-native';
-import AppAlertDialog from '../../src/components/dialogs/AppAlertDialog';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 
 export default function ResetPasswordScreen() {
   const { sendPasswordReset } = useAuth(); 
@@ -80,7 +79,7 @@ export default function ResetPasswordScreen() {
             </VStack>
             <Button
               variant="link"
-              onPress={() => router.back()} // Botão para voltar ao login
+              onPress={() => router.back()} 
             >
               <ButtonText className="text-white pressed:opacity-70">
                 Voltar para o Login
@@ -95,7 +94,7 @@ export default function ResetPasswordScreen() {
           onClose={() => {
             setShowAlert(false);
             if (alertTitle === 'Email Enviado') {
-              router.replace('/(auth)/login'); // Volta pro login após sucesso
+              router.replace('/(auth)/login'); 
             }
           }}
         />

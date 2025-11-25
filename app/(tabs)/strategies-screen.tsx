@@ -15,19 +15,15 @@ import { VStack } from '@/components/ui/vstack';
 export default function StrategiesScreen() {
   const router = useRouter();
 
-  // 1. Conecta-se à store para buscar as estratégias e o estado de carregamento
   const strategies = useSetupStore(state => state.strategies);
   const loadingStrategies = useSetupStore(state => state.loadingStrategies);
   const listenToUserStrategies = useSetupStore(state => state.listenToUserStrategies);
 
-  // 2. Inicia o ouvinte em tempo real para as estratégias do usuário
   useEffect(() => {
     const unsubscribe = listenToUserStrategies();
-    // Limpa o ouvinte quando o componente é desmontado
     return () => unsubscribe();
   }, [listenToUserStrategies]);
 
-  // 3. Exibe um spinner enquanto os dados são carregados
   if (loadingStrategies) {
     return (
       <Box className="flex-1 justify-center items-center">
@@ -46,7 +42,6 @@ export default function StrategiesScreen() {
         <VStack className="flex-1 bg-black/60">
           <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Estratégias</Heading>
         
-        {/* 4. Renderiza a lista de estratégias ou uma mensagem de "lista vazia" */}
         {strategies.length === 0 ? (
           <Box className="flex-1 justify-center items-center px-8">
             <Text className="text-lg text-center text-white">
@@ -65,13 +60,11 @@ export default function StrategiesScreen() {
           />
         )}
 
-        {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova estratégia */}
         <Fab
           size="lg"
           placement="bottom right"
           className="bg-red-500 mb-20"
           onPress={() => {
-            // Navega para a tela de criação (que faremos a seguir)
             router.push('/create-strategy-screen');
           }}
         >

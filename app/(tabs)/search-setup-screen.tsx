@@ -20,7 +20,6 @@ import { ImageBackground } from 'react-native';
 export default function SearchScreen() {
   const router = useRouter();
 
-  // Estado local para guardar as seleções de filtro
   const [filters, setFilters] = useState({
     car: '',
     track: '',
