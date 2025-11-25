@@ -55,7 +55,7 @@ const AppAlertDialog: React.FC<AppAlertDialogProps> = ({
               </Button>
             </>
           ) : (
-            <Button action="primary" onPress={onClose}>
+            <Button action="negative" onPress={onClose}>
               <ButtonText>{okText}</ButtonText>
             </Button>
           )}

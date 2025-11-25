@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
+import { Fab } from '../../components/ui/fab';
 import { Heading } from '../../components/ui/heading';
-import { Text } from '../../components/ui/text';
 import { Spinner } from '../../components/ui/spinner';
-import { Fab, FabLabel } from '../../components/ui/fab';
-import { useRouter } from 'expo-router';
+import { Text } from '../../components/ui/text';
 
-import { useSetupStore } from '../../src/stores/setupStore';
-import StrategyCard from '../../src/components/cards/StrategyCard';
-import { ClipboardPlus } from 'lucide-react-native';
 import { VStack } from '@/components/ui/vstack';
+import { ClipboardPlus } from 'lucide-react-native';
+import StrategyCard from '../../src/components/cards/StrategyCard';
+import { useSetupStore } from '../../src/stores/setupStore';
 
 export default function StrategiesScreen() {
   const router = useRouter();
@@ -33,13 +33,13 @@ export default function StrategiesScreen() {
   }
 
   return (
-    <Box className="flex-1 bg-gray-100">
+    <Box className="flex-1 bg-black">
       <ImageBackground
         source={require('../../src/assets/images/apex-wallpaper.jpg')}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
-        <VStack className="flex-1 bg-black/60">
+        <VStack className="flex-1 bg-black/50">
           <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Estratégias</Heading>
         
         {strategies.length === 0 ? (

@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
-import { Text } from '@/components/ui/text';
 import { FlatList } from '@/components/ui/flat-list';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
-import { Image } from 'expo-image';
-import { ArrowLeft, User } from 'lucide-react-native';
 import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
 import { useSetupStore } from '@/src/stores/setupStore';
+import { Image } from 'expo-image';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, User } from 'lucide-react-native';
+import React, { useEffect } from 'react';
 import { ImageBackground } from 'react-native';
 
 export default function UserListScreen() {
@@ -46,7 +46,7 @@ export default function UserListScreen() {
                         <Image
                             source={{ uri: item.profilePictureUrl }}
                             style={{ width: 40, height: 40, borderRadius: 20 }}
-                            contentFit="cover"
+                            resizeMode="cover"
                         />
                     ) : (
                         <Box className="w-10 h-10 rounded-full bg-gray-600 items-center justify-center">

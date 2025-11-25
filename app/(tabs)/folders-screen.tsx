@@ -1,16 +1,15 @@
+import { FolderPlus } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
+import { Fab } from '../../components/ui/fab';
 import { Heading } from '../../components/ui/heading';
-import { Text } from '../../components/ui/text';
 import { Spinner } from '../../components/ui/spinner';
-import { Fab, FabIcon, FabLabel } from '../../components/ui/fab';
-import { AddIcon } from '../../components/ui/icon';
+import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import { useSetupStore } from '../../src/stores/setupStore';
 import FolderCard from '../../src/components/cards/FolderCard';
 import CreateEditFolderModal from '../../src/components/dialogs/CreateEditFolderModal';
-import { FolderPlus } from 'lucide-react-native';
+import { useSetupStore } from '../../src/stores/setupStore';
 
 export default function FoldersScreen() {
     const folders = useSetupStore(state => state.folders);
@@ -39,7 +38,7 @@ export default function FoldersScreen() {
                 style={{ flex: 1 }}
                 resizeMode="cover"
             >
-                <VStack className="flex-1 bg-black/60">
+                <VStack className="flex-1 bg-black/50">
                     <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Pastas</Heading>
 
                     {folders.length === 0 ? (

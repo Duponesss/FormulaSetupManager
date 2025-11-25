@@ -8,7 +8,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { useSetupStore } from '@/src/stores/setupStore';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { Camera, Save, X, ArrowLeft, UserPlus, UserCheck } from 'lucide-react-native';
+import { Camera, Save, X, ArrowLeft, UserPlus, UserCheck, User } from 'lucide-react-native';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { VStack } from '@/components/ui/vstack';
 import { Input, InputField } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { HStack } from '@/components/ui/hstack';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
+import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
+import { Star } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -37,11 +39,15 @@ export default function ProfileScreen() {
   const followUser = useSetupStore(state => state.followUser);
   const unfollowUser = useSetupStore(state => state.unfollowUser);
 
+  const fetchUserStats = useSetupStore(state => state.fetchUserStats);
+
   const [isUploading, setIsUploading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [followLoading, setFollowLoading] = useState(false); 
 
+  // Novo estado para o Username
+  const [username, setUsername] = useState('');
   const [gamertagPSN, setGamertagPSN] = useState('');
   const [gamertagXbox, setGamertagXbox] = useState('');
   const [gamertagPC, setGamertagPC] = useState('');
@@ -58,16 +64,20 @@ export default function ProfileScreen() {
     if (!isMyProfile && params.userId) {
       fetchUserProfile(params.userId);
       checkIfFollowing(params.userId);
+      fetchUserStats(params.userId);
     }
   }, [params.userId, isMyProfile]);
 
   useEffect(() => {
     if (isMyProfile && userProfile) {
+      // Inicializa o username também
+      setUsername(userProfile.username || '');
       setGamertagPSN(userProfile.gamertagPSN || '');
       setGamertagXbox(userProfile.gamertagXbox || '');
       setGamertagPC(userProfile.gamertagPC || '');
+      fetchUserStats(userProfile.uid);
     }
-  }, [userProfile, isMyProfile]);
+  }, [userProfile?.uid, isMyProfile]); // Dependência segura
 
   const handleFollowToggle = async () => {
     if (!profileToDisplay?.uid) return;
@@ -125,6 +135,7 @@ export default function ProfileScreen() {
     try {
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
+        username: username, // Salva o novo username
         gamertagPSN: gamertagPSN,
         gamertagXbox: gamertagXbox,
         gamertagPC: gamertagPC,
@@ -145,6 +156,7 @@ export default function ProfileScreen() {
 
   const handleCancelEdit = () => {
     if (userProfile) {
+      setUsername(userProfile.username || ''); // Reseta o username
       setGamertagPSN(userProfile.gamertagPSN || '');
       setGamertagXbox(userProfile.gamertagXbox || '');
       setGamertagPC(userProfile.gamertagPC || '');
@@ -180,7 +192,6 @@ export default function ProfileScreen() {
 
   return (
     <Box className="flex-1 items-center bg-gray-900">
-      {/* Header Customizado para Visitante */}
       {!isMyProfile && (
         <Box className="w-full pt-12 px-6 pb-2">
           <Pressable onPress={() => router.back()} className="p-2 bg-gray-800 rounded-full self-start">
@@ -199,7 +210,6 @@ export default function ProfileScreen() {
               style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: '#262626', borderWidth: 2, borderColor: '#ef4444' }}
               contentFit="cover"
             />
-            {/* Botão de Câmera */}
             {isMyProfile && (
               <Pressable
                 className="absolute -bottom-2 -right-2 bg-red-600 p-3 rounded-full border-4 border-gray-900"
@@ -211,11 +221,24 @@ export default function ProfileScreen() {
             )}
           </Box>
 
-          {/* Nome e Email */}
-          <VStack className="items-center">
-            <Heading size="2xl" className="text-white mt-2">
-              {profileToDisplay.username}
-            </Heading>
+          {/* Nome e Email (Com edição condicional) */}
+          <VStack className="items-center w-full px-10">
+            {isMyProfile && isEditing ? (
+               // Input de edição de nome
+               <Input className="bg-gray-800/80 border-gray-700 mb-1 mt-4 w-1/2 text-center">
+                  <InputField 
+                    value={username} 
+                    onChangeText={setUsername} 
+                    className="text-white text-center text-xl font-bold"
+                    placeholder="Seu Nome" 
+                  />
+               </Input>
+            ) : (
+               // Exibição normal
+               <Heading size="2xl" className="text-white mt-6 text-center">
+                 {profileToDisplay.username}
+               </Heading>
+            )}
             <Text className="text-gray-400">{profileToDisplay.email}</Text>
           </VStack>
 
@@ -267,8 +290,8 @@ export default function ProfileScreen() {
                   </Button>
                 </HStack>
               ) : (
-                <Button action="primary" variant="outline" onPress={() => setIsEditing(true)}>
-                  <ButtonText>Editar Gamertags</ButtonText>
+                <Button action="secondary" variant="outline" onPress={() => setIsEditing(true)}>
+                  <ButtonText className="text-white">Editar Perfil</ButtonText>
                 </Button>
               )
             ) : (
@@ -316,12 +339,34 @@ export default function ProfileScreen() {
             )}
           </VStack>
 
-          {/* Placeholders Futuros */}
           <VStack className="w-full px-6" space="md">
-            <Heading size="md" className="text-white">Estatísticas</Heading>
-            <Box className="bg-gray-800/80 rounded-lg p-4 items-center">
-              <Text className="text-gray-400">(Em breve: Setups publicados, Média de avaliação)</Text>
-            </Box>
+            <Heading size="md" className="text-white">Estatísticas da Comunidade</Heading>
+            
+            <HStack space="md">
+              <Box className="flex-1 bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
+                <Text className="text-3xl font-bold text-white mb-1">
+                  {profileToDisplay.setupsCount || 0}
+                </Text>
+                <Text className="text-gray-400 text-xs text-center uppercase">Setups Públicos</Text>
+              </Box>
+
+              <Box className="flex-1 bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
+                <HStack className="items-center mb-1" space="xs">
+                  <Text className="text-3xl font-bold text-white">
+                    {(profileToDisplay.averageRating || 0).toFixed(1)}
+                  </Text>
+                  <Star size={20} color="#f59e0b" fill="#f59e0b" />
+                </HStack>
+                
+                <Box className="mt-1">
+                   <StarRatingDisplay 
+                      rating={profileToDisplay.averageRating || 0} 
+                      size={12} 
+                   />
+                </Box>
+                <Text className="text-gray-400 text-xs text-center uppercase mt-1">Média Geral</Text>
+              </Box>
+            </HStack>
           </VStack>
 
         </VStack>

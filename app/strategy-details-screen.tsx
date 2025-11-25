@@ -1,23 +1,23 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image, ImageBackground } from 'expo-image';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '../components/ui/box';
+import { Button, ButtonText } from '../components/ui/button';
+import { Divider } from '../components/ui/divider';
 import { Heading } from '../components/ui/heading';
-import { Text } from '../components/ui/text';
-import { Spinner } from '../components/ui/spinner';
+import { HStack } from '../components/ui/hstack';
 import { Pressable } from '../components/ui/pressable';
 import { ScrollView } from '../components/ui/scroll-view';
-import { HStack } from '../components/ui/hstack';
+import { Spinner } from '../components/ui/spinner';
+import { Text } from '../components/ui/text';
 import { VStack } from '../components/ui/vstack';
-import { Button, ButtonText } from '../components/ui/button';
 import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
-import { Divider } from '../components/ui/divider';
 
-import { useSetupStore, type Strategy, type PlannedStint } from '../src/stores/setupStore';
+import { LineChart } from "react-native-gifted-charts";
 import { SetupCard } from '../src/components/cards/SetupCard';
 import LapTimeInput from '../src/components/inputs/LapTimeInput';
-import { LineChart } from "react-native-gifted-charts";
+import { useSetupStore, type PlannedStint, type Strategy } from '../src/stores/setupStore';
 
 const timeToMillis = (time: string): number | null => {
   const parts = time.match(/(\d{2}):(\d{2})\.(\d{3})/);
@@ -191,14 +191,15 @@ export default function StrategyDetailsScreen() {
   }
 
   return (
-    <Box className="flex-1 bg-gray-100">
+    <Box className="flex-1 bg-black">
       <ImageBackground
         source={require('../src/assets/images/apex-wallpaper.jpg')}
         style={{ flex: 1 }}
         resizeMode="cover"
+        imageStyle={{ opacity: 0.6 }}
       >
         {/* Cabeçalho Customizado */}
-        <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200 pt-12">
+        <HStack className="bg-black/50 p-4 justify-between items-center pt-10">
           <Pressable onPress={() => router.back()} className="p-2">
             {(props: { pressed: boolean }) => (
               <Box
@@ -206,11 +207,11 @@ export default function StrategyDetailsScreen() {
                   opacity: props.pressed ? 0.5 : 1.0,
                 }}
               >
-                <ArrowLeft />
+                <ArrowLeft color="white"/>
               </Box>
             )}
           </Pressable>
-          <Heading size="md" className="flex-1 text-center" numberOfLines={1}>{strategy.name}</Heading>
+          <Heading size="md" className="flex-1 text-center text-white" numberOfLines={1}>{strategy.name}</Heading>
           <HStack space="md">
             <Pressable onPress={handleEdit} className="p-2">
               {(props: { pressed: boolean }) => (
@@ -301,7 +302,7 @@ export default function StrategyDetailsScreen() {
                                     // @ts-ignore
                                     source={pirelliTyreImages[stint.tyreCompound]}
                                     style={{ width: 25, height: 25 }}
-                                    contentFit="contain"
+                                    resizeMode="contain"
                                   />
                                   <VStack>
                                     <Text className="text-sm font-medium">{getTyreName(stint.tyreCompound)}</Text>
@@ -330,7 +331,7 @@ export default function StrategyDetailsScreen() {
                                     // @ts-ignore
                                     source={pirelliTyreImages[compound]}
                                     style={{ width: 20, height: 20 }}
-                                    contentFit="contain"
+                                    resizeMode="contain"
                                   />
                                   <Text className="text-xs">{getTyreName(compound)}</Text>
                                   <Text className="text-xs font-bold">{remainingTyres[compound]}x</Text>

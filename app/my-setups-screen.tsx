@@ -1,23 +1,19 @@
 import { useRouter } from "expo-router";
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState, useCallback, useMemo } from 'react';
-import { useAuth } from "@/src/contexts/AuthContext";
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Box } from '@/components/ui/box';
-import { Text } from '@/components/ui/text';
-import { Pressable } from '@/components/ui/pressable';
 import { FlatList } from '@/components/ui/flat-list';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { useSingleTap } from '@/src/hooks/useSingleTap';
-import { SetupCard } from '@/src/components/cards/SetupCard';
-import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
+import { Pressable } from '@/components/ui/pressable';
+import { Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectInput, SelectItem, SelectPortal, SelectTrigger } from "@/components/ui/select";
 import { Spinner } from '@/components/ui/spinner';
-import { Trophy, ArrowLeft, ChevronDown } from 'lucide-react-native';
+import { Text } from '@/components/ui/text';
+import { SetupCard } from '@/src/components/cards/SetupCard';
 import AddToFolderModal from "@/src/components/dialogs/AddToFolderModal";
+import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
+import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { ImageBackground, ScrollView } from "react-native";
-import LogoutModal from "@/src/components/dialogs/LogoutModal";
-import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from "@/components/ui/select";
 
 
 export default function MySetupsScreen() {
@@ -95,7 +91,7 @@ export default function MySetupsScreen() {
                     style={{ flex: 1 }}
                     resizeMode="cover"
                 >
-                    <Box className="pt-5 pb-5 px-6 bg-black/60">
+                    <Box className="pt-5 pb-5 px-6 bg-black/50">
                         <HStack className="items-center mt-5">
                             <Pressable onPress={() => router.back()} className="p-2">
                                 {(props: { pressed: boolean }) => (

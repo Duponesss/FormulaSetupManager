@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { useSetupStore } from '@/src/stores/setupStore';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
 import { ImageBackground } from 'react-native';
 
 export default function SetupDeepLinkHandler() {

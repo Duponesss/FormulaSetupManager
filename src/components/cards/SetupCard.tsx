@@ -1,13 +1,13 @@
-import React from 'react';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { Pressable } from '@/components/ui/pressable';
-import { useRouter } from 'expo-router';
-import { type SetupData } from '../../stores/setupStore';
 import { Image } from 'expo-image';
-import { Bookmark, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, Globe, Lock } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Bookmark, CalendarDays, CloudRain, Gamepad2, Globe, Lock, MapPin, Sun } from 'lucide-react-native';
+import React from 'react';
+import { type SetupData } from '../../stores/setupStore';
 import StarRatingDisplay from '../display/StarRatingDisplay';
 
 const teamColors = {
@@ -106,7 +106,7 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
             <DetailRow
               icon={
                 teamLogo ? (
-                  <Image source={teamLogo} style={{ width: 20, height: 20 }} contentFit="contain" />
+                  <Image source={teamLogo} style={{ width: 20, height: 20 }} resizeMode="contain" />
                 ) : (
                   <Text>🚗</Text>
                 )

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowBigLeft, ArrowLeft, PencilLine, Trash, X } from 'lucide-react-native';
-import React, { useEffect, useState, useCallback } from 'react';
+import { ArrowLeft, PencilLine, Trash, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
 import {
   AlertDialog,
@@ -19,10 +19,10 @@ import { Pressable } from '../components/ui/pressable';
 import { Spinner } from '../components/ui/spinner';
 import { Text } from '../components/ui/text';
 
+import AddToFolderModal from '@/src/components/dialogs/AddToFolderModal';
 import { SetupCard } from '../src/components/cards/SetupCard';
 import CreateEditFolderModal from '../src/components/dialogs/CreateEditFolderModal';
 import { SetupData, useSetupStore } from '../src/stores/setupStore';
-import AddToFolderModal from '@/src/components/dialogs/AddToFolderModal';
 
 export default function FolderDetailsScreen() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function FolderDetailsScreen() {
   const handleDeleteFolder = async () => {
     if (folderId) {
       await deleteFolder(folderId);
-      router.back(); 
+      router.back();
     }
     setIsDeleteAlertOpen(false);
   };
@@ -70,87 +70,87 @@ export default function FolderDetailsScreen() {
   }
 
   return (
-    <Box className="flex-1 bg-gray-100">
+    <Box className="flex-1 bg-black">
       <ImageBackground
         source={require('../src/assets/images/apex-wallpaper.jpg')}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
-      {/* Cabeçalho Customizado */}
-      <HStack className="bg-white p-4 justify-between items-center border-b border-gray-200">
-        <HStack className='flex items-center mt-2'>
-          <Pressable onPress={() => router.back()} className="p-2">
-            {(props: { pressed: boolean }) => (
-                  <Box 
+        {/* Cabeçalho Customizado */}
+        <HStack className="bg-black/70 p-4 justify-between items-center">
+          <HStack className='flex items-center mt-4'>
+            <Pressable onPress={() => router.back()} className="p-2">
+              {(props: { pressed: boolean }) => (
+                <Box
+                  style={{
+                    opacity: props.pressed ? 0.5 : 1.0,
+                  }}
+                >
+                  <ArrowLeft color="white"/>
+                </Box>
+              )}
+            </Pressable>
+            <Heading size="md" className="flex-1 text-center text-white">{folderName}</Heading>
+
+            <HStack space="md">
+              <Pressable onPress={() => setIsEditModalOpen(true)} className="p-2">
+                {(props: { pressed: boolean }) => (
+                  <Box
                     style={{
                       opacity: props.pressed ? 0.5 : 1.0,
                     }}
                   >
-                    <ArrowLeft />
+                    <PencilLine color="blue" />
                   </Box>
                 )}
-          </Pressable>
-          <Heading size="md" className="flex-1 text-center">{folderName}</Heading>
-
-          <HStack space="md">
-            <Pressable onPress={() => setIsEditModalOpen(true)} className="p-2">
-              {(props: { pressed: boolean }) => (
-                <Box 
-                  style={{
-                    opacity: props.pressed ? 0.5 : 1.0,
-                  }}
-                >
-                  <PencilLine color="blue" />
-                </Box>
-              )}
-            </Pressable>
-            <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
-              {(props: { pressed: boolean }) => (
-                <Box 
-                  style={{
-                    opacity: props.pressed ? 0.5 : 1.0,
-                  }}
-                >
-                  <Trash color="red" />
-                </Box>
-              )}
-            </Pressable>
+              </Pressable>
+              <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
+                {(props: { pressed: boolean }) => (
+                  <Box
+                    style={{
+                      opacity: props.pressed ? 0.5 : 1.0,
+                    }}
+                  >
+                    <Trash color="red" />
+                  </Box>
+                )}
+              </Pressable>
+            </HStack>
           </HStack>
         </HStack>
-      </HStack>
 
-      {/* Corpo da Tela */}
-      <Box className="flex-1 bg-black/60">
-      {loadingFolderSetups ? (
-        <Box className="flex-1 justify-center items-center">
-          <Spinner size="large" />
-        </Box>
-      ) : folderSetups.length === 0 ? (
-        <Box className="flex-1 justify-center items-center px-8">
-          <Text className="text-lg text-center text-gray-500">
-            Esta pasta está vazia.
-          </Text>
-        </Box>
-      ) : (
-        <FlatList
-          data={folderSetups}
-          renderItem={({ item }) => (
-            <SetupCard item={item} onAddToFolder={handleOpenAddToFolderModal} />
+        {/* Corpo da Tela */}
+        <Box className="flex-1 bg-black/50">
+          {loadingFolderSetups ? (
+            <Box className="flex-1 justify-center items-center">
+              <Spinner size="large" />
+            </Box>
+          ) : folderSetups.length === 0 ? (
+            <Box className="flex-1 justify-center items-center px-8">
+              <Text className="text-lg text-center text-white">
+                Esta pasta está vazia.
+              </Text>
+            </Box>
+          ) : (
+            <FlatList
+              data={folderSetups}
+              renderItem={({ item }) => (
+                <SetupCard item={item} onAddToFolder={handleOpenAddToFolderModal} />
+              )}
+              keyExtractor={(item) => item.id!}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
+            />
           )}
-          keyExtractor={(item) => item.id!}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
-        />
-      )}
 
-      {/* Modal de Edição */}
-      {currentFolder && (
-        <CreateEditFolderModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          folderToEdit={currentFolder}
-        />
-      )}
-      </Box>
+          {/* Modal de Edição */}
+          {currentFolder && (
+            <CreateEditFolderModal
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+              folderToEdit={currentFolder}
+            />
+          )}
+        </Box>
       </ImageBackground>
       {/* Diálogo de Confirmação de Exclusão */}
       <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setIsDeleteAlertOpen(false)}>
@@ -182,7 +182,12 @@ export default function FolderDetailsScreen() {
 
       <AddToFolderModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          if (folderId) {
+             getSetupsForFolder(folderId);
+          }
+        }}
         setup={selectedSetup}
       />
     </Box>

@@ -1,18 +1,18 @@
-import { useRouter } from "expo-router";
-import React, { useEffect, useCallback } from 'react';
+import { Spinner } from "@/components/ui/spinner";
+import LogoutModal from "@/src/components/dialogs/LogoutModal";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { useRouter } from "expo-router";
+import { Flame, List, LogOut, Plus } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { ImageBackground, ScrollView } from "react-native";
 import { Box } from '../../components/ui/box';
-import { Text } from '../../components/ui/text';
-import { Pressable } from '../../components/ui/pressable';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
+import { Pressable } from '../../components/ui/pressable';
+import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import { ImageBackground, ScrollView, FlatList } from "react-native";
-import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
-import { LogOut, Plus, List, Flame, User } from 'lucide-react-native';
-import LogoutModal from "@/src/components/dialogs/LogoutModal";
 import { SetupCard } from '../../src/components/cards/SetupCard';
-import { Spinner } from "@/components/ui/spinner";
+import { useSetupStore } from '../../src/stores/setupStore';
 
 export default function HomeScreen() {
   const router = useRouter();

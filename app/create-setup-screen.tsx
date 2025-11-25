@@ -319,7 +319,7 @@ export default function CreateSetupScreen() {
       >
         {/* Header */}
         <Box className="pt-12 pb-4 px-6 bg-black/70">
-          <HStack className="items-center">
+          <HStack className="items-center justify-between">
             <Pressable onPress={() => router.back()} className="p-2">
               {(props: { pressed: boolean }) => (
                 <Box
@@ -332,6 +332,7 @@ export default function CreateSetupScreen() {
               )}
             </Pressable>
             <Heading className="text-white " size="xl">{isEditMode ? 'Editar Setup' : 'Novo Setup'}</Heading>
+            <Box className="w-10"></Box>
           </HStack>
         </Box>
 
@@ -484,10 +485,10 @@ export default function CreateSetupScreen() {
           isOpen={showAlert}
           title={alertTitle}
           message={alertMessage}
-          onClose={() => setShowAlert(false)}
-          onConfirm={() => {
+          onClose={() => {
             setShowAlert(false);
             if (alertTitle === 'Sucesso') {
+              resetForm();
               router.replace('/(tabs)');
             }
           }}

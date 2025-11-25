@@ -1,27 +1,44 @@
-import { useLocalSearchParams, useRouter, useFocusEffect, useNavigation } from "expo-router";
-import React, { useEffect, useState } from 'react';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
+import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { ScrollView } from '@/components/ui/scroll-view';
+import { Spinner } from "@/components/ui/spinner";
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
-import { useSingleTap } from '@/src/hooks/useSingleTap';
-import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
-import { Image } from 'expo-image';
-import { ImageBackground, Share } from 'react-native';
-import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
+import { useSingleTap } from '@/src/hooks/useSingleTap';
+import { useSetupStore } from '@/src/stores/setupStore';
+import { Image } from 'expo-image';
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import {
-  Car, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, SlidersHorizontal,
-  Wind, Cog, Settings2, ArrowDownUp, Gauge, AlignVerticalSpaceAround, CircleDashed,
-  X, User, Globe, Lock, Copy, Star, Share2
+  AlignVerticalSpaceAround,
+  ArrowDownUp,
+  CalendarDays,
+  Car,
+  CircleDashed,
+  CloudRain,
+  Cog,
+  Copy,
+  Gamepad2,
+  Gauge,
+  Globe, Lock,
+  MapPin,
+  Settings2,
+  Share2,
+  SlidersHorizontal,
+  Star,
+  Sun,
+  User,
+  Wind,
+  X
 } from 'lucide-react-native';
-import { Spinner } from "@/components/ui/spinner";
+import React, { useState } from 'react';
+import { ImageBackground, Share } from 'react-native';
 
 const teamColors = {
   'Oracle Red Bull Racing': '#3671C6',
@@ -249,7 +266,7 @@ export default function SetupDetailsScreen() {
         resizeMode="cover"
       >
         {/* Header */}
-        <Box className="pt-12 pb-4 px-6 bg-black/60">
+        <Box className="pt-12 pb-4 px-6 bg-black/50">
           <HStack className="items-center justify-between">
             <Heading size="xl" className="text-white">Detalhes do Setup</Heading>
             <HStack space="md">
@@ -299,7 +316,7 @@ export default function SetupDetailsScreen() {
                         <Image
                           source={{ uri: setup.authorPhotoUrl }}
                           style={{ width: 24, height: 24, borderRadius: 12 }}
-                          contentFit="cover"
+                          resizeMode="cover"
                         />
                       ) : (
                         <User size={20} color="#6B7280" />
@@ -325,7 +342,7 @@ export default function SetupDetailsScreen() {
             <DetailRow
               label="Carro"
               value={setup.car}
-              icon={teamLogo ? <Image source={teamLogo} style={{ width: 20, height: 20 }} contentFit="contain" /> : <Car size={16} color="#6B7280" />}
+              icon={teamLogo ? <Image source={teamLogo} style={{ width: 20, height: 20 }} resizeMode="contain" /> : <Car size={16} color="#6B7280" />}
             />
             <DetailRow label="Circuito" value={setup.track} icon={<MapPin size={16} color="#6B7280" />} />
             <DetailRow label="Tipo de Controle" value={setup.controlType} icon={<Gamepad2 size={16} color="#6B7280" />} />
@@ -454,7 +471,7 @@ export default function SetupDetailsScreen() {
         </ScrollView>
         {/* Action Buttons */}
         {isOwner && !isViewOnly && (
-          <Box className="bg-black/60">
+          <Box className="bg-black/50">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
                 <Button
@@ -476,7 +493,7 @@ export default function SetupDetailsScreen() {
         )}
 
         {!isOwner && setup && (
-          <Box className="bg-black/60">
+          <Box className="bg-black/50">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
                 <Button
