@@ -1,28 +1,28 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
 import { FlatList } from '../../components/ui/flat-list';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
 import { Pressable } from '../../components/ui/pressable';
-import { Text } from '../../components/ui/text'
+import { Text } from '../../components/ui/text';
 import { SetupCard } from '../../src/components/cards/SetupCard';
 import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
-import { Spinner } from '@/components/ui/spinner';
-import { Button, ButtonText } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react-native';
-import { ImageBackground } from 'react-native';
 
 export default function ResultsScreen() {
   const router = useRouter();
-  const handleGoBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.push('/(tabs)');
-    }
-  };
-  const params = useLocalSearchParams<{ car?: string; track?: string; condition?: string; controlType?: string; }>();
+  
+  const params = useLocalSearchParams<{ 
+    car?: string; 
+    track?: string; 
+    condition?: string; 
+    controlType?: string; 
+    authorName?: string; 
+  }>();
 
   const publicSetups = useSetupStore((state) => state.publicSetups);
   const loadingPublicSetups = useSetupStore((state) => state.loadingPublicSetups);
@@ -44,6 +44,7 @@ export default function ResultsScreen() {
       track: filtersObject.track || undefined,
       controlType: filtersObject.controlType || undefined,
       condition: filtersObject.condition || undefined,
+      authorName: filtersObject.authorName || undefined,
     };
     searchPublicSetups(filters).catch(err => {
       console.error("Erro pego na tela de resultados:", err);
@@ -100,7 +101,7 @@ export default function ResultsScreen() {
               <Heading size="xl" className="flex-1 text-center text-white">Resultados da Busca</Heading>
             </HStack>
           </Box>
-          <Box className="flex-1 bg-black/60">
+          <Box className="flex-1 bg-black/50">
             {loadingPublicSetups ? (
               <Box className="flex-1 justify-center items-center">
                 <Spinner size="large" color="#ef4444" />

@@ -15,6 +15,8 @@ export interface UserProfile {
   gamertagPC?: string;   
   followersCount?: number;
   followingCount?: number;
+  setupsCount?: number;
+  averageRating?: number;
 }
 
 export interface SetupData {
@@ -177,6 +179,7 @@ interface SetupState {
   userList: UserProfile[];
   loadingUserList: boolean;
   fetchUserList: (userId: string, type: 'followers' | 'following') => Promise<void>;
+  fetchUserStats: (userId: string) => Promise<void>;
   
   formData: SetupData;
   updateField: (field: keyof SetupData, value: string | number | boolean) => void;
@@ -374,6 +377,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       if (filters?.condition) {
         q = query(q, where("condition", "==", filters.condition));
       }
+      if (filters?.authorName) {
+        q = query(q, where("authorName", "==", filters.authorName));
+      }
 
       q = query(q, orderBy("createdAt", "desc"), limit(10));
 
@@ -422,6 +428,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       }
       if (filters?.condition) {
         q = query(q, where("condition", "==", filters.condition));
+      }
+      if (filters?.authorName) {
+        q = query(q, where("authorName", "==", filters.authorName));
       }
 
       q = query(q, 
@@ -474,10 +483,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     };
 
     await addDoc(collection(db, "setups"), setupCopy);
-    
-    // Opcional (Fase 4 - Polimento): 
-    // Aqui poderíamos usar uma Cloud Function/Transaction para incrementar
-    // o `totalDownloads` do setup *original* (originalSetup.id)
   },
 
   fetchMyRating: async (setupId) => {
@@ -1011,6 +1016,38 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     } catch (error) {
       console.error("Erro ao buscar setup pelo ID:", error);
       return false;
+    }
+  },
+  fetchUserStats: async (userId: string) => {
+    try {
+      const q = query(
+        collection(db, "setups"), 
+        where("userId", "==", userId),
+        where("isPublic", "==", true)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      let totalRating = 0;
+      const count = snapshot.size;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        totalRating += (data.rating || 0);
+      });
+
+      const avg = count > 0 ? totalRating / count : 0;
+
+      const { userProfile, viewedUserProfile } = get();
+
+      if (userProfile && userProfile.uid === userId) {
+        set({ userProfile: { ...userProfile, setupsCount: count, averageRating: avg } });
+      } else if (viewedUserProfile && viewedUserProfile.uid === userId) {
+        set({ viewedUserProfile: { ...viewedUserProfile, setupsCount: count, averageRating: avg } });
+      }
+
+    } catch (error) {
+      console.error("Erro ao calcular estatísticas:", error);
     }
   },
 }));
