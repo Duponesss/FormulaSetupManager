@@ -1,25 +1,25 @@
-import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect, useNavigation } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { Box } from '../components/ui/box';
-import { Button, ButtonText, ButtonIcon } from '../components/ui/button';
-import { Divider } from '../components/ui/divider';
-import { Heading } from '../components/ui/heading';
-import { HStack } from '../components/ui/hstack';
-import { Pressable } from '../components/ui/pressable';
-import { ScrollView } from '../components/ui/scroll-view';
-import { Text } from '../components/ui/text';
-import { VStack } from '../components/ui/vstack';
-import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
-import { useSingleTap } from '../src/hooks/useSingleTap';
-import { useSetupStore, type SetupData } from '../src/stores/setupStore';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
+import { Divider } from '@/components/ui/divider';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { ScrollView } from '@/components/ui/scroll-view';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
+import { useSingleTap } from '@/src/hooks/useSingleTap';
+import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
 import { Image } from 'expo-image';
-import { ImageBackground } from 'react-native';
-import { Progress, ProgressFilledTrack } from '../components/ui/progress';
+import { ImageBackground, Share } from 'react-native';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
 import {
   Car, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, SlidersHorizontal,
   Wind, Cog, Settings2, ArrowDownUp, Gauge, AlignVerticalSpaceAround, CircleDashed,
-  X, User, Globe, Lock, Copy, Star
+  X, User, Globe, Lock, Copy, Star, Share2
 } from 'lucide-react-native';
 import { Spinner } from "@/components/ui/spinner";
 
@@ -54,7 +54,14 @@ const teamLogos = {
 
 export default function SetupDetailsScreen() {
   const router = useRouter();
-  const handleGoBack = () => router.back();
+  const navigation = useNavigation();
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      router.back(); 
+    } else {
+      router.replace('/(tabs)'); 
+    }
+  };
 
   const params = useLocalSearchParams<{ setupId: string, isViewOnly?: string }>();
   const { setupId } = params;
@@ -71,7 +78,8 @@ export default function SetupDetailsScreen() {
   const rateSetup = useSetupStore((state) => state.rateSetup);
   const fetchMyRating = useSetupStore((state) => state.fetchMyRating);
   const myRating = useSetupStore((state) => (setupId ? state.myRatings[setupId] : null) || 0);
-  const topRatedSetups = useSetupStore((state) => state.topRatedSetups);
+  const topRatedSetups = useSetupStore((state) => state.topRatedSetups); 
+  const deepLinkSetup = useSetupStore((state) => state.deepLinkSetup);
 
   const setup = React.useMemo(() => {
     if (!setupId) return null;
@@ -80,14 +88,31 @@ export default function SetupDetailsScreen() {
       folderSetups.find((s) => s.id === setupId) ||
       publicSetups.find((s) => s.id === setupId) ||
       topRatedSetups.find((s) => s.id === setupId) ||
+      (deepLinkSetup?.id === setupId ? deepLinkSetup : null) ||
       null
     );
-  }, [setupId, allSetups, folderSetups, publicSetups]);
+  }, [setupId, allSetups, folderSetups, publicSetups, topRatedSetups, deepLinkSetup]);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+
+  const handleShare = async () => {
+    if (!setup) return;
+    try {
+      const deepLink = `apexf1assistant://setup/${setup.id}`;
+
+      const message = `Confira este setup para ${setup.track} no Apex F1 Manager!\n\n${deepLink}`;
+
+      await Share.share({
+        message: message,
+        title: `Setup: ${setup.setupTitle}`,
+      });
+    } catch (error) {
+      console.error("Erro ao compartilhar:", error);
+    }
+  };
 
   const handleDelete = async () => {
     if (!setupId) return;
@@ -230,17 +255,28 @@ export default function SetupDetailsScreen() {
         <Box className="pt-12 pb-4 px-6 bg-black/60">
           <HStack className="items-center justify-between">
             <Heading size="xl" className="text-white">Detalhes do Setup</Heading>
-            <Pressable onPress={handleGoBack}>
-              {(props: { pressed: boolean }) => (
-                <Box
-                  style={{
-                    opacity: props.pressed ? 0.5 : 1.0,
-                  }}
-                >
-                  <X color="red" />
-                </Box>
+            <HStack space="md">
+              {setup && (
+                <Pressable onPress={handleShare} style={{ marginRight: 16 }}>
+                  {({ pressed }) => (
+                    <Box style={{ opacity: pressed ? 0.5 : 1.0 }}>
+                      <Share2 color="white" size={24} />
+                    </Box>
+                  )}
+                </Pressable>
               )}
-            </Pressable>
+              <Pressable onPress={handleGoBack}>
+                {(props: { pressed: boolean }) => (
+                  <Box
+                    style={{
+                      opacity: props.pressed ? 0.5 : 1.0,
+                    }}
+                  >
+                    <X color="red" />
+                  </Box>
+                )}
+              </Pressable>
+            </HStack>
           </HStack>
         </Box>
 

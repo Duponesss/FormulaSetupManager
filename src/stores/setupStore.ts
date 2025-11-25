@@ -246,6 +246,9 @@ interface SetupState {
   topRatedSetups: SetupData[];
   loadingTopRated: boolean;
   fetchTopRatedSetups: () => Promise<void>;
+
+  deepLinkSetup: SetupData | null;
+  fetchSetupById: (setupId: string) => Promise<boolean>;
 }
 
 let unsubscribeFromProfile: (() => void) | null = null;
@@ -285,6 +288,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   isFollowing: false,
   userList: [],
   loadingUserList: false,
+  deepLinkSetup: null,
 
   listenToUserProfile: (uid) => {
     if (unsubscribeFromProfile) unsubscribeFromProfile();
@@ -1060,6 +1064,38 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     } catch (error) {
       console.error("Erro ao buscar lista de usuários:", error);
       set({ loadingUserList: false });
+    }
+  },
+
+  fetchSetupById: async (setupId: string) => {
+    // Primeiro verifica se já temos esse setup em cache em alguma lista para economizar leitura
+    const { allSetups, folderSetups, publicSetups, topRatedSetups } = get();
+    const cached = 
+      allSetups.find(s => s.id === setupId) || 
+      folderSetups.find(s => s.id === setupId) ||
+      publicSetups.find(s => s.id === setupId) ||
+      topRatedSetups.find(s => s.id === setupId);
+
+    if (cached) {
+      set({ deepLinkSetup: cached });
+      return true;
+    }
+
+    // Se não tiver em cache, busca no Firestore
+    try {
+      const docRef = doc(db, "setups", setupId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const setupData = { id: docSnap.id, ...docSnap.data() } as SetupData;
+        set({ deepLinkSetup: setupData });
+        return true;
+      } else {
+        return false; 
+      }
+    } catch (error) {
+      console.error("Erro ao buscar setup pelo ID:", error);
+      return false;
     }
   },
 }));
