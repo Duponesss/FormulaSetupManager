@@ -1,17 +1,17 @@
-import { useAuth } from "../../src/hooks/use-auth";
-import React, { useState } from 'react';
+import { AntDesign } from '@expo/vector-icons';
 import { Redirect, useRouter } from "expo-router";
+import React, { useState } from 'react';
+import { Image, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
 import { Button, ButtonText } from '../../components/ui/button';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
+import { Input, InputField } from '../../components/ui/input';
 import { Spinner } from '../../components/ui/spinner';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import { Input, InputField } from '../../components/ui/input';
-import { Image, ImageBackground } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
 import AppAlertDialog from '../../src/components/dialogs/AppAlertDialog';
+import { useAuth } from "../../src/hooks/use-auth";
 
 
 export default function LoginScreen() {
@@ -47,9 +47,9 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      console.log('Fazendo login...');
+      // console.log('Fazendo login...');
       await signInWithEmail(email, password);
-      console.log('Login realizado com sucesso!');
+      // console.log('Login realizado com sucesso!');
     } catch (error: any) {
       console.error('Erro de autenticação:', error);
       let errorMessage = 'Erro ao fazer autenticação';
@@ -146,7 +146,7 @@ export default function LoginScreen() {
 
             <Button
               variant="link"
-              onPress={() => router.push('/register')} // Link para /register
+              onPress={() => router.push('/register')} 
             >
               <ButtonText className="text-white pressed:opacity-70">
                 Não tem conta? Criar uma
@@ -154,7 +154,7 @@ export default function LoginScreen() {
             </Button>
             <Button
               variant="link"
-              onPress={() => router.push('/reset-password')} // Link para /reset-password
+              onPress={() => router.push('/reset-password')} 
             >
               <ButtonText className="text-gray-400 pressed:opacity-70 text-xs">
                 Esqueceu sua senha?

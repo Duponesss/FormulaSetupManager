@@ -1,36 +1,28 @@
+import { FolderPlus } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
+import { Fab } from '../../components/ui/fab';
 import { Heading } from '../../components/ui/heading';
-import { Text } from '../../components/ui/text';
 import { Spinner } from '../../components/ui/spinner';
-import { Fab, FabIcon, FabLabel } from '../../components/ui/fab';
-import { AddIcon } from '../../components/ui/icon';
+import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import { useSetupStore } from '../../src/stores/setupStore';
 import FolderCard from '../../src/components/cards/FolderCard';
 import CreateEditFolderModal from '../../src/components/dialogs/CreateEditFolderModal';
-import { FolderPlus } from 'lucide-react-native';
+import { useSetupStore } from '../../src/stores/setupStore';
 
 export default function FoldersScreen() {
-    // 1. Pega os estados e ações relevantes da nossa store
     const folders = useSetupStore(state => state.folders);
     const loadingFolders = useSetupStore(state => state.loadingFolders);
     const listenToUserFolders = useSetupStore(state => state.listenToUserFolders);
 
-    // 2. Adiciona o estado para controlar a visibilidade do modal
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 2. Configura o ouvinte em tempo real quando a tela é montada
     useEffect(() => {
-        // Inicia o listener para as pastas do usuário
         const unsubscribe = listenToUserFolders();
 
-        // Função de limpeza: para o listener quando a tela é desmontada
         return () => unsubscribe();
-    }, [listenToUserFolders]); // O hook re-executa se a função listenToUserFolders mudar
-
-    // 3. Renderiza um spinner enquanto os dados estão sendo carregados
+    }, [listenToUserFolders]);
     if (loadingFolders) {
         return (
             <Box className="flex-1 justify-center items-center">
@@ -46,10 +38,9 @@ export default function FoldersScreen() {
                 style={{ flex: 1 }}
                 resizeMode="cover"
             >
-                <VStack className="flex-1 bg-black/60">
+                <VStack className="flex-1 bg-black/50">
                     <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Pastas</Heading>
 
-                    {/* 4. Renderiza a lista de pastas ou uma mensagem de "lista vazia" */}
                     {folders.length === 0 ? (
                         <Box className="flex-1 justify-center items-center px-8">
                             <Text className="text-lg text-center text-white">
@@ -68,7 +59,6 @@ export default function FoldersScreen() {
                         />
                     )}
 
-                    {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova pasta */}
                     <Fab
                         size="lg"
                         placement="bottom right"

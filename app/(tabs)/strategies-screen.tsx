@@ -1,33 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
+import { Fab } from '../../components/ui/fab';
 import { Heading } from '../../components/ui/heading';
-import { Text } from '../../components/ui/text';
 import { Spinner } from '../../components/ui/spinner';
-import { Fab, FabLabel } from '../../components/ui/fab';
-import { useRouter } from 'expo-router';
+import { Text } from '../../components/ui/text';
 
-import { useSetupStore } from '../../src/stores/setupStore';
-import StrategyCard from '../../src/components/cards/StrategyCard';
-import { ClipboardPlus } from 'lucide-react-native';
 import { VStack } from '@/components/ui/vstack';
+import { ClipboardPlus } from 'lucide-react-native';
+import StrategyCard from '../../src/components/cards/StrategyCard';
+import { useSetupStore } from '../../src/stores/setupStore';
 
 export default function StrategiesScreen() {
   const router = useRouter();
 
-  // 1. Conecta-se à store para buscar as estratégias e o estado de carregamento
   const strategies = useSetupStore(state => state.strategies);
   const loadingStrategies = useSetupStore(state => state.loadingStrategies);
   const listenToUserStrategies = useSetupStore(state => state.listenToUserStrategies);
 
-  // 2. Inicia o ouvinte em tempo real para as estratégias do usuário
   useEffect(() => {
     const unsubscribe = listenToUserStrategies();
-    // Limpa o ouvinte quando o componente é desmontado
     return () => unsubscribe();
   }, [listenToUserStrategies]);
 
-  // 3. Exibe um spinner enquanto os dados são carregados
   if (loadingStrategies) {
     return (
       <Box className="flex-1 justify-center items-center">
@@ -37,16 +33,15 @@ export default function StrategiesScreen() {
   }
 
   return (
-    <Box className="flex-1 bg-gray-100">
+    <Box className="flex-1 bg-black">
       <ImageBackground
         source={require('../../src/assets/images/apex-wallpaper.jpg')}
         style={{ flex: 1 }}
         resizeMode="cover"
       >
-        <VStack className="flex-1 bg-black/60">
+        <VStack className="flex-1 bg-black/50">
           <Heading className="pt-12 pb-4 px-6 text-2xl font-bold text-white">Minhas Estratégias</Heading>
         
-        {/* 4. Renderiza a lista de estratégias ou uma mensagem de "lista vazia" */}
         {strategies.length === 0 ? (
           <Box className="flex-1 justify-center items-center px-8">
             <Text className="text-lg text-center text-white">
@@ -65,13 +60,11 @@ export default function StrategiesScreen() {
           />
         )}
 
-        {/* 5. Botão de Ação Flutuante (FAB) para criar uma nova estratégia */}
         <Fab
           size="lg"
           placement="bottom right"
           className="bg-red-500 mb-20"
           onPress={() => {
-            // Navega para a tela de criação (que faremos a seguir)
             router.push('/create-strategy-screen');
           }}
         >

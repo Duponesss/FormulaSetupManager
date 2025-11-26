@@ -16,11 +16,9 @@ interface AppAlertDialogProps {
   onClose: () => void;
   title: string;
   message: string;
-  // Props para o modo "Confirmação"
-  onConfirm?: () => void; // Se 'onConfirm' for fornecido, o modal exibe 2 botões
+  onConfirm?: () => void;
   confirmText?: string;
   cancelText?: string;
-  // Prop para o modo "Alerta Simples"
   okText?: string;
 }
 
@@ -34,7 +32,7 @@ const AppAlertDialog: React.FC<AppAlertDialogProps> = ({
   cancelText = "Cancelar",
   okText = "OK",
 }) => {
-  const isConfirmation = !!onConfirm; // Verifica se é um modal de confirmação
+  const isConfirmation = !!onConfirm;
 
   return (
     <AlertDialog isOpen={isOpen} onClose={onClose}>
@@ -48,7 +46,6 @@ const AppAlertDialog: React.FC<AppAlertDialogProps> = ({
         </AlertDialogBody>
         <AlertDialogFooter className="mt-4">
           {isConfirmation ? (
-            // Modo Confirmação (2 botões)
             <>
               <Button variant="outline" action="secondary" onPress={onClose} className="mr-3">
                 <ButtonText>{cancelText}</ButtonText>
@@ -58,8 +55,7 @@ const AppAlertDialog: React.FC<AppAlertDialogProps> = ({
               </Button>
             </>
           ) : (
-            // Modo Alerta Simples (1 botão)
-            <Button action="primary" onPress={onClose}>
+            <Button action="negative" onPress={onClose}>
               <ButtonText>{okText}</ButtonText>
             </Button>
           )}

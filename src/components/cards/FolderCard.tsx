@@ -14,15 +14,13 @@ interface FolderCardProps {
 const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
   const router = useRouter();
 
-  // Função para navegar para a tela de detalhes da pasta
   const handlePress = () => {
     router.push({
-      pathname: '/folder-details-screen', // Tela que ainda vamos criar
+      pathname: '/folder-details-screen', 
       params: { folderId: folder.id, folderName: folder.name },
     });
   };
 
-  // Formata as datas para o padrão pt-BR, igual ao seu SetupCard
   const createdAtFormatted = folder.createdAt
     ? folder.createdAt.toDate().toLocaleDateString('pt-BR')
     : '—';
@@ -31,7 +29,6 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
     : '—';
 
   return (
-    // 3. O Pressable agora usa a "render prop"
     <Pressable
       className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md"
       onPress={handlePress}

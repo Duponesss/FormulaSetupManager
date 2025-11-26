@@ -1,16 +1,15 @@
-import React from 'react';
-import { Box } from '../../../components/ui/box';
-import { HStack } from '../../../components/ui/hstack';
-import { Text } from '../../../components/ui/text';
-import { VStack } from '../../../components/ui/vstack';
-import { Pressable } from '../../../components/ui/pressable';
-import { useRouter } from 'expo-router';
-import { type SetupData } from '../../stores/setupStore';
+import { Box } from '@/components/ui/box';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { Image } from 'expo-image';
-import { Bookmark, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, Globe, Lock, Star } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Bookmark, CalendarDays, CloudRain, Gamepad2, Globe, Lock, MapPin, Sun } from 'lucide-react-native';
+import React from 'react';
+import { type SetupData } from '../../stores/setupStore';
 import StarRatingDisplay from '../display/StarRatingDisplay';
 
-// --- MAPEAMENTO DE CORES DAS EQUIPES ---
 const teamColors = {
   'Oracle Red Bull Racing': '#3671C6',
   'Scuderia Ferrari HP': '#DC0000',
@@ -22,10 +21,9 @@ const teamColors = {
   'VISA Cash App RB F1 Team': '#6692FF',
   'Williams Racing': '#85b8ff',
   'Kick Sauber F1 Team': '#52E252',
-  'default': '#E5E7EB', // Um cinza padrão para fallback
+  'default': '#E5E7EB', 
 };
 
-// --- MAPEAMENTO DE LOGOS DAS EQUIPES ---
 const teamLogos = {
   'Oracle Red Bull Racing': require('../../assets/images/redbull.png'),
   'Scuderia Ferrari HP': require('../../assets/images/ferrari.png'),
@@ -39,7 +37,6 @@ const teamLogos = {
   'Kick Sauber F1 Team': require('../../assets/images/kick-sauber.svg'),
 };
 
-// Componente de linha de detalhe para limpar o código
 const DetailRow = ({ icon, text }: { icon: React.ReactNode, text: string }) => (
   <HStack className="items-center" space="sm">
     <Box className="w-5 items-center">{icon}</Box>
@@ -65,7 +62,7 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
       }
     });
   };
-  console.log(`Renderizando SetupCard: ${item.setupTitle}`);
+  // console.log(`Renderizando SetupCard: ${item.setupTitle}`);
 
   const teamColor = teamColors[item.car as keyof typeof teamColors] || teamColors.default;
   const teamLogo = teamLogos[item.car as keyof typeof teamLogos] || null;
@@ -87,7 +84,7 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
             {!isViewOnly && (
               <HStack space="md">
                 <Pressable
-                  className="w-8 h-8 items-center justify-center bg-blue-100 p-1 rounded-lg" // Ajustado para rounded-lg
+                  className="w-8 h-8 items-center justify-center bg-blue-100 p-1 rounded-lg"
                   onPress={(e) => { e.stopPropagation(); onAddToFolder(item); }}
                 >
                   {(props: { pressed: boolean }) => (
@@ -109,9 +106,8 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
             <DetailRow
               icon={
                 teamLogo ? (
-                  <Image source={teamLogo} style={{ width: 20, height: 20 }} contentFit="contain" />
+                  <Image source={teamLogo} style={{ width: 20, height: 20 }} resizeMode="contain" />
                 ) : (
-                  // Fallback se o logo não for encontrado
                   <Text>🚗</Text>
                 )
               }

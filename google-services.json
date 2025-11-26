@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1054243541807",
+    "project_id": "formulasetupmanagerv2",
+    "storage_bucket": "formulasetupmanagerv2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1054243541807:android:db569493368a3a59b647da",
+        "android_client_info": {
+          "package_name": "com.formulasetupmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuPs5I4jYfIHf9PL4Wx0RwswnLYLA1yUE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

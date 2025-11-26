@@ -1,31 +1,38 @@
-import React, { useState, useMemo } from 'react';
 import { useRouter } from 'expo-router';
+import { ChevronDown } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { ImageBackground } from 'react-native';
 import { Box } from '../../components/ui/box';
 import { Button, ButtonText } from '../../components/ui/button';
 import { FormControl } from '../../components/ui/form-control';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
-import { Pressable } from '../../components/ui/pressable';
 import { ScrollView } from '../../components/ui/scroll-view';
+import { Input, InputField } from '@/components/ui/input';
+import {
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger
+} from '../../components/ui/select';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
-import {
-  Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop,
-  SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem
-} from '../../components/ui/select';
-import { ChevronDown } from 'lucide-react-native';
 import { useSetupStore } from '../../src/stores/setupStore';
-import { ImageBackground } from 'react-native';
 
 export default function SearchScreen() {
   const router = useRouter();
 
-  // Estado local para guardar as seleções de filtro
   const [filters, setFilters] = useState({
     car: '',
     track: '',
     controlType: '',
     condition: '',
+    authorName: '',
   });
 
   const gameData = useSetupStore(state => state.gameData);
@@ -40,6 +47,7 @@ export default function SearchScreen() {
     if (filters.track) activeFilters.track = filters.track;
     if (filters.controlType) activeFilters.controlType = filters.controlType;
     if (filters.condition) activeFilters.condition = filters.condition;
+    if (filters.authorName) activeFilters.authorName = filters.authorName;
     router.push({
       pathname: '/search-results-screen',
       params: activeFilters,
@@ -47,7 +55,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <Box className="flex-1 bg-white">
+    <Box className="flex-1">
       <ImageBackground
         source={require('../../src/assets/images/apex-wallpaper.jpg')}
         style={{ flex: 1 }}
@@ -59,9 +67,22 @@ export default function SearchScreen() {
             <Heading size="xl" className="text-white">Buscar Setups</Heading>
           </HStack>
         </Box>
-        <Box className="flex-1 bg-black/60">
+        <Box className="flex-1 bg-black/50">
           <ScrollView className="flex-1">
             <VStack space="xl" className="p-6">
+
+              <FormControl>
+                <Text className="font-medium mb-2 text-white">Nome do Piloto</Text>
+                <Input className="bg-gray-800/80 border-gray-700">
+                  <InputField
+                    placeholder="MaxVerstappen"
+                    value={filters.authorName}
+                    onChangeText={(text) => setFilters(prev => ({ ...prev, authorName: text }))}
+                    className="text-white"
+                    placeholderTextColor="#c7cbd2"
+                  />
+                </Input>
+              </FormControl>
 
               <FormControl>
                 <Text className="font-medium mb-2 text-white">Carro</Text>

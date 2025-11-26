@@ -1,29 +1,45 @@
-import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import React, { useEffect, useState } from 'react';
-import { Box } from '../components/ui/box';
-import { Button, ButtonText, ButtonIcon } from '../components/ui/button';
-import { Divider } from '../components/ui/divider';
-import { Heading } from '../components/ui/heading';
-import { HStack } from '../components/ui/hstack';
-import { Pressable } from '../components/ui/pressable';
-import { ScrollView } from '../components/ui/scroll-view';
-import { Text } from '../components/ui/text';
-import { VStack } from '../components/ui/vstack';
-import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
-import { useSingleTap } from '../src/hooks/useSingleTap';
-import { useSetupStore, type SetupData } from '../src/stores/setupStore';
-import { Image } from 'expo-image';
-import { ImageBackground } from 'react-native';
-import { Progress, ProgressFilledTrack } from '../components/ui/progress';
-import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
-import {
-  Car, MapPin, Gamepad2, Sun, CloudRain, CalendarDays, SlidersHorizontal,
-  Wind, Cog, Settings2, ArrowDownUp, Gauge, AlignVerticalSpaceAround, CircleDashed,
-  X, User, Globe, Lock, Copy, Star
-} from 'lucide-react-native';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { Divider } from '@/components/ui/divider';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
+import { ScrollView } from '@/components/ui/scroll-view';
 import { Spinner } from "@/components/ui/spinner";
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
+import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
+import { useSingleTap } from '@/src/hooks/useSingleTap';
+import { useSetupStore } from '@/src/stores/setupStore';
+import { Image } from 'expo-image';
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import {
+  AlignVerticalSpaceAround,
+  ArrowDownUp,
+  CalendarDays,
+  Car,
+  CircleDashed,
+  CloudRain,
+  Cog,
+  Copy,
+  Gamepad2,
+  Gauge,
+  Globe, Lock,
+  MapPin,
+  Settings2,
+  Share2,
+  SlidersHorizontal,
+  Star,
+  Sun,
+  User,
+  Wind,
+  X
+} from 'lucide-react-native';
+import React, { useState } from 'react';
+import { ImageBackground, Share } from 'react-native';
 
-// --- MAPEAMENTO DE CORES DAS EQUIPES ---
 const teamColors = {
   'Oracle Red Bull Racing': '#3671C6',
   'Scuderia Ferrari HP': '#DC0000',
@@ -35,10 +51,9 @@ const teamColors = {
   'VISA Cash App RB F1 Team': '#6692FF',
   'Williams Racing': '#85b8ff',
   'Kick Sauber F1 Team': '#52E252',
-  'default': '#E5E7EB', // Um cinza padrão para fallback
+  'default': '#E5E7EB', 
 };
 
-// --- MAPEAMENTO DE LOGOS DAS EQUIPES ---
 const teamLogos = {
   'Oracle Red Bull Racing': require('../src/assets/images/redbull.png'),
   'Scuderia Ferrari HP': require('../src/assets/images/ferrari.png'),
@@ -54,7 +69,14 @@ const teamLogos = {
 
 export default function SetupDetailsScreen() {
   const router = useRouter();
-  const handleGoBack = () => router.back();
+  const navigation = useNavigation();
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      router.back(); 
+    } else {
+      router.replace('/(tabs)'); 
+    }
+  };
 
   const params = useLocalSearchParams<{ setupId: string, isViewOnly?: string }>();
   const { setupId } = params;
@@ -71,7 +93,8 @@ export default function SetupDetailsScreen() {
   const rateSetup = useSetupStore((state) => state.rateSetup);
   const fetchMyRating = useSetupStore((state) => state.fetchMyRating);
   const myRating = useSetupStore((state) => (setupId ? state.myRatings[setupId] : null) || 0);
-  const topRatedSetups = useSetupStore((state) => state.topRatedSetups);
+  const topRatedSetups = useSetupStore((state) => state.topRatedSetups); 
+  const deepLinkSetup = useSetupStore((state) => state.deepLinkSetup);
 
   const setup = React.useMemo(() => {
     if (!setupId) return null;
@@ -80,14 +103,31 @@ export default function SetupDetailsScreen() {
       folderSetups.find((s) => s.id === setupId) ||
       publicSetups.find((s) => s.id === setupId) ||
       topRatedSetups.find((s) => s.id === setupId) ||
+      (deepLinkSetup?.id === setupId ? deepLinkSetup : null) ||
       null
     );
-  }, [setupId, allSetups, folderSetups, publicSetups]);
+  }, [setupId, allSetups, folderSetups, publicSetups, topRatedSetups, deepLinkSetup]);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
+
+  const handleShare = async () => {
+    if (!setup) return;
+    try {
+      const deepLink = `apexf1assistant://setup/${setup.id}`;
+
+      const message = `Confira este setup para ${setup.track} no Apex F1 Manager!\n\n${deepLink}`;
+
+      await Share.share({
+        message: message,
+        title: `Setup: ${setup.setupTitle}`,
+      });
+    } catch (error) {
+      console.error("Erro ao compartilhar:", error);
+    }
+  };
 
   const handleDelete = async () => {
     if (!setupId) return;
@@ -105,7 +145,7 @@ export default function SetupDetailsScreen() {
   const confirmDeletion = () => setShowDeleteModal(true);
 
   const handleEditNavigation = () => {
-    console.log('EDITANDO SETUP COM setupId:', setupId);
+    // console.log('EDITANDO SETUP COM setupId:', setupId);
     router.push({ pathname: '/create-setup-screen', params: { setupId } });
   };
 
@@ -166,7 +206,6 @@ export default function SetupDetailsScreen() {
     label: string, value: number, icon: React.ReactNode,
     min: number, max: number, suffix?: string
   }) => {
-    // Calcula a porcentagem para a barra de progresso
     const progressValue = ((value - min) / (max - min)) * 100;
     return (
       <VStack className="py-2">
@@ -227,20 +266,31 @@ export default function SetupDetailsScreen() {
         resizeMode="cover"
       >
         {/* Header */}
-        <Box className="pt-12 pb-4 px-6 bg-black/60">
+        <Box className="pt-12 pb-4 px-6 bg-black/50">
           <HStack className="items-center justify-between">
             <Heading size="xl" className="text-white">Detalhes do Setup</Heading>
-            <Pressable onPress={handleGoBack}>
-              {(props: { pressed: boolean }) => (
-                <Box
-                  style={{
-                    opacity: props.pressed ? 0.5 : 1.0,
-                  }}
-                >
-                  <X color="red" />
-                </Box>
+            <HStack space="md">
+              {setup && (
+                <Pressable onPress={handleShare} style={{ marginRight: 16 }}>
+                  {({ pressed }) => (
+                    <Box style={{ opacity: pressed ? 0.5 : 1.0 }}>
+                      <Share2 color="white" size={24} />
+                    </Box>
+                  )}
+                </Pressable>
               )}
-            </Pressable>
+              <Pressable onPress={handleGoBack}>
+                {(props: { pressed: boolean }) => (
+                  <Box
+                    style={{
+                      opacity: props.pressed ? 0.5 : 1.0,
+                    }}
+                  >
+                    <X color="red" />
+                  </Box>
+                )}
+              </Pressable>
+            </HStack>
           </HStack>
         </Box>
 
@@ -266,7 +316,7 @@ export default function SetupDetailsScreen() {
                         <Image
                           source={{ uri: setup.authorPhotoUrl }}
                           style={{ width: 24, height: 24, borderRadius: 12 }}
-                          contentFit="cover"
+                          resizeMode="cover"
                         />
                       ) : (
                         <User size={20} color="#6B7280" />
@@ -282,9 +332,9 @@ export default function SetupDetailsScreen() {
               value={setup.isPublic ? "Público" : "Privado"}
               icon={
                 setup.isPublic ? (
-                  <Globe size={20} color="#16a34a" /> // Verde
+                  <Globe size={20} color="#16a34a" /> 
                 ) : (
-                  <Lock size={20} color="#6B7280" /> // Cinza
+                  <Lock size={20} color="#6B7280" /> 
                 )
               }
             />
@@ -292,7 +342,7 @@ export default function SetupDetailsScreen() {
             <DetailRow
               label="Carro"
               value={setup.car}
-              icon={teamLogo ? <Image source={teamLogo} style={{ width: 20, height: 20 }} contentFit="contain" /> : <Car size={16} color="#6B7280" />}
+              icon={teamLogo ? <Image source={teamLogo} style={{ width: 20, height: 20 }} resizeMode="contain" /> : <Car size={16} color="#6B7280" />}
             />
             <DetailRow label="Circuito" value={setup.track} icon={<MapPin size={16} color="#6B7280" />} />
             <DetailRow label="Tipo de Controle" value={setup.controlType} icon={<Gamepad2 size={16} color="#6B7280" />} />
@@ -420,9 +470,8 @@ export default function SetupDetailsScreen() {
 
         </ScrollView>
         {/* Action Buttons */}
-        {/* CASO 1: EU SOU O DONO E NÃO ESTOU em isViewOnly */}
         {isOwner && !isViewOnly && (
-          <Box className="bg-black/60">
+          <Box className="bg-black/50">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
                 <Button
@@ -443,9 +492,8 @@ export default function SetupDetailsScreen() {
           </Box>
         )}
 
-        {/* CASO 2: EU NÃO SOU O DONO (e o setup carregou) */}
         {!isOwner && setup && (
-          <Box className="bg-black/60">
+          <Box className="bg-black/50">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
                 <Button
@@ -459,8 +507,6 @@ export default function SetupDetailsScreen() {
             </VStack>
           </Box>
         )}
-        {/* CASO 3: SOU O DONO, MAS ESTOU EM isViewOnly (ex: tela de estratégia) */}
-        {/* Nenhum botão é mostrado */}
       </ImageBackground>
       {/* Modal de Confirmação de Exclusão */}
       <AppAlertDialog
@@ -484,7 +530,6 @@ export default function SetupDetailsScreen() {
             router.back();
           }
           if (alertTitle === 'Sucesso!') {
-            // Navegue para a tela inicial (Meus Setups)
             router.push('/(tabs)');
           }
         }}

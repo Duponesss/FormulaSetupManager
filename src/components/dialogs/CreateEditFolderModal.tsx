@@ -22,7 +22,7 @@ import { X } from 'lucide-react-native';
 interface CreateEditFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  folderToEdit?: Folder | null; // Pasta opcional para o modo de edição
+  folderToEdit?: Folder | null;
 }
 
 const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
@@ -30,27 +30,21 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
   onClose,
   folderToEdit,
 }) => {
-  // 1. Pega as ações da store
   const createFolder = useSetupStore(state => state.createFolder);
   const updateFolder = useSetupStore(state => state.updateFolder);
 
-  // 2. Estados internos para o formulário
   const [name, setName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 3. Determina se está no modo de edição
   const isEditing = !!folderToEdit;
 
-  // 4. useEffect para preencher o formulário no modo de edição
   useEffect(() => {
-    // Se o modal estiver abrindo e for para editar, preenche os campos
     if (isOpen && isEditing) {
       setName(folderToEdit.name);
       setIsPublic(folderToEdit.isPublic);
     } 
-    // Se o modal estiver fechando ou abrindo para criar, limpa os campos
     else if (!isOpen) {
       setName('');
       setIsPublic(false);
@@ -58,7 +52,6 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
     }
   }, [isOpen, folderToEdit, isEditing]);
 
-  // 5. Função para salvar (criar ou atualizar)
   const handleSave = async () => {
     if (!name.trim()) {
       setErrorMessage('O nome da pasta não pode ser vazio.');
@@ -70,13 +63,11 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
 
     try {
       if (isEditing) {
-        // Atualiza a pasta existente
         await updateFolder(folderToEdit.id, { name, isPublic });
       } else {
-        // Cria uma nova pasta
         await createFolder(name, isPublic);
       }
-      onClose(); // Fecha o modal em caso de sucesso
+      onClose();
     } catch (error) {
       console.error("Erro ao salvar pasta:", error);
       setErrorMessage('Ocorreu um erro ao salvar. Tente novamente.');
@@ -108,13 +99,11 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
           <HStack className="items-center justify-between mt-6">
             <VStack className="flex-1 mr-4">
               <Text className="font-semibold">Privacidade da Pasta</Text>
-              {/* Texto dinâmico com cor condicional para feedback claro */}
               <Text 
                 className={`text-sm ${isPublic ? 'text-emerald-500' : 'text-red-600'}`}
               >
                 {isPublic ? 'Pública' : 'Privada'}
               </Text>
-              {/* Descrição também é dinâmica */}
               <Text className="text-xs text-gray-500 mt-1">
                 {isPublic
                   ? 'Outros usuários poderão ver esta pasta.'

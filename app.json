@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "FormulaSetupManager",
-    "slug": "FormulaSetupManager",
+    "name": "Apex F1 Assistant",
+    "slug": "ApexF1Assistant",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/icon.png",
-    "scheme": "formulasetupmanager",
+    "icon": "./src/assets/icons/icon.png",
+    "scheme": "apexf1assistant",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -13,15 +13,17 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./src/assets/images/android-icon-foreground.png",
-        "backgroundImage": "./src/assets/images/android-icon-background.png",
-        "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./src/assets/icons/adaptive-icon-light.png",
+        "monochromeImage": "./src/assets/icons/adaptive-icon-dark.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.formulasetupmanager",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -32,11 +34,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./src/assets/images/apex-logo.png",
+          "image": "./src/assets/icons/splash-icon-light.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
+            "image": "./assets/images/splash-icon-dark.png",
             "backgroundColor": "#000000"
           }
         }
@@ -52,6 +55,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0027da4c-6090-450c-956e-e9afe92cb7f6"
+      }
     }
   }
 }

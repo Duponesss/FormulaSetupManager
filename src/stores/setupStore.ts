@@ -5,7 +5,6 @@ import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc
  } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 
-// Interface para o perfil do usuário
 export interface UserProfile {
   uid: string;
   email: string;
@@ -16,9 +15,10 @@ export interface UserProfile {
   gamertagPC?: string;   
   followersCount?: number;
   followingCount?: number;
+  setupsCount?: number;
+  averageRating?: number;
 }
 
-// Define a interface para todos os dados do formulário
 export interface SetupData {
   id?: string;
   createdAt?: Timestamp;
@@ -31,12 +31,12 @@ export interface SetupData {
   condition: string;
   notes: string;
   isPublic: boolean;
-  authorName?: string;      // Para exibir sem buscar na tabela users
-  authorPhotoUrl?: string;  // Para exibir avatar na lista
-  rating: number;           // Média 0-5
-  ratingCount: number;      // Total de votos
-  totalDownloads: number;   // Quantas vezes foi copiado
-  originalSetupId?: string | null; // Se for cópia, guarda o ID do pai
+  authorName?: string;      
+  authorPhotoUrl?: string;  
+  rating: number;           
+  ratingCount: number;      
+  totalDownloads: number;   
+  originalSetupId?: string | null;
   frontWing: number;
   rearWing: number;
   diffAdjustmentOn: number;
@@ -58,10 +58,9 @@ export interface SetupData {
   frontLeftTyrePressure: number;
   rearRightTyrePressure: number;
   rearLeftTyrePressure: number;
-  [key: string]: any; // Permite indexação por string
+  [key: string]: any;
 }
 
-// Interface para uma Pasta
 export interface Folder {
   id: string;
   name: string;
@@ -71,7 +70,6 @@ export interface Folder {
   updatedAt: Timestamp;
 }
 
-// Interface para a entrada na coleção de junção
 export interface FolderEntry {
   id: string;
   folderId: string;
@@ -80,18 +78,16 @@ export interface FolderEntry {
   addedAt: Timestamp;
 }
 
-// Representa um único stint dentro de um plano (máximo 3 por plano)
 export interface PlannedStint {
   tyreCompound: "soft" | "medium" | "hard" | "intermediate" | "wet";
-  pitStopLap: number; // A volta em que o usuário planeja parar
+  pitStopLap: number;
 }
 
-// Representa um Plano de Estratégia completo (A, B ou C)
 export interface StrategyPlan {
-  planLabel: string; // "Plano A", "Plano B", "Plano C"
-  plannedStints: PlannedStint[]; // Array com até 3 stints
-  fuelLoad: number; // Carga de combustível em voltas (ex: 35.5)
-  totalTime: string; // Tempo total de corrida "MM:SS.mls"
+  planLabel: string;
+  plannedStints: PlannedStint[];
+  fuelLoad: number; 
+  totalTime: string;
 }
 
 export interface Strategy {
@@ -105,21 +101,19 @@ export interface Strategy {
   notes: string;
   setupId: string;
 
-  // --- CAMPOS ADICIONADOS ---
-  totalRaceLaps?: number; // Número total de voltas da corrida (opcional, pode ser inferido)
-  initialAvailableTyres: { // Pneus disponíveis NO INÍCIO da corrida
+  totalRaceLaps?: number; 
+  initialAvailableTyres: { 
     soft: number; 
     medium: number; 
     hard: number; 
     intermediate: number; 
     wet: number; 
   };
-  strategyPlans: StrategyPlan[]; // Array com os Planos (A, B, C) - Max 3
+  strategyPlans: StrategyPlan[];
 
   lapTimes: Array<{ lapNumber: number; timeInMillis: number; }>; 
 }
 
-// Valores iniciais para um novo setup
 const formInitialState: SetupData = {
   setupTitle: '', 
   controlType: '', 
@@ -128,7 +122,7 @@ const formInitialState: SetupData = {
   track: '', 
   condition: '', 
   notes: '',
-  isPublic: false, // Privado por padrão
+  isPublic: false, 
   rating: 0,
   ratingCount: 0,
   totalDownloads: 0,
@@ -170,7 +164,6 @@ export interface RatingDoc {
   rating: number;
 }
 
-// Define a interface do store, incluindo os dados e as ações
 interface SetupState {
   userProfile: UserProfile | null;
   loadingProfile: boolean;
@@ -186,6 +179,7 @@ interface SetupState {
   userList: UserProfile[];
   loadingUserList: boolean;
   fetchUserList: (userId: string, type: 'followers' | 'following') => Promise<void>;
+  fetchUserStats: (userId: string) => Promise<void>;
   
   formData: SetupData;
   updateField: (field: keyof SetupData, value: string | number | boolean) => void;
@@ -198,29 +192,25 @@ interface SetupState {
   saveSetup: (setupData: SetupData) => Promise<void>;
   deleteSetup: (setupId: string) => Promise<void>;
 
-  // Estado para a gameData
   gameData: GameData | null;
   loadingGameData: boolean;
   fetchGameData: (gameId: string) => Promise<void>;
 
-  // Estado das Pastas
   folders: Folder[];
   loadingFolders: boolean;
-  listenToUserFolders: () => (() => void); // Ouvinte em tempo real para pastas
+  listenToUserFolders: () => (() => void);
   createFolder: (name: string, isPublic: boolean) => Promise<void>;
   updateFolder: (folderId: string, data: { name?: string, isPublic?: boolean }) => Promise<void>;
   deleteFolder: (folderId: string) => Promise<void>;
 
-  // Estado para Setups dentro de uma Pasta
   folderSetups: SetupData[];
   loadingFolderSetups: boolean;
   getSetupsForFolder: (folderId: string) => Promise<void>;
-  setupFolderIds: string[]; // Armazena os IDs das pastas em que um setup está
+  setupFolderIds: string[];
   loadingSetupFolders: boolean;
   getFoldersForSetup: (setupId: string) => Promise<void>;
   updateSetupFolders: (setupId: string, newFolderIds: string[]) => Promise<void>;
 
-  // --- NOVOS ESTADOS E AÇÕES PARA STRATEGIES ---
   strategies: Strategy[];
   loadingStrategies: boolean;
   listenToUserStrategies: () => (() => void);
@@ -230,22 +220,25 @@ interface SetupState {
   updateLapTimes: (strategyId: string, lapTimes: Strategy['lapTimes']) => Promise<void>;
 
   publicSetups: SetupData[];
-  loadingPublicSetups: boolean;      // Loading inicial
-  loadingMoreSetups: boolean;        // Loading do "Carregar Mais"
-  lastSetupDoc: DocumentSnapshot | null; // Referência para paginação
-  hasMoreSetups: boolean;              // Para saber se desativa o botão
-  currentSearchFilters: Record<string, string | undefined> | null; // Para lembrar os filtros
+  loadingPublicSetups: boolean;      
+  loadingMoreSetups: boolean;        
+  lastSetupDoc: DocumentSnapshot | null; 
+  hasMoreSetups: boolean;              
+  currentSearchFilters: Record<string, string | undefined> | null;
 
   searchPublicSetups: (filters?: Record<string, string | undefined>) => Promise<void>;
   fetchMorePublicSetups: () => Promise<void>;
   cloneSetup: (setup: SetupData) => Promise<void>;
   rateSetup: (setupId: string, ratingValue: number) => Promise<void>;
-  myRatings: { [setupId: string]: number | null }; // Cache dos votos do usuário
-  fetchMyRating: (setupId: string) => Promise<void>; // Ação para buscar o voto
+  myRatings: { [setupId: string]: number | null }; 
+  fetchMyRating: (setupId: string) => Promise<void>;
 
   topRatedSetups: SetupData[];
   loadingTopRated: boolean;
   fetchTopRatedSetups: () => Promise<void>;
+
+  deepLinkSetup: SetupData | null;
+  fetchSetupById: (setupId: string) => Promise<boolean>;
 }
 
 let unsubscribeFromProfile: (() => void) | null = null;
@@ -253,8 +246,6 @@ let unsubscribeFromSetups: (() => void) | null = null;
 let unsubscribeFromFolders: (() => void) | null = null;
 let unsubscribeFromStrategies: (() => void) | null = null;
 
-
-// Cria o hook do store
 export const useSetupStore = create<SetupState>((set, get) => ({
   userProfile: null,
   loadingProfile: true,
@@ -285,6 +276,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   isFollowing: false,
   userList: [],
   loadingUserList: false,
+  deepLinkSetup: null,
 
   listenToUserProfile: (uid) => {
     if (unsubscribeFromProfile) unsubscribeFromProfile();
@@ -310,32 +302,23 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     if (!user) throw new Error("Usuário não autenticado.");
 
     try {
-      // 1. Converte a imagem URI (file://...) em um Blob
       const response = await fetch(imageUri);
       const blob = await response.blob();
 
-      // 2. Cria uma referência no Firebase Storage
-      // Ex: 'profilePictures/user_uid_123.jpg'
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const storageRef = ref(storage, `profilePictures/${user.uid}/profile.${fileExtension}`);
 
-      // 3. Faz o upload do arquivo
       const uploadTask = uploadBytesResumable(storageRef, blob);
 
-      // Aguarda o upload ser concluído
       await uploadTask;
 
-      // 4. Pega a URL de download pública
       const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-      // 5. Atualiza o documento do usuário no Firestore com a nova URL
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         profilePictureUrl: downloadURL
       });
       
-      // O listener 'listenToUserProfile' fará o set({ userProfile: ... }) automaticamente
-
     } catch (error) {
       console.error("Erro ao fazer upload da foto:", error);
       throw new Error("Não foi possível salvar a foto de perfil.");
@@ -369,22 +352,19 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     return unsubscribe;
   },
 
-  // --- NOVA FUNÇÃO: BUSCA PÚBLICA ---
   searchPublicSetups: async (filters) => {
-    // 1. Ativa o loading principal e reseta tudo
     set({ 
       loadingPublicSetups: true, 
       publicSetups: [], 
       lastSetupDoc: null, 
       hasMoreSetups: true,
-      currentSearchFilters: filters // Salva os filtros para o "Carregar Mais"
+      currentSearchFilters: filters 
     });
     
     try {
       const setupsRef = collection(db, "setups");
       let q = query(setupsRef, where("isPublic", "==", true));
 
-      // Aplicando filtros
       if (filters?.car) {
         q = query(q, where("car", "==", filters.car));
       }
@@ -397,20 +377,21 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       if (filters?.condition) {
         q = query(q, where("condition", "==", filters.condition));
       }
+      if (filters?.authorName) {
+        q = query(q, where("authorName", "==", filters.authorName));
+      }
 
-      // 3. Aplica ordenação e limite (os 10 que você pediu)
       q = query(q, orderBy("createdAt", "desc"), limit(10));
 
       const snapshot = await getDocs(q);
       const setups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
       
-      // 4. Salva o último documento pego para usar no "startAfter"
       const lastDoc = snapshot.docs[snapshot.docs.length - 1];
       
       set({ 
         publicSetups: setups, 
         lastSetupDoc: lastDoc || null,
-        hasMoreSetups: snapshot.docs.length === 10, // Se veio menos de 10, não há mais
+        hasMoreSetups: snapshot.docs.length === 10, 
         loadingPublicSetups: false 
       });
 
@@ -420,7 +401,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // --- NOVA FUNÇÃO: CARREGAR MAIS ---
   fetchMorePublicSetups: async () => {
     const { 
       currentSearchFilters: filters, 
@@ -429,7 +409,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       hasMoreSetups 
     } = get();
 
-    // Se já estiver carregando, ou não tiver mais, ou não tiver um ponto de partida, não faz nada
     if (loadingMoreSetups || !hasMoreSetups || !lastSetupDoc) return;
 
     set({ loadingMoreSetups: true });
@@ -438,7 +417,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       const setupsRef = collection(db, "setups");
       let q = query(setupsRef, where("isPublic", "==", true));
 
-      // REAPLICA OS MESMOS FILTROS DA BUSCA INICIAL
       if (filters?.car) {
         q = query(q, where("car", "==", filters.car));
       }
@@ -451,11 +429,13 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       if (filters?.condition) {
         q = query(q, where("condition", "==", filters.condition));
       }
+      if (filters?.authorName) {
+        q = query(q, where("authorName", "==", filters.authorName));
+      }
 
-      // A MÁGICA: Começa *depois* do último que pegamos e busca mais 10
       q = query(q, 
         orderBy("createdAt", "desc"), 
-        startAfter(lastSetupDoc), // <-- Paginação
+        startAfter(lastSetupDoc), 
         limit(10)
       );
 
@@ -464,7 +444,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       const newLastDoc = snapshot.docs[snapshot.docs.length - 1];
 
       set(state => ({
-        publicSetups: [...state.publicSetups, ...newSetups], // Adiciona os novos ao final da lista
+        publicSetups: [...state.publicSetups, ...newSetups], 
         lastSetupDoc: newLastDoc || null,
         hasMoreSetups: snapshot.docs.length === 10,
         loadingMoreSetups: false
@@ -476,50 +456,39 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // --- NOVA FUNÇÃO: CLONAR SETUP ---
   cloneSetup: async (originalSetup) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado para clonar.");
 
     const currentProfile = get().userProfile;
     
-    // Remove o ID original para criar um novo
     const { id, ...data } = originalSetup; 
 
     const setupCopy = {
       ...data,
-      userId: user.uid, // O novo dono é o usuário atual
-      isPublic: false,  // A cópia é sempre privada por padrão
-      originalSetupId: id, // Guarda a referência de onde veio
-      setupTitle: `${data.setupTitle} (Cópia)`, // Indica que é uma cópia
+      userId: user.uid,
+      isPublic: false,  
+      originalSetupId: id, 
+      setupTitle: `${data.setupTitle} (Cópia)`, 
 
-      // Reseta as estatísticas da comunidade para a nova cópia
       rating: 0,
       ratingCount: 0,
       totalDownloads: 0,
       
-      // Define o autor da *cópia* como o usuário atual
       authorName: currentProfile?.username || "Piloto Desconhecido",
       authorPhotoUrl: currentProfile?.profilePictureUrl || null,
 
-      // Define novas datas de criação/atualização
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
 
-    // Salva o novo documento na coleção 'setups'
     await addDoc(collection(db, "setups"), setupCopy);
-    
-    // Opcional (Fase 4 - Polimento): 
-    // Aqui poderíamos usar uma Cloud Function/Transaction para incrementar
-    // o `totalDownloads` do setup *original* (originalSetup.id)
   },
 
   fetchMyRating: async (setupId) => {
     const user = auth.currentUser;
-    if (!user) return; // Se não está logado, não há voto
+    if (!user) return; 
 
-    // Se já temos no cache, não busca de novo
     if (get().myRatings[setupId] !== undefined) {
       return;
     }
@@ -530,13 +499,11 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       const ratingDoc = await getDoc(ratingRef);
 
       if (ratingDoc.exists()) {
-        // Voto encontrado, salva no cache
         const myVote = ratingDoc.data() as RatingDoc;
         set((state) => ({
           myRatings: { ...state.myRatings, [setupId]: myVote.rating },
         }));
       } else {
-        // Voto não encontrado, salva null no cache
         set((state) => ({
           myRatings: { ...state.myRatings, [setupId]: null },
         }));
@@ -546,12 +513,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // --- FUNÇÃO rateSetup (TOTALMENTE MODIFICADA) ---
   rateSetup: async (setupId, ratingValue) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
-
-    // 1. Define as duas referências de documento que vamos usar
     const setupRef = doc(db, "setups", setupId);
     const ratingDocId = `${setupId}_${user.uid}`;
     const ratingRef = doc(db, "ratings", ratingDocId);
@@ -561,7 +525,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
 
     try {
       await runTransaction(db, async (transaction) => {
-        // 2. Lê os dois documentos *dentro* da transação
         const setupDoc = await transaction.get(setupRef);
         const myRatingDoc = await transaction.get(ratingRef);
 
@@ -575,35 +538,30 @@ export const useSetupStore = create<SetupState>((set, get) => ({
         const isNewVote = !myRatingDoc.exists();
         const oldVoteValue = isNewVote ? 0 : (myRatingDoc.data() as RatingDoc).rating;
 
-        // 3. Calcula a nova média
         if (isNewVote) {
-          // Usuário está votando pela primeira vez
           newRatingCount = setupData.ratingCount + 1;
           const newRatingSum = oldRatingSum + ratingValue;
           newAverageRating = newRatingSum / newRatingCount;
         } else {
-          // Usuário está *atualizando* o voto
-          newRatingCount = setupData.ratingCount; // Contagem não muda
+          newRatingCount = setupData.ratingCount;
           const newRatingSum = (oldRatingSum - oldVoteValue) + ratingValue;
           newAverageRating = newRatingSum / newRatingCount;
         }
 
-        // 4. Atualiza os dois documentos na transação
         transaction.update(setupRef, {
           rating: newAverageRating,
           ratingCount: newRatingCount,
         });
         
-        transaction.set(ratingRef, { // .set() (cria ou sobrescreve)
+        transaction.set(ratingRef, { 
           setupId: setupId,
           userId: user.uid,
           rating: ratingValue,
         });
       });
 
-      console.log("Avaliação (re)calculada e registrada!");
+      // console.log("Avaliação (re)calculada e registrada!");
 
-      // 5. Atualiza o estado local (Zustand)
       set((state) => {
         const updateSetupInList = (list: SetupData[]) => 
           list.map(s => 
@@ -613,7 +571,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
           );
         
         return {
-          myRatings: { ...state.myRatings, [setupId]: ratingValue }, // Atualiza o cache do meu voto
+          myRatings: { ...state.myRatings, [setupId]: ratingValue }, 
           allSetups: updateSetupInList(state.allSetups),
           folderSetups: updateSetupInList(state.folderSetups),
           publicSetups: updateSetupInList(state.publicSetups),
@@ -626,34 +584,27 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  saveSetup: async (setupData) => {const user = auth.currentUser;
+  saveSetup: async (setupData) => {
+    const user = auth.currentUser;
     if (!user) throw new Error("Utilizador não autenticado para salvar o setup.");
     
-    // Pegamos o perfil atual do estado da Store para salvar o nome/foto junto
-    // Isso evita leituras extras no banco quando formos listar os setups
     const currentProfile = get().userProfile;
     
-    // Remove o ID do objeto principal para não o salvar como um campo no documento
     const { id, ...data } = setupData;
 
     const dataToSave = {
       ...data,
       userId: user.uid,
       updatedAt: Timestamp.now(),
-      // Garante que isPublic seja booleano
       isPublic: Boolean(data.isPublic),
-      // Atualiza o nome/foto caso o usuário tenha mudado (opcional, mas recomendado)
       authorName: currentProfile?.username || "Piloto Desconhecido",
       authorPhotoUrl: currentProfile?.profilePictureUrl || null,
     };
 
     if (id) {
-      // ATUALIZAR SETUP EXISTENTE
       const docRef = doc(db, "setups", id);
       await updateDoc(docRef, dataToSave);
     } else {
-      // CRIAR NOVO SETUP
-      // Inicializa contadores apenas na criação
       await addDoc(collection(db, "setups"), {
         ...dataToSave,
         createdAt: Timestamp.now(),
@@ -668,10 +619,8 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   deleteSetup: async (setupId) => {
     if (!setupId) throw new Error("ID do setup é necessário.");
     
-    // Deletar o documento do setup
     await deleteDoc(doc(db, "setups", setupId));
 
-    // Deletar todas as entradas em 'folderEntries' para este setup
     const q = query(collection(db, "folderEntries"), where("setupId", "==", setupId));
     const entriesSnapshot = await getDocs(q);
     const batch = writeBatch(db);
@@ -680,7 +629,7 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   },
 
   fetchGameData: async (gameId) => {
-    if (get().gameData) return; // Não busca se já tiver os dados
+    if (get().gameData) return; 
     try {
       set({ loadingGameData: true });
       const docRef = doc(db, "gamedata", gameId);
@@ -739,11 +688,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   deleteFolder: async (folderId) => {
     const batch = writeBatch(db);
 
-    // 1. Deletar a pasta
     const folderRef = doc(db, "folders", folderId);
     batch.delete(folderRef);
 
-    // 2. Encontrar e deletar todas as entradas associadas a esta pasta
     const entriesQuery = query(collection(db, "folderEntries"), where("folderId", "==", folderId));
     const entriesSnapshot = await getDocs(entriesQuery);
     entriesSnapshot.forEach(doc => batch.delete(doc.ref));
@@ -754,7 +701,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   getSetupsForFolder: async (folderId) => {
     set({ loadingFolderSetups: true, folderSetups: [] });
     try {
-      // 1. Buscar todas as entradas para a pasta específica
       const entriesQuery = query(collection(db, "folderEntries"), where("folderId", "==", folderId));
       const entriesSnapshot = await getDocs(entriesQuery);
       
@@ -765,10 +711,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
         return;
       }
 
-      // 2. Buscar todos os setups correspondentes aos IDs encontrados usando a query 'in'
-      // A query 'in' é muito performática e evita múltiplas leituras individuais.
-      // O Firestore limita as queries 'in' a 30 itens por vez.
-      // TODO: Implementar paginação ou múltiplas queries se uma pasta puder ter mais de 30 setups.
       const setupsQuery = query(collection(db, "setups"), where(documentId(), "in", setupIds));
       const setupsSnapshot = await getDocs(setupsQuery);
       const setups = setupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
@@ -809,9 +751,8 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     const foldersToAdd = newFolderIds.filter(id => !currentFolderIds.includes(id));
     const foldersToRemove = currentFolderIds.filter(id => !newFolderIds.includes(id));
 
-    // Adiciona as novas entradas
     foldersToAdd.forEach(folderId => {
-      const newEntryRef = doc(collection(db, "folderEntries")); // Cria uma referência com ID automático
+      const newEntryRef = doc(collection(db, "folderEntries"));
       batch.set(newEntryRef, {
         setupId,
         folderId,
@@ -820,7 +761,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       });
     });
 
-    // Para remover, precisamos primeiro encontrar os documentos correspondentes
     if (foldersToRemove.length > 0) {
       const q = query(
         collection(db, "folderEntries"),
@@ -834,7 +774,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       });
     }
 
-    // Executa todas as operações de uma só vez
     await batch.commit();
   },
 
@@ -847,7 +786,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
     const q = query(collection(db, "strategies"), where("ownerId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      // O mapeamento aqui já funcionará com a nova estrutura
       const strategies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
       set({ strategies, loadingStrategies: false });
     }, (error) => {
@@ -895,18 +833,17 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     const docRef = doc(db, "strategies", strategyId);
     await updateDoc(docRef, {
       lapTimes: lapTimes,
-      updatedAt: Timestamp.now(), // Atualiza a data de modificação
+      updatedAt: Timestamp.now(),
     });
   },
 
   fetchTopRatedSetups: async () => {
-    // Evita recarregar se já tiver dados (opcional, mas bom para performance inicial)
+    if (get().topRatedSetups.length > 0) return; 
     if (get().topRatedSetups.length > 0) return; 
     
     set({ loadingTopRated: true });
     try {
       const setupsRef = collection(db, "setups");
-      // Query: Públicos, Ordenados por Rating (maior para menor), Top 5
       const q = query(
         setupsRef, 
         where("isPublic", "==", true), 
@@ -938,18 +875,15 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // --- VERIFICAR SE SIGO ---
   checkIfFollowing: async (targetUserId) => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
     
-    // Verifica na subcoleção se existe um documento
     const docRef = doc(db, "users", currentUser.uid, "following", targetUserId);
     const docSnap = await getDoc(docRef);
     set({ isFollowing: docSnap.exists() });
   },
 
-  // --- SEGUIR USUÁRIO (TRANSAÇÃO) ---
   followUser: async (targetUserId) => {
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error("Usuário não logado");
@@ -957,7 +891,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     const myRef = doc(db, "users", currentUser.uid);
     const targetRef = doc(db, "users", targetUserId);
     
-    // Referências das subcoleções (relações)
     const myFollowingRef = doc(db, "users", currentUser.uid, "following", targetUserId);
     const targetFollowerRef = doc(db, "users", targetUserId, "followers", currentUser.uid);
 
@@ -968,11 +901,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
 
         if (!targetDoc.exists()) throw new Error("Usuário alvo não existe");
 
-        // 1. Cria os documentos de relação
         transaction.set(myFollowingRef, { since: Timestamp.now() });
         transaction.set(targetFollowerRef, { since: Timestamp.now() });
 
-        // 2. Atualiza contadores (Atomicamente)
         const newMyFollowingCount = (myDoc.data()?.followingCount || 0) + 1;
         const newTargetFollowerCount = (targetDoc.data()?.followersCount || 0) + 1;
 
@@ -980,10 +911,8 @@ export const useSetupStore = create<SetupState>((set, get) => ({
         transaction.update(targetRef, { followersCount: newTargetFollowerCount });
       });
 
-      // Atualiza estado local
       set({ isFollowing: true });
       
-      // Se estivermos vendo o perfil, atualiza o contador visualmente
       const viewed = get().viewedUserProfile;
       if (viewed && viewed.uid === targetUserId) {
         set({ viewedUserProfile: { ...viewed, followersCount: (viewed.followersCount || 0) + 1 } });
@@ -995,7 +924,6 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     }
   },
 
-  // --- DEIXAR DE SEGUIR (TRANSAÇÃO) ---
   unfollowUser: async (targetUserId) => {
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error("Usuário não logado");
@@ -1010,11 +938,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
         const myDoc = await transaction.get(myRef);
         const targetDoc = await transaction.get(targetRef);
 
-        // 1. Remove relações
         transaction.delete(myFollowingRef);
         transaction.delete(targetFollowerRef);
 
-        // 2. Decrementa contadores (evita negativo)
         const newMyFollowingCount = Math.max(0, (myDoc.data()?.followingCount || 0) - 1);
         const newTargetFollowerCount = Math.max(0, (targetDoc.data()?.followersCount || 0) - 1);
 
@@ -1060,6 +986,68 @@ export const useSetupStore = create<SetupState>((set, get) => ({
     } catch (error) {
       console.error("Erro ao buscar lista de usuários:", error);
       set({ loadingUserList: false });
+    }
+  },
+
+  fetchSetupById: async (setupId: string) => {
+    const { allSetups, folderSetups, publicSetups, topRatedSetups } = get();
+    const cached = 
+      allSetups.find(s => s.id === setupId) || 
+      folderSetups.find(s => s.id === setupId) ||
+      publicSetups.find(s => s.id === setupId) ||
+      topRatedSetups.find(s => s.id === setupId);
+
+    if (cached) {
+      set({ deepLinkSetup: cached });
+      return true;
+    }
+
+    try {
+      const docRef = doc(db, "setups", setupId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const setupData = { id: docSnap.id, ...docSnap.data() } as SetupData;
+        set({ deepLinkSetup: setupData });
+        return true;
+      } else {
+        return false; 
+      }
+    } catch (error) {
+      console.error("Erro ao buscar setup pelo ID:", error);
+      return false;
+    }
+  },
+  fetchUserStats: async (userId: string) => {
+    try {
+      const q = query(
+        collection(db, "setups"), 
+        where("userId", "==", userId),
+        where("isPublic", "==", true)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      let totalRating = 0;
+      const count = snapshot.size;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        totalRating += (data.rating || 0);
+      });
+
+      const avg = count > 0 ? totalRating / count : 0;
+
+      const { userProfile, viewedUserProfile } = get();
+
+      if (userProfile && userProfile.uid === userId) {
+        set({ userProfile: { ...userProfile, setupsCount: count, averageRating: avg } });
+      } else if (viewedUserProfile && viewedUserProfile.uid === userId) {
+        set({ viewedUserProfile: { ...viewedUserProfile, setupsCount: count, averageRating: avg } });
+      }
+
+    } catch (error) {
+      console.error("Erro ao calcular estatísticas:", error);
     }
   },
 }));

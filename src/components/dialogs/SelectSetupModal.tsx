@@ -20,18 +20,14 @@ interface SelectSetupModalProps {
 }
 
 const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, onSelect }) => {
-  // 1. Pega os setups e o estado de carregamento da store
   const allSetups = useSetupStore(state => state.allSetups);
   const loadingSetups = useSetupStore(state => state.loadingSetups);
 
-  // 2. Estado para o campo de busca
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 3. Filtra os setups com base no termo de busca
-  // useMemo otimiza a performance, evitando recalcular a lista a cada renderização
   const filteredSetups = useMemo(() => {
     if (!searchTerm) {
-      return allSetups; // Se não houver busca, retorna todos
+      return allSetups;
     }
     return allSetups.filter(setup =>
       setup.setupTitle.toLowerCase().includes(searchTerm.toLowerCase())
@@ -64,7 +60,6 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
             <FlatList
               data={filteredSetups}
               keyExtractor={(item) => item.id!}
-              // Limita a altura da lista para não estourar o modal
               style={{ maxHeight: 300 }} 
               renderItem={({ item }) => (
                 <Pressable

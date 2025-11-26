@@ -1,5 +1,3 @@
-// src/components/inputs/LapTimeInput.tsx
-
 import React, { useState } from 'react';
 import { Box } from '../../../components/ui/box';
 import { Input, InputField } from '../../../components/ui/input';
@@ -8,7 +6,7 @@ import { Spinner } from '../../../components/ui/spinner';
 import { HStack } from '../../../components/ui/hstack';
 
 interface LapTimeInputProps {
-  onAddLap: (timeString: string) => Promise<void>; // Função que será chamada ao adicionar
+  onAddLap: (timeString: string) => Promise<void>;
 }
 
 const LapTimeInput: React.FC<LapTimeInputProps> = ({ onAddLap }) => {
@@ -16,15 +14,14 @@ const LapTimeInput: React.FC<LapTimeInputProps> = ({ onAddLap }) => {
   const [isAdding, setIsAdding] = useState(false);
 
   const handlePressAdd = async () => {
-    if (!inputValue.trim()) return; // Não faz nada se estiver vazio
+    if (!inputValue.trim()) return; 
 
     setIsAdding(true);
     try {
-      await onAddLap(inputValue); // Chama a função do pai
-      setInputValue(''); // Limpa o input apenas se a adição for bem-sucedida
+      await onAddLap(inputValue); 
+      setInputValue(''); 
     } catch (error) {
       console.error("Erro ao chamar onAddLap:", error);
-      // Você pode querer mostrar um feedback de erro aqui
     } finally {
       setIsAdding(false);
     }
@@ -36,9 +33,9 @@ const LapTimeInput: React.FC<LapTimeInputProps> = ({ onAddLap }) => {
         <Input>
           <InputField
             placeholder="MM:SS.mls (ex: 01:34.567)"
-            keyboardType="numbers-and-punctuation" // Teclado mais adequado
+            keyboardType="numbers-and-punctuation"
             value={inputValue}
-            onChangeText={setInputValue} // Atualiza apenas o estado interno
+            onChangeText={setInputValue}
           />
         </Input>
       </Box>

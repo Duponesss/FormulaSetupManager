@@ -13,12 +13,11 @@ import { auth, db } from '../services/firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
 
-// Conditional import for Google Sign-in (only works in development builds)
 let GoogleSignin: any = null;
 try {
   GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
 } catch (error) {
-  console.log('Google Sign-in not available in Expo Go');
+  // console.log('Google Sign-in not available in Expo Go');
 }
 
 interface AuthContextType {
@@ -45,10 +44,8 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// INTERRUPTOR PARA O MODO DE DESENVOLVIMENTO
-const MOCK_AUTH_IN_DEV = false; // <-- Mude para 'false' para testar o login real
+const MOCK_AUTH_IN_DEV = false; 
 
-// Objeto de utilizador falso para simulação
 const FAKE_USER: User = {
   uid: 'dev-user-12345',
   email: 'dev@formula.com',
@@ -58,7 +55,7 @@ const FAKE_USER: User = {
   photoURL: null,
   phoneNumber: null,
   providerId: 'password',
-  metadata: {} as any, // Usamos 'as any' para simplificar o mock
+  metadata: {} as any, 
   providerData: [],
   refreshToken: 'fake-refresh-token',
   tenantId: null,
@@ -74,15 +71,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(!MOCK_AUTH_IN_DEV);
 
   useEffect(() => {
-    // Se estivermos a simular, não executa a lógica do Firebase
     if (MOCK_AUTH_IN_DEV) {
       return;
     }
 
-    // Configure Google Sign-in only if available
     if (GoogleSignin) {
       GoogleSignin.configure({
-        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, // From Google Cloud Console
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, 
       });
     }
 
@@ -100,17 +95,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      // Check if your device supports Google Play
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-      // Get the users ID token
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
 
-      // Create a Google credential with the token
       const googleCredential = GoogleAuthProvider.credential(idToken);
 
-      // Sign-in the user with the credential
       await signInWithCredential(auth, googleCredential);
     } catch (error) {
       throw error;
@@ -127,11 +118,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUpWithEmail = async (email: string, password: string, username: string) => {
     try {
-      // Cria o usuário no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Cria o documento de perfil no Firestore
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
