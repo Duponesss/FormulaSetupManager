@@ -78,7 +78,7 @@ export default function RootLayout() {
   const { setColorScheme } = useColorScheme();
 
   useEffect(() => {
-    setColorScheme("dark");
+    setColorScheme("light");
   }, []);
   return (
     <GluestackUIProvider>

@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./src/assets/icons/icon.png",
     "scheme": "apexf1assistant",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "backgroundColor": "#000000",
     "newArchEnabled": true,
     "ios": {
@@ -35,14 +35,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./src/assets/icons/splash-icon-light.png",
+          "image": "./src/assets/icons/splash-icon-dark.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "image": "./src/assets/icons/splash-icon-dark.png",
-            "backgroundColor": "#000000"
-          }
+          "backgroundColor": "#000000",
         }
       ],
       "expo-web-browser",
