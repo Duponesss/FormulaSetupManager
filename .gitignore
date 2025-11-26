@@ -48,6 +48,5 @@ app-example
 firebase-backup-config.txt
 node_modules
 
-package-lock.json
 
 docs/commit_table.md
