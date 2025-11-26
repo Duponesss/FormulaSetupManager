@@ -6,7 +6,8 @@
     "orientation": "portrait",
     "icon": "./src/assets/icons/icon.png",
     "scheme": "apexf1assistant",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true

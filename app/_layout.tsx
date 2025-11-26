@@ -8,6 +8,8 @@ import { Spinner } from '../components/ui/spinner';
 import * as SplashScreen from 'expo-splash-screen';
 import '../global.css';
 import { Text } from '../components/ui/text';
+import { StatusBar } from 'expo-status-bar';
+import { useColorScheme } from "nativewind";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,9 +56,9 @@ function RootNavigation() {
 
   if (isAuthLoading || !isDataReady) {
     return (
-      <Box className="flex-1 items-center justify-center">
-        <Spinner size="large" />
-        <Text>Carregando...</Text>
+      <Box className="flex-1 items-center justify-center bg-black">
+        <Spinner size="large" color="#ef4444"/>
+        <Text className="text-white mt-4">Carregando...</Text>
       </Box>
     );
   }
@@ -73,8 +75,14 @@ function RootNavigation() {
 
 
 export default function RootLayout() {
+  const { setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    setColorScheme("dark");
+  }, []);
   return (
     <GluestackUIProvider>
+      <StatusBar style="light" />
       <AuthProvider>
         <RootNavigation />
       </AuthProvider>
