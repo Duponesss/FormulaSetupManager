@@ -1,17 +1,20 @@
-import React, { useState, useMemo } from 'react';
+import { Box } from '@/components/ui/box';
+import { ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { Input, InputField, InputIcon } from '@/components/ui/input';
 import {
-  Modal, ModalBackdrop, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter
-} from '../../../components/ui/modal';
-import { Heading } from '../../../components/ui/heading';
-import { Button, ButtonText } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
-import { Spinner } from '../../../components/ui/spinner';
-import { Input, InputIcon, InputField } from '../../../components/ui/input';
-import { Pressable } from '../../../components/ui/pressable';
-import { useSetupStore } from '../../stores/setupStore';
+  Modal, ModalBackdrop, ModalContent,
+  ModalFooter,
+  ModalHeader
+} from '@/components/ui/modal';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { Search } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
-import { X, Search } from 'lucide-react-native';
-import { Box } from '../../../components/ui/box';
+import { useSetupStore } from '../../stores/setupStore';
+import { DebouncedButton } from '../common/DebouncedButton';
+import { DebouncedPressable } from '../common/DebouncedPressable';
 
 interface SelectSetupModalProps {
   isOpen: boolean;
@@ -40,7 +43,6 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
       <ModalContent className="bg-white rounded-lg">
         <ModalHeader>
           <Heading size="md">Selecionar Setup</Heading>
-          <ModalCloseButton><X /></ModalCloseButton>
         </ModalHeader>
         <Box className="p-4">
           {/* Campo de Busca */}
@@ -62,13 +64,13 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
               keyExtractor={(item) => item.id!}
               style={{ maxHeight: 300 }} 
               renderItem={({ item }) => (
-                <Pressable
+                <DebouncedPressable
                   className="p-3 border-b border-gray-200"
                   onPress={() => onSelect(item.id!)}
                 >
                   <Text className="font-semibold">{item.setupTitle}</Text>
                   <Text className="text-xs text-gray-500">{item.track} - {item.car}</Text>
-                </Pressable>
+                </DebouncedPressable>
               )}
               ListEmptyComponent={
                 <Box className="items-center p-4">
@@ -81,9 +83,9 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
           )}
         </Box>
         <ModalFooter>
-          <Button variant="outline" action="secondary" onPress={onClose}>
+          <DebouncedButton variant="outline" action="secondary" onPress={onClose}>
             <ButtonText>Cancelar</ButtonText>
-          </Button>
+          </DebouncedButton>
         </ModalFooter>
       </ModalContent>
     </Modal>

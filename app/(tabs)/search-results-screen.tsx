@@ -1,5 +1,7 @@
-import { Button, ButtonText } from '@/components/ui/button';
+import { ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect } from 'react';
@@ -8,7 +10,6 @@ import { Box } from '../../components/ui/box';
 import { FlatList } from '../../components/ui/flat-list';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
-import { Pressable } from '../../components/ui/pressable';
 import { Text } from '../../components/ui/text';
 import { SetupCard } from '../../src/components/cards/SetupCard';
 import { useSetupStore, type SetupData } from '../../src/stores/setupStore';
@@ -63,9 +64,9 @@ export default function ResultsScreen() {
     if (hasMoreSetups) {
       return (
         <Box className="py-4">
-          <Button onPress={fetchMorePublicSetups} className="bg-red-600">
+          <DebouncedButton onPress={fetchMorePublicSetups} className="bg-red-600">
             <ButtonText>Carregar Mais 10</ButtonText>
-          </Button>
+          </DebouncedButton>
         </Box>
       );
     }
@@ -91,13 +92,13 @@ export default function ResultsScreen() {
         >
           <Box className="pt-12 pb-4 px-6 bg-black/70">
             <HStack className="items-center justify-between">
-              <Pressable onPress={() => router.back()} className="w-10">
+              <DebouncedPressable onPress={() => router.back()} className="w-10">
                 {(props: { pressed: boolean }) => (
                   <Box style={{ opacity: props.pressed ? 0.5 : 1.0 }}>
                     <ArrowLeft color="white" />
                   </Box>
                 )}
-              </Pressable>
+              </DebouncedPressable>
               <Heading size="xl" className="flex-1 text-center text-white">Resultados da Busca</Heading>
             </HStack>
           </Box>

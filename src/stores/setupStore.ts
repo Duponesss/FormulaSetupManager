@@ -16,6 +16,7 @@ export interface UserProfile {
   followersCount?: number;
   followingCount?: number;
   setupsCount?: number;
+  foldersCount?: number;
   averageRating?: number;
 }
 
@@ -239,6 +240,12 @@ interface SetupState {
 
   deepLinkSetup: SetupData | null;
   fetchSetupById: (setupId: string) => Promise<boolean>;
+  viewedUserSetups: SetupData[];
+  viewedUserFolders: Folder[];
+  loadingUserContent: boolean;
+  
+  fetchPublicSetupsByUser: (userId: string) => Promise<void>;
+  fetchPublicFoldersByUser: (userId: string) => Promise<void>;
 }
 
 let unsubscribeFromProfile: (() => void) | null = null;
@@ -277,6 +284,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   userList: [],
   loadingUserList: false,
   deepLinkSetup: null,
+  viewedUserSetups: [],
+  viewedUserFolders: [],
+  loadingUserContent: false,
 
   listenToUserProfile: (uid) => {
     if (unsubscribeFromProfile) unsubscribeFromProfile();
@@ -1018,36 +1028,82 @@ export const useSetupStore = create<SetupState>((set, get) => ({
       return false;
     }
   },
+
   fetchUserStats: async (userId: string) => {
     try {
-      const q = query(
+      // 1. Busca Setups Públicos
+      const qSetups = query(
         collection(db, "setups"), 
         where("userId", "==", userId),
         where("isPublic", "==", true)
       );
+      const snapSetups = await getDocs(qSetups);
       
-      const snapshot = await getDocs(q);
-      
+      // Cálculo da média
       let totalRating = 0;
-      const count = snapshot.size;
-
-      snapshot.forEach(doc => {
+      const setupsCount = snapSetups.size;
+      snapSetups.forEach(doc => {
         const data = doc.data();
         totalRating += (data.rating || 0);
       });
+      const avg = setupsCount > 0 ? totalRating / setupsCount : 0;
 
-      const avg = count > 0 ? totalRating / count : 0;
+      // 2. Busca Pastas Públicas (NOVO)
+      const qFolders = query(
+        collection(db, "folders"),
+        where("ownerId", "==", userId),
+        where("isPublic", "==", true)
+      );
+      const snapFolders = await getDocs(qFolders);
+      const foldersCount = snapFolders.size;
 
+      // Atualiza o estado correto
       const { userProfile, viewedUserProfile } = get();
 
       if (userProfile && userProfile.uid === userId) {
-        set({ userProfile: { ...userProfile, setupsCount: count, averageRating: avg } });
+        set({ userProfile: { ...userProfile, setupsCount, foldersCount, averageRating: avg } });
       } else if (viewedUserProfile && viewedUserProfile.uid === userId) {
-        set({ viewedUserProfile: { ...viewedUserProfile, setupsCount: count, averageRating: avg } });
+        set({ viewedUserProfile: { ...viewedUserProfile, setupsCount, foldersCount, averageRating: avg } });
       }
 
     } catch (error) {
       console.error("Erro ao calcular estatísticas:", error);
+    }
+  },
+
+  fetchPublicSetupsByUser: async (userId: string) => {
+    set({ loadingUserContent: true, viewedUserSetups: [] });
+    try {
+      const q = query(
+        collection(db, "setups"),
+        where("userId", "==", userId),
+        where("isPublic", "==", true),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const setups = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SetupData));
+      set({ viewedUserSetups: setups, loadingUserContent: false });
+    } catch (error) {
+      console.error("Erro ao buscar setups do usuário:", error);
+      set({ loadingUserContent: false });
+    }
+  },
+  
+  fetchPublicFoldersByUser: async (userId: string) => {
+    set({ loadingUserContent: true, viewedUserFolders: [] });
+    try {
+      const q = query(
+        collection(db, "folders"),
+        where("ownerId", "==", userId),
+        where("isPublic", "==", true),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const folders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
+      set({ viewedUserFolders: folders, loadingUserContent: false });
+    } catch (error) {
+      console.error("Erro ao buscar pastas do usuário:", error);
+      set({ loadingUserContent: false });
     }
   },
 }));

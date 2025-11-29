@@ -1,6 +1,5 @@
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { Image } from 'expo-image';
@@ -9,6 +8,7 @@ import { Bookmark, CalendarDays, CloudRain, Gamepad2, Globe, Lock, MapPin, Sun }
 import React from 'react';
 import { type SetupData } from '../../stores/setupStore';
 import StarRatingDisplay from '../display/StarRatingDisplay';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 
 const teamColors = {
   'Oracle Red Bull Racing': '#3671C6',
@@ -68,7 +68,7 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
   const teamLogo = teamLogos[item.car as keyof typeof teamLogos] || null;
 
   return (
-    <Pressable
+    <DebouncedPressable
       onPress={handleCardPress}
       className="rounded-xl p-4 mb-5 bg-white shadow-lg overflow-hidden border-l-4 border-t-4"
       style={{
@@ -83,7 +83,7 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
             <Text size="lg" className="font-bold flex-1" numberOfLines={1}>{item.setupTitle}</Text>
             {!isViewOnly && (
               <HStack space="md">
-                <Pressable
+                <DebouncedPressable
                   className="w-8 h-8 items-center justify-center bg-blue-100 p-1 rounded-lg"
                   onPress={(e) => { e.stopPropagation(); onAddToFolder(item); }}
                 >
@@ -96,7 +96,7 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
                       <Bookmark color="#2563EB" />
                     </Box>
                   )}
-                </Pressable>
+                </DebouncedPressable>
               </HStack>
             )}
           </HStack>
@@ -165,6 +165,6 @@ export const SetupCard: React.FC<SetupCardProps> = React.memo(({ item, onAddToFo
           </HStack>
         </Box>
       )}
-    </Pressable>
+    </DebouncedPressable>
   );
 });

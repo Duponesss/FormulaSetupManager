@@ -1,32 +1,26 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, PencilLine, Trash, X } from 'lucide-react-native';
+import { ArrowLeft, PencilLine, Trash } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogBody,
-  AlertDialogCloseButton,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-} from '../components/ui/alert-dialog';
 import { Box } from '../components/ui/box';
-import { Button, ButtonText } from '../components/ui/button';
 import { Heading } from '../components/ui/heading';
 import { HStack } from '../components/ui/hstack';
-import { Pressable } from '../components/ui/pressable';
 import { Spinner } from '../components/ui/spinner';
 import { Text } from '../components/ui/text';
 
 import AddToFolderModal from '@/src/components/dialogs/AddToFolderModal';
+import DeleteFolderDialog from '@/src/components/dialogs/DeleteFolderDialog';
+import { useAuth } from "@/src/contexts/AuthContext";
 import { SetupCard } from '../src/components/cards/SetupCard';
 import CreateEditFolderModal from '../src/components/dialogs/CreateEditFolderModal';
 import { SetupData, useSetupStore } from '../src/stores/setupStore';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 
 export default function FolderDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ folderId: string; folderName: string }>();
+  const { user } = useAuth();
+
   const { folderId, folderName } = params;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,6 +46,7 @@ export default function FolderDetailsScreen() {
   }, [folderId, getSetupsForFolder]);
 
   const currentFolder = folders.find(f => f.id === folderId);
+  const isOwner = !!currentFolder;
 
   const handleDeleteFolder = async () => {
     if (folderId) {
@@ -79,43 +74,46 @@ export default function FolderDetailsScreen() {
         {/* Cabeçalho Customizado */}
         <HStack className="bg-black/70 p-4 justify-between items-center">
           <HStack className='flex items-center mt-4'>
-            <Pressable onPress={() => router.back()} className="p-2">
+            <DebouncedPressable onPress={() => router.back()} className="p-2">
               {(props: { pressed: boolean }) => (
                 <Box
                   style={{
                     opacity: props.pressed ? 0.5 : 1.0,
                   }}
                 >
-                  <ArrowLeft color="white"/>
+                  <ArrowLeft color="white" />
                 </Box>
               )}
-            </Pressable>
+            </DebouncedPressable>
             <Heading size="md" className="flex-1 text-center text-white">{folderName}</Heading>
-
-            <HStack space="md">
-              <Pressable onPress={() => setIsEditModalOpen(true)} className="p-2">
-                {(props: { pressed: boolean }) => (
-                  <Box
-                    style={{
-                      opacity: props.pressed ? 0.5 : 1.0,
-                    }}
-                  >
-                    <PencilLine color="blue" />
-                  </Box>
-                )}
-              </Pressable>
-              <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
-                {(props: { pressed: boolean }) => (
-                  <Box
-                    style={{
-                      opacity: props.pressed ? 0.5 : 1.0,
-                    }}
-                  >
-                    <Trash color="red" />
-                  </Box>
-                )}
-              </Pressable>
-            </HStack>
+            {isOwner && (
+              <HStack space="md">
+                <DebouncedPressable onPress={() => setIsEditModalOpen(true)} className="p-2">
+                  {(props: { pressed: boolean }) => (
+                    <Box
+                      style={{
+                        opacity: props.pressed ? 0.5 : 1.0,
+                      }}
+                    >
+                      <PencilLine color="blue" />
+                    </Box>
+                  )}
+                </DebouncedPressable>
+                <DebouncedPressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
+                  {(props: { pressed: boolean }) => (
+                    <Box
+                      style={{
+                        opacity: props.pressed ? 0.5 : 1.0,
+                      }}
+                    >
+                      <Trash color="red" />
+                    </Box>
+                  )}
+                </DebouncedPressable>
+              </HStack>
+            )}
+            {/* Se não for dono, colocamos um Box vazio para manter o alinhamento do título */}
+            {!isOwner && <Box className="w-10" />}
           </HStack>
         </HStack>
 
@@ -135,7 +133,11 @@ export default function FolderDetailsScreen() {
             <FlatList
               data={folderSetups}
               renderItem={({ item }) => (
-                <SetupCard item={item} onAddToFolder={handleOpenAddToFolderModal} />
+                <SetupCard
+                  item={item}
+                  onAddToFolder={handleOpenAddToFolderModal}
+                  isViewOnly={!isOwner}
+                />
               )}
               keyExtractor={(item) => item.id!}
               contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
@@ -143,7 +145,7 @@ export default function FolderDetailsScreen() {
           )}
 
           {/* Modal de Edição */}
-          {currentFolder && (
+          {isOwner && currentFolder && (
             <CreateEditFolderModal
               isOpen={isEditModalOpen}
               onClose={() => setIsEditModalOpen(false)}
@@ -152,44 +154,26 @@ export default function FolderDetailsScreen() {
           )}
         </Box>
       </ImageBackground>
-      {/* Diálogo de Confirmação de Exclusão */}
-      <AlertDialog isOpen={isDeleteAlertOpen} onClose={() => setIsDeleteAlertOpen(false)}>
-        <AlertDialogBackdrop />
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <Heading>Excluir Pasta</Heading>
-            <AlertDialogCloseButton>
-              <X />
-            </AlertDialogCloseButton>
-          </AlertDialogHeader>
-          <AlertDialogBody>
-            <Text>
-              Você tem certeza que deseja excluir a pasta "{folderName}"? Todos os setups salvos
-              nela serão removidos desta pasta (mas não serão excluídos do sistema).
-              Esta ação não pode ser desfeita.
-            </Text>
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button variant="outline" action="secondary" onPress={() => setIsDeleteAlertOpen(false)} className="mr-3">
-              <ButtonText>Cancelar</ButtonText>
-            </Button>
-            <Button action="negative" onPress={handleDeleteFolder}>
-              <ButtonText>Excluir</ButtonText>
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AddToFolderModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          if (folderId) {
-             getSetupsForFolder(folderId);
-          }
-        }}
-        setup={selectedSetup}
-      />
+      {isOwner && currentFolder && (
+        <DeleteFolderDialog
+          isOpen={isDeleteAlertOpen}
+          onClose={() => setIsDeleteAlertOpen(false)}
+          onConfirm={handleDeleteFolder}
+          folderName={folderName}
+        />
+      )}
+      {isOwner && currentFolder && (
+        <AddToFolderModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            if (folderId) {
+              getSetupsForFolder(folderId);
+            }
+          }}
+          setup={selectedSetup}
+        />
+      )}
     </Box>
   );
 }

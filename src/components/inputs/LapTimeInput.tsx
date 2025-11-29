@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Box } from '../../../components/ui/box';
-import { Input, InputField } from '../../../components/ui/input';
-import { Button, ButtonText } from '../../../components/ui/button';
-import { Spinner } from '../../../components/ui/spinner';
-import { HStack } from '../../../components/ui/hstack';
+import { Box } from '@/components/ui/box';
+import { Input, InputField } from '@/components/ui/input';
+import { ButtonText } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { HStack } from '@/components/ui/hstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
 
 interface LapTimeInputProps {
   onAddLap: (timeString: string) => Promise<void>;
@@ -39,9 +40,9 @@ const LapTimeInput: React.FC<LapTimeInputProps> = ({ onAddLap }) => {
           />
         </Input>
       </Box>
-      <Button onPress={handlePressAdd} disabled={isAdding || !inputValue.trim()}>
+      <DebouncedButton onPress={handlePressAdd} disabled={isAdding || !inputValue.trim()}>
         {isAdding ? <Spinner color="white" /> : <ButtonText>Adicionar</ButtonText>}
-      </Button>
+      </DebouncedButton>
     </HStack>
   );
 };

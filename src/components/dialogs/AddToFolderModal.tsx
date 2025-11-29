@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Modal, ModalBackdrop, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter
-} from '../../../components/ui/modal';
-import { Checkbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from '../../../components/ui/checkbox';
-import { Heading } from '../../../components/ui/heading';
-import { Button, ButtonText } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
-import { Spinner } from '../../../components/ui/spinner';
-import { useSetupStore, type SetupData } from '../../stores/setupStore';
-import { VStack } from '../../../components/ui/vstack';
-import { FlatList } from 'react-native';
-import { Check, X } from 'lucide-react-native';
 import { Box } from '@/components/ui/box';
+import { ButtonText } from '@/components/ui/button';
+import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
+import { Heading } from '@/components/ui/heading';
+import {
+  Modal, ModalBackdrop, ModalContent,
+  ModalFooter,
+  ModalHeader
+} from '@/components/ui/modal';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import { Check } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { FlatList } from 'react-native';
+import { useSetupStore, type SetupData } from '../../stores/setupStore';
 
 interface AddToFolderModalProps {
   isOpen: boolean;
@@ -67,7 +69,6 @@ const AddToFolderModal: React.FC<AddToFolderModalProps> = ({ isOpen, onClose, se
       <ModalContent className="bg-white rounded-lg">
         <ModalHeader>
           <Heading size="md">Adicionar à Pasta</Heading>
-          <ModalCloseButton><X /></ModalCloseButton>
         </ModalHeader>
         <Box className="p-4"> 
           {loadingSetupFolders ? (
@@ -94,12 +95,12 @@ const AddToFolderModal: React.FC<AddToFolderModalProps> = ({ isOpen, onClose, se
           )}
         </Box>
         <ModalFooter>
-          <Button variant="outline" action="secondary" className="mr-3" onPress={onClose} disabled={isSaving}>
+          <DebouncedButton variant="outline" action="secondary" className="mr-3" onPress={onClose} disabled={isSaving}>
             <ButtonText>Cancelar</ButtonText>
-          </Button>
-          <Button onPress={handleSave} disabled={isSaving}>
+          </DebouncedButton>
+          <DebouncedButton onPress={handleSave} disabled={isSaving}>
             {isSaving ? <Spinner color="white" /> : <ButtonText>Salvar</ButtonText>}
-          </Button>
+          </DebouncedButton>
         </ModalFooter>
       </ModalContent>
     </Modal>

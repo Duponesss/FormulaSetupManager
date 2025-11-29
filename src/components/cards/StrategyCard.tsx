@@ -1,12 +1,12 @@
-import React from 'react';
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
+import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useRouter } from 'expo-router';
-import { type Strategy } from '../../stores/setupStore';
 import { ClipboardList, Flag, Route } from 'lucide-react-native';
-import { Box } from '@/components/ui/box';
+import React from 'react';
+import { type Strategy } from '../../stores/setupStore';
+import { DebouncedPressable } from '../common/DebouncedPressable';
 
 interface StrategyCardProps {
   strategy: Strategy;
@@ -27,7 +27,7 @@ const StrategyCard: React.FC<StrategyCardProps> = React.memo(({ strategy }) => {
     : '—';
 
   return (
-    <Pressable
+    <DebouncedPressable
       className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md"
       onPress={handlePress}
     >
@@ -62,7 +62,7 @@ const StrategyCard: React.FC<StrategyCardProps> = React.memo(({ strategy }) => {
           </VStack>
         </Box>
       )}
-    </Pressable>
+    </DebouncedPressable>
   );
 });
 

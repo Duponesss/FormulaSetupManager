@@ -5,7 +5,7 @@ export const useSingleTap = (callback: (...args: any[]) => void, delay: number =
 
   const debouncedCallback = useCallback((...args: any[]) => {
     if (processing.current) {
-      console.log('Clique rápido ignorado.');
+      // console.log('Clique rápido ignorado.');
       return;
     }
 

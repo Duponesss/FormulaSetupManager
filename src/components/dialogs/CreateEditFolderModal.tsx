@@ -1,23 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Input, InputField } from '@/components/ui/input';
 import {
   Modal,
   ModalBackdrop,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
   ModalBody,
+  ModalContent,
   ModalFooter,
-} from '../../../components/ui/modal';
-import { Heading } from '../../../components/ui/heading';
-import { Input, InputField } from '../../../components/ui/input';
-import { Button, ButtonText } from '../../../components/ui/button';
-import { Text } from '../../../components/ui/text';
-import { HStack } from '../../../components/ui/hstack';
-import { Switch } from '../../../components/ui/switch';
-import { Spinner } from '../../../components/ui/spinner';
-import { useSetupStore, type Folder } from '../../stores/setupStore';
+  ModalHeader,
+} from '@/components/ui/modal';
+import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
+import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { X } from 'lucide-react-native';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import React, { useEffect, useState } from 'react';
+import { useSetupStore, type Folder } from '../../stores/setupStore';
 
 interface CreateEditFolderModalProps {
   isOpen: boolean;
@@ -82,9 +81,6 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
       <ModalContent className="bg-white rounded-lg">
         <ModalHeader>
           <Heading>{isEditing ? 'Editar Pasta' : 'Criar Nova Pasta'}</Heading>
-          <ModalCloseButton>
-          <X />
-          </ModalCloseButton>
         </ModalHeader>
         <ModalBody className="py-4">
           <Text className="mb-2">Nome da Pasta</Text>
@@ -120,7 +116,7 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
 
         </ModalBody>
         <ModalFooter>
-          <Button
+          <DebouncedButton
             variant="outline"
             action="secondary"
             className="mr-3"
@@ -128,10 +124,10 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
             disabled={isLoading}
           >
             <ButtonText>Cancelar</ButtonText>
-          </Button>
-          <Button onPress={handleSave} disabled={isLoading}>
+          </DebouncedButton>
+          <DebouncedButton onPress={handleSave} disabled={isLoading}>
             {isLoading ? <Spinner color="white" /> : <ButtonText>Salvar</ButtonText>}
-          </Button>
+          </DebouncedButton>
         </ModalFooter>
       </ModalContent>
     </Modal>

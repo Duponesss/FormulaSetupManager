@@ -1,26 +1,35 @@
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import React, { useState, useMemo, useEffect } from 'react';
 import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
+import { ButtonText } from '@/components/ui/button';
+import { FormControl, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField } from '@/components/ui/input';
+import { ScrollView } from '@/components/ui/scroll-view';
+import {
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger
+} from '@/components/ui/select';
+import { Slider, SliderFilledTrack, SliderThumb, SliderTrack } from '@/components/ui/slider';
+import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { Textarea, TextareaInput } from '@/components/ui/textarea';
-import { Slider, SliderThumb, SliderTrack, SliderFilledTrack } from '@/components/ui/slider';
-import { FormControl, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
-import {
-  Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop,
-  SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem
-} from '@/components/ui/select';
-import { ScrollView } from '@/components/ui/scroll-view';
-import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, ChevronDown } from 'lucide-react-native';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
-import { FlatList, ImageBackground, Pressable } from 'react-native';
-import { Spinner } from '@/components/ui/spinner';
+import { ArrowLeft, ChevronDown } from 'lucide-react-native';
+import { FlatList, ImageBackground } from 'react-native';
 
 type FormSectionItem = {
   type: 'header' | 'input' | 'picker' | 'textarea' | 'slider' | 'footer' | 'switch';
@@ -320,7 +329,7 @@ export default function CreateSetupScreen() {
         {/* Header */}
         <Box className="pt-12 pb-4 px-6 bg-black/70">
           <HStack className="items-center justify-between">
-            <Pressable onPress={() => router.back()} className="p-2">
+            <DebouncedPressable onPress={() => router.back()} className="p-2">
               {(props: { pressed: boolean }) => (
                 <Box
                   style={{
@@ -330,7 +339,7 @@ export default function CreateSetupScreen() {
                   <ArrowLeft color="white" />
                 </Box>
               )}
-            </Pressable>
+            </DebouncedPressable>
             <Heading className="text-white " size="xl">{isEditMode ? 'Editar Setup' : 'Novo Setup'}</Heading>
             <Box className="w-10"></Box>
           </HStack>
@@ -464,12 +473,12 @@ export default function CreateSetupScreen() {
                   <Box className="p-2">
                     <Box className="my-8">
                       <HStack space="md">
-                        <Button variant="outline" className="flex-1 bg-gray-600" onPress={() => router.back()} isDisabled={loading}>
+                        <DebouncedButton variant="outline" className="flex-1 bg-gray-600" onPress={() => router.back()} isDisabled={loading}>
                           <ButtonText className="text-white">Cancelar</ButtonText>
-                        </Button>
-                        <Button className="flex-1 bg-red-600" onPress={handleSave} isDisabled={loading}>
+                        </DebouncedButton>
+                        <DebouncedButton className="flex-1 bg-red-600" onPress={handleSave} isDisabled={loading}>
                           <ButtonText>{loading ? 'Salvando...' : (isEditMode ? 'Atualizar' : 'Salvar')}</ButtonText>
-                        </Button>
+                        </DebouncedButton>
                       </HStack>
                     </Box>
                   </Box>

@@ -1,23 +1,24 @@
+import { Box } from '@/components/ui/box';
+import { ButtonText } from '@/components/ui/button';
+import { Divider } from '@/components/ui/divider';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { ScrollView } from '@/components/ui/scroll-view';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { Image, ImageBackground } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box } from '../components/ui/box';
-import { Button, ButtonText } from '../components/ui/button';
-import { Divider } from '../components/ui/divider';
-import { Heading } from '../components/ui/heading';
-import { HStack } from '../components/ui/hstack';
-import { Pressable } from '../components/ui/pressable';
-import { ScrollView } from '../components/ui/scroll-view';
-import { Spinner } from '../components/ui/spinner';
-import { Text } from '../components/ui/text';
-import { VStack } from '../components/ui/vstack';
-import AppAlertDialog from '../src/components/dialogs/AppAlertDialog';
 
+import { SetupCard } from '@/src/components/cards/SetupCard';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
+import LapTimeInput from '@/src/components/inputs/LapTimeInput';
+import { useSetupStore, type PlannedStint, type Strategy } from '@/src/stores/setupStore';
 import { LineChart } from "react-native-gifted-charts";
-import { SetupCard } from '../src/components/cards/SetupCard';
-import LapTimeInput from '../src/components/inputs/LapTimeInput';
-import { useSetupStore, type PlannedStint, type Strategy } from '../src/stores/setupStore';
 
 const timeToMillis = (time: string): number | null => {
   const parts = time.match(/(\d{2}):(\d{2})\.(\d{3})/);
@@ -185,7 +186,9 @@ export default function StrategyDetailsScreen() {
     return (
       <Box className="flex-1 justify-center items-center">
         <Text>Estratégia não encontrada.</Text>
-        <Button onPress={() => router.back()} className="mt-4"><ButtonText>Voltar</ButtonText></Button>
+        <DebouncedButton onPress={() => router.back()} className="mt-4">
+          <ButtonText>Voltar</ButtonText>
+        </DebouncedButton>
       </Box>
     );
   }
@@ -200,7 +203,7 @@ export default function StrategyDetailsScreen() {
       >
         {/* Cabeçalho Customizado */}
         <HStack className="bg-black/50 p-4 justify-between items-center pt-10">
-          <Pressable onPress={() => router.back()} className="p-2">
+          <DebouncedPressable onPress={() => router.back()} className="p-2">
             {(props: { pressed: boolean }) => (
               <Box
                 style={{
@@ -210,10 +213,10 @@ export default function StrategyDetailsScreen() {
                 <ArrowLeft color="white"/>
               </Box>
             )}
-          </Pressable>
+          </DebouncedPressable>
           <Heading size="md" className="flex-1 text-center text-white" numberOfLines={1}>{strategy.name}</Heading>
           <HStack space="md">
-            <Pressable onPress={handleEdit} className="p-2">
+            <DebouncedPressable onPress={handleEdit} className="p-2">
               {(props: { pressed: boolean }) => (
                 <Box
                   style={{
@@ -223,8 +226,8 @@ export default function StrategyDetailsScreen() {
                   <Pencil size={20} color="blue" />
                 </Box>
               )}
-            </Pressable>
-            <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
+            </DebouncedPressable>
+            <DebouncedPressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
               {(props: { pressed: boolean }) => (
                 <Box
                   style={{
@@ -234,7 +237,7 @@ export default function StrategyDetailsScreen() {
                   <Trash2 size={20} color="red" />
                 </Box>
               )}
-            </Pressable>
+            </DebouncedPressable>
           </HStack>
         </HStack>
 
@@ -395,9 +398,9 @@ export default function StrategyDetailsScreen() {
                   {strategy.lapTimes.map(lap => (
                     <HStack key={lap.lapNumber} className="justify-between items-center py-1">
                       <Text>Volta {lap.lapNumber}: <Text className="font-bold">{millisToTime(lap.timeInMillis)}</Text></Text>
-                      <Pressable onPress={() => handleDeleteLap(lap.lapNumber)} className="p-1">
+                      <DebouncedPressable onPress={() => handleDeleteLap(lap.lapNumber)} className="p-1">
                         <Trash2 size={16} color="red" />
-                      </Pressable>
+                      </DebouncedPressable>
                     </HStack>
                   ))}
                 </VStack>

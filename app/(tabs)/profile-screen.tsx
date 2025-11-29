@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
 import { Box } from '@/components/ui/box';
+import { ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
-import { Text } from '@/components/ui/text';
-import { Spinner } from '@/components/ui/spinner';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Pressable } from '@/components/ui/pressable';
-import { useSetupStore } from '@/src/stores/setupStore';
-import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'expo-image';
-import { Camera, Save, X, ArrowLeft, UserPlus, UserCheck, User } from 'lucide-react-native';
-import { ScrollView } from '@/components/ui/scroll-view';
-import { VStack } from '@/components/ui/vstack';
-import { Input, InputField } from '@/components/ui/input';
-import { useAuth } from '@/src/hooks/use-auth';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/src/services/firebaseConfig';
-import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { HStack } from '@/components/ui/hstack';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator } from 'react-native';
+import { Input, InputField } from '@/components/ui/input';
+import { ScrollView } from '@/components/ui/scroll-view';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
+import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
-import { Star } from 'lucide-react-native';
+import { useAuth } from '@/src/hooks/use-auth';
+import { db } from '@/src/services/firebaseConfig';
+import { useSetupStore } from '@/src/stores/setupStore';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { doc, updateDoc } from 'firebase/firestore';
+import { ArrowLeft, Camera, Save, Star, UserCheck, UserPlus, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -46,7 +46,6 @@ export default function ProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [followLoading, setFollowLoading] = useState(false); 
 
-  // Novo estado para o Username
   const [username, setUsername] = useState('');
   const [gamertagPSN, setGamertagPSN] = useState('');
   const [gamertagXbox, setGamertagXbox] = useState('');
@@ -60,24 +59,27 @@ export default function ProfileScreen() {
 
   const profileToDisplay = isMyProfile ? userProfile : viewedUserProfile;
 
-  useEffect(() => {
-    if (!isMyProfile && params.userId) {
-      fetchUserProfile(params.userId);
-      checkIfFollowing(params.userId);
-      fetchUserStats(params.userId);
-    }
-  }, [params.userId, isMyProfile]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!isMyProfile && params.userId) {
+        fetchUserProfile(params.userId);
+        checkIfFollowing(params.userId);
+        fetchUserStats(params.userId);
+      }
+      else if (isMyProfile && user?.uid) {
+        fetchUserStats(user.uid);
+      }
+    }, [params.userId, isMyProfile, user?.uid]) 
+  );
 
   useEffect(() => {
     if (isMyProfile && userProfile) {
-      // Inicializa o username também
-      setUsername(userProfile.username || '');
       setGamertagPSN(userProfile.gamertagPSN || '');
       setGamertagXbox(userProfile.gamertagXbox || '');
       setGamertagPC(userProfile.gamertagPC || '');
-      fetchUserStats(userProfile.uid);
+      setUsername(userProfile.username || '');
     }
-  }, [userProfile?.uid, isMyProfile]); // Dependência segura
+  }, [userProfile, isMyProfile]);
 
   const handleFollowToggle = async () => {
     if (!profileToDisplay?.uid) return;
@@ -178,9 +180,9 @@ export default function ProfileScreen() {
         <Text className="text-white text-center">Perfil não encontrado.</Text>
         {isMyProfile && <Text className="text-gray-400 text-center mt-2">Tente fazer logout e login novamente.</Text>}
         {!isMyProfile && (
-          <Button variant="outline" onPress={() => router.back()} className="mt-4">
+          <DebouncedButton variant="outline" onPress={() => router.back()} className="mt-4">
             <ButtonText className="text-white">Voltar</ButtonText>
-          </Button>
+          </DebouncedButton>
         )}
       </Box>
     );
@@ -194,9 +196,9 @@ export default function ProfileScreen() {
     <Box className="flex-1 items-center bg-gray-900">
       {!isMyProfile && (
         <Box className="w-full pt-12 px-6 pb-2">
-          <Pressable onPress={() => router.back()} className="p-2 bg-gray-800 rounded-full self-start">
+          <DebouncedPressable onPress={() => router.back()} className="p-2 bg-gray-800 rounded-full self-start">
             <ArrowLeft color="white" size={24} />
-          </Pressable>
+          </DebouncedPressable>
         </Box>
       )}
 
@@ -211,13 +213,13 @@ export default function ProfileScreen() {
               contentFit="cover"
             />
             {isMyProfile && (
-              <Pressable
+              <DebouncedPressable
                 className="absolute -bottom-2 -right-2 bg-red-600 p-3 rounded-full border-4 border-gray-900"
                 onPress={handlePickImage}
                 disabled={isUploading}
               >
                 {isUploading ? <Spinner size="small" color="$white" /> : <Camera size={20} color="white" />}
-              </Pressable>
+              </DebouncedPressable>
             )}
           </Box>
 
@@ -244,7 +246,7 @@ export default function ProfileScreen() {
 
           {/* --- ESTATÍSTICAS SOCIAIS --- */}
           <HStack space="2xl" className="mb-2">
-            <Pressable
+            <DebouncedPressable
               onPress={() => router.push({
                 pathname: '/user-list-screen',
                 params: { userId: profileToDisplay?.uid, type: 'followers' }
@@ -256,11 +258,11 @@ export default function ProfileScreen() {
                   <Text className="text-gray-500 text-xs uppercase">Seguidores</Text>
                 </VStack>
               )}
-            </Pressable>
+            </DebouncedPressable>
 
             <Box className="w-px h-full bg-gray-700" />
 
-            <Pressable
+            <DebouncedPressable
               onPress={() => router.push({
                 pathname: '/user-list-screen',
                 params: { userId: profileToDisplay?.uid, type: 'following' }
@@ -272,7 +274,7 @@ export default function ProfileScreen() {
                   <Text className="text-gray-500 text-xs uppercase">Seguindo</Text>
                 </VStack>
               )}
-            </Pressable>
+            </DebouncedPressable>
           </HStack>
 
           {/* --- BOTÕES DE AÇÃO PRINCIPAL --- */}
@@ -280,22 +282,22 @@ export default function ProfileScreen() {
             {isMyProfile ? (
               isEditing ? (
                 <HStack space="md">
-                  <Button variant="outline" action="secondary" onPress={handleCancelEdit} className="flex-1">
+                  <DebouncedButton variant="outline" action="secondary" onPress={handleCancelEdit} className="flex-1">
                     <X size={18} color="white" />
                     <ButtonText className="text-white ml-2">Cancelar</ButtonText>
-                  </Button>
-                  <Button action="positive" onPress={handleSaveChanges} disabled={isSaving} className="flex-1">
+                  </DebouncedButton>
+                  <DebouncedButton action="positive" onPress={handleSaveChanges} disabled={isSaving} className="flex-1">
                     <Save size={18} color="white" />
                     <ButtonText className="ml-2">{isSaving ? 'Salvando...' : 'Salvar'}</ButtonText>
-                  </Button>
+                  </DebouncedButton>
                 </HStack>
               ) : (
-                <Button action="secondary" variant="outline" onPress={() => setIsEditing(true)}>
+                <DebouncedButton action="secondary" variant="outline" onPress={() => setIsEditing(true)}>
                   <ButtonText className="text-white">Editar Perfil</ButtonText>
-                </Button>
+                </DebouncedButton>
               )
             ) : (
-              <Button
+              <DebouncedButton
                 className={`w-full rounded-xl ${isFollowing ? 'bg-gray-700' : 'bg-red-600'}`}
                 onPress={handleFollowToggle}
                 isDisabled={followLoading}
@@ -308,7 +310,7 @@ export default function ProfileScreen() {
                     <ButtonText className="text-white font-bold ml-2">{isFollowing ? "Seguindo" : "Seguir"}</ButtonText>
                   </>
                 )}
-              </Button>
+              </DebouncedButton>
             )}
           </Box>
 
@@ -342,31 +344,81 @@ export default function ProfileScreen() {
           <VStack className="w-full px-6" space="md">
             <Heading size="md" className="text-white">Estatísticas da Comunidade</Heading>
             
+            {/* LINHA 1: SETUPS e PASTAS */}
             <HStack space="md">
-              <Box className="flex-1 bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
-                <Text className="text-3xl font-bold text-white mb-1">
-                  {profileToDisplay.setupsCount || 0}
-                </Text>
-                <Text className="text-gray-400 text-xs text-center uppercase">Setups Públicos</Text>
-              </Box>
+              
+              {/* Card: Setups */}
+              <DebouncedPressable 
+                className="flex-1"
+                onPress={() => {
+                    // Só navega se tiver setups (> 0)
+                    if ((profileToDisplay.setupsCount || 0) > 0) {
+                        router.push({
+                            pathname: '/user-content-screen',
+                            params: { 
+                                userId: profileToDisplay.uid, 
+                                userName: profileToDisplay.username,
+                                type: 'setups' 
+                            }
+                        });
+                    }
+                }}
+              >
+                {({pressed}) => (
+                    <Box className={`bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center ${pressed ? 'opacity-70' : 'opacity-100'}`}>
+                        <Text className="text-3xl font-bold text-white mb-1">
+                        {profileToDisplay.setupsCount || 0}
+                        </Text>
+                        <Text className="text-gray-400 text-xs text-center uppercase">Setups Públicos</Text>
+                    </Box>
+                )}
+              </DebouncedPressable>
 
-              <Box className="flex-1 bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
+              {/* Card: Pastas (NOVO) */}
+              <DebouncedPressable 
+                className="flex-1"
+                onPress={() => {
+                    if ((profileToDisplay.foldersCount || 0) > 0) {
+                        router.push({
+                            pathname: '/user-content-screen',
+                            params: { 
+                                userId: profileToDisplay.uid, 
+                                userName: profileToDisplay.username,
+                                type: 'folders' 
+                            }
+                        });
+                    }
+                }}
+              >
+                {({pressed}) => (
+                    <Box className={`bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center ${pressed ? 'opacity-70' : 'opacity-100'}`}>
+                        <Text className="text-3xl font-bold text-white mb-1">
+                        {profileToDisplay.foldersCount || 0}
+                        </Text>
+                        <Text className="text-gray-400 text-xs text-center uppercase">Pastas Públicas</Text>
+                    </Box>
+                )}
+              </DebouncedPressable>
+            </HStack>
+
+            {/* LINHA 2: MÉDIA DE AVALIAÇÃO (Full Width) */}
+            <Box className="bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
                 <HStack className="items-center mb-1" space="xs">
                   <Text className="text-3xl font-bold text-white">
                     {(profileToDisplay.averageRating || 0).toFixed(1)}
                   </Text>
-                  <Star size={20} color="#f59e0b" fill="#f59e0b" />
+                  <Star size={24} color="#f59e0b" fill="#f59e0b" />
                 </HStack>
                 
                 <Box className="mt-1">
                    <StarRatingDisplay 
                       rating={profileToDisplay.averageRating || 0} 
-                      size={12} 
+                      size={16} 
                    />
                 </Box>
-                <Text className="text-gray-400 text-xs text-center uppercase mt-1">Média Geral</Text>
-              </Box>
-            </HStack>
+                <Text className="text-gray-400 text-xs text-center uppercase mt-2">Média Geral de Avaliações</Text>
+            </Box>
+
           </VStack>
 
         </VStack>

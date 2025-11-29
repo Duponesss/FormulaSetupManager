@@ -1,17 +1,16 @@
-import React from 'react';
 import {
   AlertDialog,
   AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogCloseButton,
-  AlertDialogFooter,
   AlertDialogBody,
-} from '../../../components/ui/alert-dialog'; 
-import { Heading } from '../../../components/ui/heading';
-import { Text } from '../../../components/ui/text';
-import { Button, ButtonText  } from '../../../components/ui/button';
-import { X } from 'lucide-react-native';
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import { ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import React from 'react';
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -26,20 +25,17 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onClose, onConfirm })
       <AlertDialogContent>
         <AlertDialogHeader>
           <Heading>Confirmar Saída</Heading>
-          <AlertDialogCloseButton onPress={onClose}>
-            <X />
-          </AlertDialogCloseButton>
         </AlertDialogHeader>
         <AlertDialogBody>
           <Text>Você tem certeza que deseja sair da sua conta?</Text>
         </AlertDialogBody>
         <AlertDialogFooter>
-          <Button variant="outline" action="secondary" onPress={onClose} className="mr-3">
+          <DebouncedButton variant="outline" action="secondary" onPress={onClose} className="mr-3">
             <ButtonText>Cancelar</ButtonText>
-          </Button>
-          <Button action="negative" onPress={onConfirm}>
+          </DebouncedButton>
+          <DebouncedButton action="negative" onPress={onConfirm}>
             <ButtonText>Sair</ButtonText>
-          </Button>
+          </DebouncedButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

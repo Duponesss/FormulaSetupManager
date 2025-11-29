@@ -1,15 +1,16 @@
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
+import { ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField } from '@/components/ui/input';
-import { Pressable } from '@/components/ui/pressable';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectInput, SelectItem, SelectPortal, SelectTrigger } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import { VStack } from '@/components/ui/vstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 import SelectSetupModal from '@/src/components/dialogs/SelectSetupModal';
 import { PlannedStint, type Strategy, StrategyPlan, useSetupStore } from '@/src/stores/setupStore';
 import { Image, ImageBackground } from 'expo-image';
@@ -225,7 +226,7 @@ export default function CreateStrategyScreen() {
             >
                 {/* Cabeçalho Customizado */}
                 <HStack className="bg-black/50 p-4 justify-between items-center pt-10">
-                    <Pressable onPress={() => router.push('/strategies-screen')} className="p-2">
+                    <DebouncedPressable onPress={() => router.push('/strategies-screen')} className="p-2">
                         {(props: { pressed: boolean }) => (
                             <Box
                                 style={{
@@ -235,7 +236,7 @@ export default function CreateStrategyScreen() {
                                 <ArrowLeft color="white"/>
                             </Box>
                         )}
-                    </Pressable>
+                    </DebouncedPressable>
                     <Heading size="lg" className="flex-1 text-center text-white">
                         {isEditing ? 'Editar Estratégia' : 'Criar Nova Estratégia'}
                     </Heading>
@@ -309,12 +310,12 @@ export default function CreateStrategyScreen() {
                         <Box className="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
                             <Heading size="sm" className="mb-4 text-white">Setup Vinculado</Heading>
                             {!selectedSetup ? (
-                                <Pressable
+                                <DebouncedPressable
                                     className="border border-dashed border-gray-600 bg-gray-800/50 p-4 rounded-xl items-center"
                                     onPress={() => setIsSetupModalOpen(true)}
                                 >
                                     <Text className="text-gray-400">Clique para selecionar um setup</Text>
-                                </Pressable>
+                                </DebouncedPressable>
                             ) : (
                                 <Box className="border border-green-900/50 bg-green-900/20 p-3 rounded-xl">
                                     <HStack className="justify-between items-center">
@@ -323,12 +324,12 @@ export default function CreateStrategyScreen() {
                                             <Text className="text-xs text-gray-400">{selectedSetup.track} - {selectedSetup.car}</Text>
                                         </VStack>
                                         <HStack space="md">
-                                            <Button variant="outline" size="sm" className="border-gray-600" onPress={() => setIsSetupModalOpen(true)}>
+                                            <DebouncedButton variant="outline" size="sm" className="border-gray-600" onPress={() => setIsSetupModalOpen(true)}>
                                                 <ButtonText className="text-gray-300">Trocar</ButtonText>
-                                            </Button>
-                                            <Pressable className="p-2" onPress={() => setSelectedSetupId(null)}>
+                                            </DebouncedButton>
+                                            <DebouncedPressable className="p-2" onPress={() => setSelectedSetupId(null)}>
                                                 <X size={18} color="#ef4444" />
-                                            </Pressable>
+                                            </DebouncedPressable>
                                         </HStack>
                                     </HStack>
                                 </Box>
@@ -385,9 +386,9 @@ export default function CreateStrategyScreen() {
                                     <Box key={planIndex} className="border border-gray-700 p-3 rounded-xl bg-gray-800/50">
                                         <HStack className="justify-between items-center mb-3">
                                             <Heading size="xs" className="text-white">{plan.planLabel}</Heading>
-                                            <Pressable onPress={() => removeStrategyPlan(planIndex)}>
+                                            <DebouncedPressable onPress={() => removeStrategyPlan(planIndex)}>
                                                 <Trash2 size={18} color="#ef4444" />
-                                            </Pressable>
+                                            </DebouncedPressable>
                                         </HStack>
                                         <VStack space="md">
                                             {/* Stints do Plano */}
@@ -432,15 +433,15 @@ export default function CreateStrategyScreen() {
                                                     ) : (
                                                         <Box className="w-24" />
                                                     )}
-                                                    <Pressable onPress={() => removeStintFromPlan(planIndex, stintIndex)} className="pb-3 pl-1">
+                                                    <DebouncedPressable onPress={() => removeStintFromPlan(planIndex, stintIndex)} className="pb-3 pl-1">
                                                         <Trash2 size={16} color="gray" />
-                                                    </Pressable>
+                                                    </DebouncedPressable>
                                                 </HStack>
                                             ))}
                                             {plan.plannedStints.length < 3 && (
-                                                <Button size="xs" variant="link" onPress={() => addStintToPlan(planIndex)}>
+                                                <DebouncedButton size="xs" variant="link" onPress={() => addStintToPlan(planIndex)}>
                                                     <ButtonText className="text-blue-400">+ Adicionar Stint</ButtonText>
-                                                </Button>
+                                                </DebouncedButton>
                                             )}
 
                                             {/* Combustível e Tempo Total */}
@@ -482,9 +483,9 @@ export default function CreateStrategyScreen() {
 
                                 {/* Botão para Adicionar Novo Plano */}
                                 {strategyPlans.length < 3 && (
-                                    <Button variant="outline" className="border-gray-600" onPress={addStrategyPlan}>
+                                    <DebouncedButton variant="outline" className="border-gray-600" onPress={addStrategyPlan}>
                                         <ButtonText className="text-gray-300">+ Adicionar {strategyPlans.length === 0 ? 'Plano A' : (strategyPlans.length === 1 ? 'Plano B' : 'Plano C')}</ButtonText>
-                                    </Button>
+                                    </DebouncedButton>
                                 )}
                             </VStack>
                         </Box>
@@ -506,9 +507,9 @@ export default function CreateStrategyScreen() {
 
                     {errorMessage ? <Text className="text-red-500 mb-4 text-center">{errorMessage}</Text> : null}
 
-                    <Button onPress={handleSave} disabled={isSaving} className="mb-10 bg-red-600 rounded-xl">
+                    <DebouncedButton onPress={handleSave} disabled={isSaving} className="mb-10 bg-red-600 rounded-xl">
                         {isSaving ? <Spinner color="white" /> : <ButtonText>Salvar Estratégia</ButtonText>}
-                    </Button>
+                    </DebouncedButton>
                 </ScrollView>
 
                 <SelectSetupModal
