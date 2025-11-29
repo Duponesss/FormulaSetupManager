@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
@@ -17,7 +17,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/src/services/firebaseConfig';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { HStack } from '@/components/ui/hstack';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
 import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
 import { Star } from 'lucide-react-native';
@@ -46,7 +46,6 @@ export default function ProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [followLoading, setFollowLoading] = useState(false); 
 
-  // Novo estado para o Username
   const [username, setUsername] = useState('');
   const [gamertagPSN, setGamertagPSN] = useState('');
   const [gamertagXbox, setGamertagXbox] = useState('');
@@ -60,24 +59,27 @@ export default function ProfileScreen() {
 
   const profileToDisplay = isMyProfile ? userProfile : viewedUserProfile;
 
-  useEffect(() => {
-    if (!isMyProfile && params.userId) {
-      fetchUserProfile(params.userId);
-      checkIfFollowing(params.userId);
-      fetchUserStats(params.userId);
-    }
-  }, [params.userId, isMyProfile]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!isMyProfile && params.userId) {
+        fetchUserProfile(params.userId);
+        checkIfFollowing(params.userId);
+        fetchUserStats(params.userId);
+      }
+      else if (isMyProfile && user?.uid) {
+        fetchUserStats(user.uid);
+      }
+    }, [params.userId, isMyProfile, user?.uid]) 
+  );
 
   useEffect(() => {
     if (isMyProfile && userProfile) {
-      // Inicializa o username também
-      setUsername(userProfile.username || '');
       setGamertagPSN(userProfile.gamertagPSN || '');
       setGamertagXbox(userProfile.gamertagXbox || '');
       setGamertagPC(userProfile.gamertagPC || '');
-      fetchUserStats(userProfile.uid);
+      setUsername(userProfile.username || '');
     }
-  }, [userProfile?.uid, isMyProfile]); // Dependência segura
+  }, [userProfile, isMyProfile]);
 
   const handleFollowToggle = async () => {
     if (!profileToDisplay?.uid) return;
@@ -342,31 +344,81 @@ export default function ProfileScreen() {
           <VStack className="w-full px-6" space="md">
             <Heading size="md" className="text-white">Estatísticas da Comunidade</Heading>
             
+            {/* LINHA 1: SETUPS e PASTAS */}
             <HStack space="md">
-              <Box className="flex-1 bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
-                <Text className="text-3xl font-bold text-white mb-1">
-                  {profileToDisplay.setupsCount || 0}
-                </Text>
-                <Text className="text-gray-400 text-xs text-center uppercase">Setups Públicos</Text>
-              </Box>
+              
+              {/* Card: Setups */}
+              <Pressable 
+                className="flex-1"
+                onPress={() => {
+                    // Só navega se tiver setups (> 0)
+                    if ((profileToDisplay.setupsCount || 0) > 0) {
+                        router.push({
+                            pathname: '/user-content-screen',
+                            params: { 
+                                userId: profileToDisplay.uid, 
+                                userName: profileToDisplay.username,
+                                type: 'setups' 
+                            }
+                        });
+                    }
+                }}
+              >
+                {({pressed}) => (
+                    <Box className={`bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center ${pressed ? 'opacity-70' : 'opacity-100'}`}>
+                        <Text className="text-3xl font-bold text-white mb-1">
+                        {profileToDisplay.setupsCount || 0}
+                        </Text>
+                        <Text className="text-gray-400 text-xs text-center uppercase">Setups Públicos</Text>
+                    </Box>
+                )}
+              </Pressable>
 
-              <Box className="flex-1 bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
+              {/* Card: Pastas (NOVO) */}
+              <Pressable 
+                className="flex-1"
+                onPress={() => {
+                    if ((profileToDisplay.foldersCount || 0) > 0) {
+                        router.push({
+                            pathname: '/user-content-screen',
+                            params: { 
+                                userId: profileToDisplay.uid, 
+                                userName: profileToDisplay.username,
+                                type: 'folders' 
+                            }
+                        });
+                    }
+                }}
+              >
+                {({pressed}) => (
+                    <Box className={`bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center ${pressed ? 'opacity-70' : 'opacity-100'}`}>
+                        <Text className="text-3xl font-bold text-white mb-1">
+                        {profileToDisplay.foldersCount || 0}
+                        </Text>
+                        <Text className="text-gray-400 text-xs text-center uppercase">Pastas Públicas</Text>
+                    </Box>
+                )}
+              </Pressable>
+            </HStack>
+
+            {/* LINHA 2: MÉDIA DE AVALIAÇÃO (Full Width) */}
+            <Box className="bg-gray-800/80 p-4 rounded-xl border border-gray-700 items-center justify-center">
                 <HStack className="items-center mb-1" space="xs">
                   <Text className="text-3xl font-bold text-white">
                     {(profileToDisplay.averageRating || 0).toFixed(1)}
                   </Text>
-                  <Star size={20} color="#f59e0b" fill="#f59e0b" />
+                  <Star size={24} color="#f59e0b" fill="#f59e0b" />
                 </HStack>
                 
                 <Box className="mt-1">
                    <StarRatingDisplay 
                       rating={profileToDisplay.averageRating || 0} 
-                      size={12} 
+                      size={16} 
                    />
                 </Box>
-                <Text className="text-gray-400 text-xs text-center uppercase mt-1">Média Geral</Text>
-              </Box>
-            </HStack>
+                <Text className="text-gray-400 text-xs text-center uppercase mt-2">Média Geral de Avaliações</Text>
+            </Box>
+
           </VStack>
 
         </VStack>
