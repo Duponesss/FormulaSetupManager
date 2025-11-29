@@ -1,0 +1,22 @@
+import React from 'react';
+import { Button } from '@/components/ui/button'; 
+import { useSingleTap } from '@/src/hooks/useSingleTap';
+
+type ButtonProps = React.ComponentProps<typeof Button> & {
+  delay?: number;
+};
+
+export const DebouncedButton: React.FC<ButtonProps> = ({ 
+  children, 
+  onPress, 
+  delay, 
+  ...props 
+}) => {
+  const handlePress = useSingleTap(onPress || (() => {}), delay);
+
+  return (
+    <Button {...props} onPress={onPress ? handlePress : undefined}>
+      {children}
+    </Button>
+  );
+};
