@@ -40,7 +40,6 @@ const SelectSetupModal: React.FC<SelectSetupModalProps> = ({ isOpen, onClose, on
       <ModalContent className="bg-white rounded-lg">
         <ModalHeader>
           <Heading size="md">Selecionar Setup</Heading>
-          <ModalCloseButton><X /></ModalCloseButton>
         </ModalHeader>
         <Box className="p-4">
           {/* Campo de Busca */}

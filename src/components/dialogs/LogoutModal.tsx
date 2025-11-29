@@ -11,7 +11,6 @@ import {
 import { Heading } from '../../../components/ui/heading';
 import { Text } from '../../../components/ui/text';
 import { Button, ButtonText  } from '../../../components/ui/button';
-import { X } from 'lucide-react-native';
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -26,9 +25,6 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onClose, onConfirm })
       <AlertDialogContent>
         <AlertDialogHeader>
           <Heading>Confirmar Saída</Heading>
-          <AlertDialogCloseButton onPress={onClose}>
-            <X />
-          </AlertDialogCloseButton>
         </AlertDialogHeader>
         <AlertDialogBody>
           <Text>Você tem certeza que deseja sair da sua conta?</Text>

@@ -67,7 +67,6 @@ const AddToFolderModal: React.FC<AddToFolderModalProps> = ({ isOpen, onClose, se
       <ModalContent className="bg-white rounded-lg">
         <ModalHeader>
           <Heading size="md">Adicionar à Pasta</Heading>
-          <ModalCloseButton><X /></ModalCloseButton>
         </ModalHeader>
         <Box className="p-4"> 
           {loadingSetupFolders ? (

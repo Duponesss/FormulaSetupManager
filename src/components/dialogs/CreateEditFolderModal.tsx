@@ -82,9 +82,6 @@ const CreateEditFolderModal: React.FC<CreateEditFolderModalProps> = ({
       <ModalContent className="bg-white rounded-lg">
         <ModalHeader>
           <Heading>{isEditing ? 'Editar Pasta' : 'Criar Nova Pasta'}</Heading>
-          <ModalCloseButton>
-          <X />
-          </ModalCloseButton>
         </ModalHeader>
         <ModalBody className="py-4">
           <Text className="mb-2">Nome da Pasta</Text>
