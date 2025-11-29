@@ -4,6 +4,7 @@ import { useSingleTap } from '@/src/hooks/useSingleTap';
 
 type ButtonProps = React.ComponentProps<typeof Button> & {
   delay?: number;
+  children?: React.ReactNode;
 };
 
 export const DebouncedButton: React.FC<ButtonProps> = ({ 

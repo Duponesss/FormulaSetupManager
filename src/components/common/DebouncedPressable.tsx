@@ -5,7 +5,8 @@ import { useSingleTap } from '@/src/hooks/useSingleTap';
 type GlueStackPressableProps = React.ComponentProps<typeof Pressable>;
 
 interface DebouncedPressableProps extends GlueStackPressableProps {
-  delay?: number; 
+  delay?: number;
+  children?: React.ReactNode | ((state: { pressed: boolean; hovered?: boolean; focused?: boolean }) => React.ReactNode);
 }
 
 export const DebouncedPressable: React.FC<DebouncedPressableProps> = ({ 
