@@ -11,7 +11,7 @@ interface DebouncedPressableProps extends GlueStackPressableProps {
 export const DebouncedPressable: React.FC<DebouncedPressableProps> = ({ 
   children, 
   onPress, 
-  delay, 
+  delay = 1000, 
   ...props 
 }) => {
   const handlePress = useSingleTap(onPress || (() => {}), delay);

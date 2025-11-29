@@ -9,7 +9,7 @@ type ButtonProps = React.ComponentProps<typeof Button> & {
 export const DebouncedButton: React.FC<ButtonProps> = ({ 
   children, 
   onPress, 
-  delay, 
+  delay = 1000, 
   ...props 
 }) => {
   const handlePress = useSingleTap(onPress || (() => {}), delay);
