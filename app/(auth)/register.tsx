@@ -1,9 +1,10 @@
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
+import { ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Input, InputField } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { useAuth } from "@/src/hooks/use-auth";
 import { useRouter } from "expo-router";
@@ -107,19 +108,19 @@ export default function RegisterScreen() {
                             </Input>
                         </Box>
                         <VStack className="items-center">
-                            <Button
+                            <DebouncedButton
                                 className="mb-0 mt-8 w-1/2 bg-red-600 pressed:opacity-80"
                                 onPress={handleEmailSignUp}
                                 disabled={loading}
                             >
                                 <ButtonText>{loading ? 'Criando...' : 'Criar Conta'}</ButtonText>
-                            </Button>
+                            </DebouncedButton>
                         </VStack>
-                        <Button variant="link" onPress={() => router.push('/login')}>
+                        <DebouncedButton variant="link" onPress={() => router.push('/login')}>
                             <ButtonText className="text-white pressed:opacity-70">
                                 Já tem conta? Entrar
                             </ButtonText>
-                        </Button>
+                        </DebouncedButton>
                     </VStack>
                 </Box>
                 <AppAlertDialog

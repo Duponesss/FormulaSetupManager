@@ -1,15 +1,16 @@
-import React from 'react';
 import {
   AlertDialog,
   AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
   AlertDialogBody,
-} from '../../../components/ui/alert-dialog';
-import { Heading } from '../../../components/ui/heading';
-import { Text } from '../../../components/ui/text';
-import { Button, ButtonText } from '../../../components/ui/button';
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import { ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import React from 'react';
 
 interface AppAlertDialogProps {
   isOpen: boolean;
@@ -47,17 +48,17 @@ const AppAlertDialog: React.FC<AppAlertDialogProps> = ({
         <AlertDialogFooter className="mt-4">
           {isConfirmation ? (
             <>
-              <Button variant="outline" action="secondary" onPress={onClose} className="mr-3">
+              <DebouncedButton variant="outline" action="secondary" onPress={onClose} className="mr-3">
                 <ButtonText>{cancelText}</ButtonText>
-              </Button>
-              <Button action="negative" onPress={onConfirm}>
+              </DebouncedButton>
+              <DebouncedButton action="negative" onPress={onConfirm}>
                 <ButtonText>{confirmText}</ButtonText>
-              </Button>
+              </DebouncedButton>
             </>
           ) : (
-            <Button action="negative" onPress={onClose}>
+            <DebouncedButton action="negative" onPress={onClose}>
               <ButtonText>{okText}</ButtonText>
-            </Button>
+            </DebouncedButton>
           )}
         </AlertDialogFooter>
       </AlertDialogContent>

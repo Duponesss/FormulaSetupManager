@@ -1,11 +1,11 @@
-import React from 'react';
-import { Pressable } from '../../../components/ui/pressable';
-import { Text } from '../../../components/ui/text';
-import { HStack } from '../../../components/ui/hstack';
-import { VStack } from '../../../components/ui/vstack';
 import { useRouter } from 'expo-router';
-import { Box, Globe, Lock } from 'lucide-react-native';
+import { Globe, Lock } from 'lucide-react-native';
+import React from 'react';
+import { HStack } from '../../../components/ui/hstack';
+import { Text } from '../../../components/ui/text';
+import { VStack } from '../../../components/ui/vstack';
 import { type Folder } from '../../stores/setupStore';
+import { DebouncedPressable } from '../common/DebouncedPressable';
 
 interface FolderCardProps {
   folder: Folder;
@@ -29,7 +29,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
     : '—';
 
   return (
-    <Pressable
+    <DebouncedPressable
       className="rounded-xl p-4 mb-4 bg-gray-50 shadow-md"
       onPress={handlePress}
     >
@@ -61,7 +61,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
           </HStack>
         </VStack>
       )}
-    </Pressable>
+    </DebouncedPressable>
   );
 };
 

@@ -5,7 +5,6 @@ import { Box } from '@/components/ui/box';
 import { FlatList } from '@/components/ui/flat-list';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Select, SelectBackdrop, SelectContent, SelectDragIndicator, SelectDragIndicatorWrapper, SelectInput, SelectItem, SelectPortal, SelectTrigger } from "@/components/ui/select";
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -14,6 +13,7 @@ import AddToFolderModal from "@/src/components/dialogs/AddToFolderModal";
 import { useSetupStore, type SetupData } from '@/src/stores/setupStore';
 import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { ImageBackground, ScrollView } from "react-native";
+import { DebouncedPressable } from "@/src/components/common/DebouncedPressable";
 
 
 export default function MySetupsScreen() {
@@ -93,7 +93,7 @@ export default function MySetupsScreen() {
                 >
                     <Box className="pt-5 pb-5 px-6 bg-black/50">
                         <HStack className="items-center mt-5">
-                            <Pressable onPress={() => router.back()} className="p-2">
+                            <DebouncedPressable onPress={() => router.back()} className="p-2">
                                 {(props: { pressed: boolean }) => (
                                     <Box
                                         style={{
@@ -103,7 +103,7 @@ export default function MySetupsScreen() {
                                         <ArrowLeft color="white" />
                                     </Box>
                                 )}
-                            </Pressable>
+                            </DebouncedPressable>
                             <Heading size="2xl" className="text-white ml-3">Meus Setups</Heading>
                         </HStack>
 
@@ -135,7 +135,7 @@ export default function MySetupsScreen() {
                         <HStack className="items-center justify-between ml-4 mb-2">
                             <Text className="text-white">{filteredSetups.length} de {allSetups.length} setups cadastrados</Text>
                             {(filterCar || filterTrack || filterControl) && (
-                                <Pressable className="bg-red-500 m-1 p-2 rounded-md" onPress={() => { setFilterCar(""); setFilterTrack(""); setFilterControl(""); }}>
+                                <DebouncedPressable className="bg-red-500 m-1 p-2 rounded-md" onPress={() => { setFilterCar(""); setFilterTrack(""); setFilterControl(""); }}>
                                     {(props: { pressed: boolean }) => (
                                         <Box
                                             style={{
@@ -145,7 +145,7 @@ export default function MySetupsScreen() {
                                             <Text className="text-white text-xs font-bold">Limpar Filtros</Text>
                                         </Box>
                                     )}
-                                </Pressable>
+                                </DebouncedPressable>
                             )}
                         </HStack>
                         <FlatList

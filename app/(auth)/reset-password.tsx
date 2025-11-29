@@ -1,8 +1,9 @@
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
+import { ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { useAuth } from "@/src/hooks/use-auth";
 import { useRouter } from "expo-router";
@@ -69,22 +70,22 @@ export default function ResetPasswordScreen() {
               </Input>
             </Box>
             <VStack className="items-center">
-              <Button
+              <DebouncedButton
                 className="mb-0 mt-8 w-1/2 bg-red-600 pressed:opacity-80"
                 onPress={handleResetPassword}
                 disabled={loading}
               >
                 <ButtonText>{loading ? 'Enviando...' : 'Enviar Email'}</ButtonText>
-              </Button>
+              </DebouncedButton>
             </VStack>
-            <Button
+            <DebouncedButton
               variant="link"
               onPress={() => router.back()} 
             >
               <ButtonText className="text-white pressed:opacity-70">
                 Voltar para o Login
               </ButtonText>
-            </Button>
+            </DebouncedButton>
           </VStack>
         </Box>
         <AppAlertDialog

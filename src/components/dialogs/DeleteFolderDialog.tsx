@@ -1,15 +1,16 @@
-import React from 'react';
 import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogBody,
-} from '../../../components/ui/alert-dialog'; // Ajuste o caminho conforme sua estrutura
-import { Heading } from '../../../components/ui/heading';
-import { Text } from '../../../components/ui/text';
-import { Button, ButtonText } from '../../../components/ui/button';
+    AlertDialog,
+    AlertDialogBackdrop,
+    AlertDialogBody,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import { ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import React from 'react';
 
 interface DeleteFolderDialogProps {
   isOpen: boolean;
@@ -41,12 +42,12 @@ const DeleteFolderDialog: React.FC<DeleteFolderDialogProps> = ({
         </AlertDialogBody>
 
         <AlertDialogFooter className="mt-4">
-          <Button variant="outline" action="secondary" onPress={onClose} className="mr-3 border-gray-600">
+          <DebouncedButton variant="outline" action="secondary" onPress={onClose} className="mr-3 border-gray-600">
             <ButtonText className="text-gray-300">Cancelar</ButtonText>
-          </Button>
-          <Button action="negative" onPress={onConfirm} className="bg-red-600">
+          </DebouncedButton>
+          <DebouncedButton action="negative" onPress={onConfirm} className="bg-red-600">
             <ButtonText className="text-white">Excluir</ButtonText>
-          </Button>
+          </DebouncedButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

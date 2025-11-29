@@ -1,9 +1,9 @@
 import { Box } from '@/components/ui/box';
-import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { ButtonIcon, ButtonText } from '@/components/ui/button';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
 import { Divider } from '@/components/ui/divider';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Spinner } from "@/components/ui/spinner";
@@ -13,6 +13,7 @@ import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import StarRatingDisplay from '@/src/components/display/StarRatingDisplay';
 import { useSingleTap } from '@/src/hooks/useSingleTap';
 import { useSetupStore } from '@/src/stores/setupStore';
+import { DebouncedPressable } from "@/src/components/common/DebouncedPressable";
 import { Image } from 'expo-image';
 import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import {
@@ -183,7 +184,7 @@ export default function SetupDetailsScreen() {
     return (
       <HStack space="md">
         {[1, 2, 3, 4, 5].map((index) => (
-          <Pressable
+          <DebouncedPressable
             key={index}
             onPress={() => onRate(index)}
             onPressIn={() => setHoverRating(index)}
@@ -194,7 +195,7 @@ export default function SetupDetailsScreen() {
               color="#f59e0b"
               fill={index <= displayRating ? "#f59e0b" : "none"}
             />
-          </Pressable>
+          </DebouncedPressable>
         ))}
       </HStack>
     );
@@ -271,15 +272,15 @@ export default function SetupDetailsScreen() {
             <Heading size="xl" className="text-white">Detalhes do Setup</Heading>
             <HStack space="md">
               {setup && (
-                <Pressable onPress={handleShare} style={{ marginRight: 16 }}>
+                <DebouncedPressable onPress={handleShare} style={{ marginRight: 16 }}>
                   {({ pressed }) => (
                     <Box style={{ opacity: pressed ? 0.5 : 1.0 }}>
                       <Share2 color="white" size={24} />
                     </Box>
                   )}
-                </Pressable>
+                </DebouncedPressable>
               )}
-              <Pressable onPress={handleGoBack}>
+              <DebouncedPressable onPress={handleGoBack}>
                 {(props: { pressed: boolean }) => (
                   <Box
                     style={{
@@ -289,7 +290,7 @@ export default function SetupDetailsScreen() {
                     <X color="red" />
                   </Box>
                 )}
-              </Pressable>
+              </DebouncedPressable>
             </HStack>
           </HStack>
         </Box>
@@ -301,7 +302,7 @@ export default function SetupDetailsScreen() {
               {setup.setupTitle}
             </Heading>
 
-            <Pressable onPress={() => router.push({ pathname: '/(tabs)/profile-screen', params: { userId: setup.userId } })}>
+            <DebouncedPressable onPress={() => router.push({ pathname: '/(tabs)/profile-screen', params: { userId: setup.userId } })}>
               {(props: { pressed: boolean }) => (
                 <Box
                   style={{
@@ -325,7 +326,7 @@ export default function SetupDetailsScreen() {
                   />
                 </Box>
               )}
-            </Pressable>
+            </DebouncedPressable>
 
             <DetailRow
               label="Visibilidade"
@@ -474,19 +475,19 @@ export default function SetupDetailsScreen() {
           <Box className="bg-black/50">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
-                <Button
+                <DebouncedButton
                   className="flex-1 p-2 rounded-xl"
                   onPress={debouncedHandleEdit}
                 >
                   <ButtonText className="text-white">Editar Setup</ButtonText>
-                </Button>
-                <Button
+                </DebouncedButton>
+                <DebouncedButton
                   className="flex-1 p-2 bg-red-500 rounded-xl"
                   variant="destructive"
                   onPress={debouncedConfirmDeletion}
                 >
                   <ButtonText className="text-white font-bold">Excluir Setup</ButtonText>
-                </Button>
+                </DebouncedButton>
               </HStack>
             </VStack>
           </Box>
@@ -496,13 +497,13 @@ export default function SetupDetailsScreen() {
           <Box className="bg-black/50">
             <VStack space="md" className="m-10 mb-10">
               <HStack space="md">
-                <Button
+                <DebouncedButton
                   className="flex-1 p-2 bg-green-600 rounded-xl"
                   onPress={handleClone}
                 >
                   <ButtonIcon as={Copy} className="mr-2" />
                   <ButtonText className="text-white font-bold" size="lg">Copiar para Meus Setups</ButtonText>
-                </Button>
+                </DebouncedButton>
               </HStack>
             </VStack>
           </Box>

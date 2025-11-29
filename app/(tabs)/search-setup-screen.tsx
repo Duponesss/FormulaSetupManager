@@ -1,14 +1,10 @@
-import { useRouter } from 'expo-router';
-import { ChevronDown } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
-import { ImageBackground } from 'react-native';
-import { Box } from '../../components/ui/box';
-import { Button, ButtonText } from '../../components/ui/button';
-import { FormControl } from '../../components/ui/form-control';
-import { Heading } from '../../components/ui/heading';
-import { HStack } from '../../components/ui/hstack';
-import { ScrollView } from '../../components/ui/scroll-view';
+import { Box } from '@/components/ui/box';
+import { ButtonText } from '@/components/ui/button';
+import { FormControl } from '@/components/ui/form-control';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
 import { Input, InputField } from '@/components/ui/input';
+import { ScrollView } from '@/components/ui/scroll-view';
 import {
   Select,
   SelectBackdrop,
@@ -19,10 +15,15 @@ import {
   SelectItem,
   SelectPortal,
   SelectTrigger
-} from '../../components/ui/select';
-import { Text } from '../../components/ui/text';
-import { VStack } from '../../components/ui/vstack';
-import { useSetupStore } from '../../src/stores/setupStore';
+} from '@/components/ui/select';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
+import { useSetupStore } from '@/src/stores/setupStore';
+import { useRouter } from 'expo-router';
+import { ChevronDown } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { ImageBackground } from 'react-native';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -192,9 +193,9 @@ export default function SearchScreen() {
           </ScrollView>
 
           <Box className="p-6 border-t border-neutral-200">
-            <Button onPress={handleApplyFilters}>
+            <DebouncedButton onPress={handleApplyFilters}>
               <ButtonText>Aplicar Filtros</ButtonText>
-            </Button>
+            </DebouncedButton>
           </Box>
         </Box>
       </ImageBackground>

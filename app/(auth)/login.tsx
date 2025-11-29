@@ -1,19 +1,20 @@
-import { AntDesign } from '@expo/vector-icons';
-import { Redirect, useRouter } from "expo-router";
-import React, { useState } from 'react';
-import { Image, ImageBackground } from 'react-native';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
+import { ButtonText } from '@/components/ui/button';
+import { FormControl, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { FormControl, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
-import { AlertCircle } from 'lucide-react-native';
+import { DebouncedButton } from '@/src/components/common/DebouncedButton';
 import AppAlertDialog from '@/src/components/dialogs/AppAlertDialog';
 import { useAuth } from "@/src/hooks/use-auth";
+import { AntDesign } from '@expo/vector-icons';
+import { Redirect, useRouter } from "expo-router";
+import { AlertCircle } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Image, ImageBackground } from 'react-native';
 
 
 export default function LoginScreen() {
@@ -174,7 +175,7 @@ export default function LoginScreen() {
             </FormControl>
 
             <VStack className="items-center">
-              <Button
+              <DebouncedButton
                 className="mb-0 mt-8 w-1/2 bg-red-600 pressed:opacity-80"
                 onPress={handleEmailAuth}
                 disabled={loading}
@@ -189,25 +190,25 @@ export default function LoginScreen() {
                     'Entrar'
                   )}
                 </ButtonText>
-              </Button>
+              </DebouncedButton>
             </VStack>
 
-            <Button
+            <DebouncedButton
               variant="link"
               onPress={() => router.push('/register')} 
             >
               <ButtonText className="text-white pressed:opacity-70">
                 Não tem conta? Criar uma
               </ButtonText>
-            </Button>
-            <Button
+            </DebouncedButton>
+            <DebouncedButton
               variant="link"
               onPress={() => router.push('/reset-password')} 
             >
               <ButtonText className="text-gray-400 pressed:opacity-70 text-xs">
                 Esqueceu sua senha?
               </ButtonText>
-            </Button>
+            </DebouncedButton>
           </VStack>
 
           <VStack space="md" className="mb-6">
@@ -219,7 +220,7 @@ export default function LoginScreen() {
           </VStack>
 
           <VStack className="items-center">
-            <Button
+            <DebouncedButton
               onPress={handleGoogleSignIn}
               disabled={loading}
               className="w-1/2 border-gray-700 pressed:bg-gray-800 rounded-md"
@@ -231,7 +232,7 @@ export default function LoginScreen() {
                   {loading ? 'Carregando...' : 'Conta Google'}
                 </ButtonText>
               </HStack>
-            </Button>
+            </DebouncedButton>
           </VStack>
 
           <Box className="mt-8">

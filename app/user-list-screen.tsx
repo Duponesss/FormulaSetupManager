@@ -2,9 +2,9 @@ import { Box } from '@/components/ui/box';
 import { FlatList } from '@/components/ui/flat-list';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 import { useSetupStore } from '@/src/stores/setupStore';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -36,7 +36,7 @@ export default function UserListScreen() {
     const title = type === 'followers' ? 'Seguidores' : 'Seguindo';
 
     const renderItem = ({ item }: { item: any }) => (
-        <Pressable
+        <DebouncedPressable
             onPress={() => handleUserPress(item.uid)}
             className="mb-4 bg-gray-800/50 p-3 rounded-xl border border-gray-700"
         >
@@ -57,7 +57,7 @@ export default function UserListScreen() {
                     <Text className="text-white font-bold text-lg">{item.username}</Text>
                 </HStack>
             )}
-        </Pressable>
+        </DebouncedPressable>
     );
 
     return (
@@ -71,7 +71,7 @@ export default function UserListScreen() {
                 {/* Header */}
                 <Box className="pt-12 pb-4 px-6 bg-black/70">
                     <HStack className="items-center">
-                        <Pressable onPress={() => router.back()} className="mr-4 p-1">
+                        <DebouncedPressable onPress={() => router.back()} className="mr-4 p-1">
                             {(props: { pressed: boolean }) => (
                                 <Box
                                     style={{
@@ -81,7 +81,7 @@ export default function UserListScreen() {
                                     <ArrowLeft color="white" />
                                 </Box>
                             )}
-                        </Pressable>
+                        </DebouncedPressable>
                         <Heading size="xl" className="text-white">{title}</Heading>
                     </HStack>
                 </Box>

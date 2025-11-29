@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, Folder as FolderIcon } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { ImageBackground, View } from 'react-native';
 import { Box } from '../components/ui/box';
-import { Text } from '../components/ui/text';
 import { FlatList } from '../components/ui/flat-list';
 import { Heading } from '../components/ui/heading';
 import { HStack } from '../components/ui/hstack';
-import { Pressable } from '../components/ui/pressable';
+import { Spinner } from '../components/ui/spinner';
+import { Text } from '../components/ui/text';
 import { SetupCard } from '../src/components/cards/SetupCard';
 import { useSetupStore } from '../src/stores/setupStore';
-import { Spinner } from '../components/ui/spinner';
-import { ArrowLeft, Folder as FolderIcon } from 'lucide-react-native';
-import { ImageBackground, View } from 'react-native';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 
 export default function UserContentScreen() {
     const router = useRouter();
@@ -33,7 +33,7 @@ export default function UserContentScreen() {
 
     // Renderização de Item de Pasta (Simplificado, similar ao FolderScreen)
     const renderFolderItem = ({ item }: { item: any }) => (
-        <Pressable
+        <DebouncedPressable
             onPress={() => router.push({
                 pathname: '/folder-details-screen',
                 params: { folderId: item.id, folderName: item.name }
@@ -48,7 +48,7 @@ export default function UserContentScreen() {
                     <Text className="text-white font-bold text-lg">{item.name}</Text>
                 </HStack>
             </HStack>
-        </Pressable>
+        </DebouncedPressable>
     );
 
     const title = type === 'setups' ? `Setups de ${userName}` : `Pastas de ${userName}`;
@@ -63,9 +63,9 @@ export default function UserContentScreen() {
             >
                 <Box className="pt-12 pb-4 px-6 bg-black/70">
                     <HStack className="items-center">
-                        <Pressable onPress={() => router.back()} className="p-2 mr-2">
+                        <DebouncedPressable onPress={() => router.back()} className="p-2 mr-2">
                             <ArrowLeft color="white" />
-                        </Pressable>
+                        </DebouncedPressable>
                         <Heading size="lg" className="text-white flex-1" numberOfLines={1}>
                             {title}
                         </Heading>

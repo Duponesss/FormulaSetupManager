@@ -1,30 +1,20 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, PencilLine, Trash, X } from 'lucide-react-native';
+import { ArrowLeft, PencilLine, Trash } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, ImageBackground } from 'react-native';
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogBody,
-  AlertDialogCloseButton,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-} from '../components/ui/alert-dialog';
 import { Box } from '../components/ui/box';
-import { Button, ButtonText } from '../components/ui/button';
 import { Heading } from '../components/ui/heading';
 import { HStack } from '../components/ui/hstack';
-import { Pressable } from '../components/ui/pressable';
 import { Spinner } from '../components/ui/spinner';
 import { Text } from '../components/ui/text';
 
 import AddToFolderModal from '@/src/components/dialogs/AddToFolderModal';
+import DeleteFolderDialog from '@/src/components/dialogs/DeleteFolderDialog';
+import { useAuth } from "@/src/contexts/AuthContext";
 import { SetupCard } from '../src/components/cards/SetupCard';
 import CreateEditFolderModal from '../src/components/dialogs/CreateEditFolderModal';
 import { SetupData, useSetupStore } from '../src/stores/setupStore';
-import { useAuth } from "@/src/contexts/AuthContext";
-import DeleteFolderDialog from '@/src/components/dialogs/DeleteFolderDialog';
+import { DebouncedPressable } from '@/src/components/common/DebouncedPressable';
 
 export default function FolderDetailsScreen() {
   const router = useRouter();
@@ -84,7 +74,7 @@ export default function FolderDetailsScreen() {
         {/* Cabeçalho Customizado */}
         <HStack className="bg-black/70 p-4 justify-between items-center">
           <HStack className='flex items-center mt-4'>
-            <Pressable onPress={() => router.back()} className="p-2">
+            <DebouncedPressable onPress={() => router.back()} className="p-2">
               {(props: { pressed: boolean }) => (
                 <Box
                   style={{
@@ -94,11 +84,11 @@ export default function FolderDetailsScreen() {
                   <ArrowLeft color="white" />
                 </Box>
               )}
-            </Pressable>
+            </DebouncedPressable>
             <Heading size="md" className="flex-1 text-center text-white">{folderName}</Heading>
             {isOwner && (
               <HStack space="md">
-                <Pressable onPress={() => setIsEditModalOpen(true)} className="p-2">
+                <DebouncedPressable onPress={() => setIsEditModalOpen(true)} className="p-2">
                   {(props: { pressed: boolean }) => (
                     <Box
                       style={{
@@ -108,8 +98,8 @@ export default function FolderDetailsScreen() {
                       <PencilLine color="blue" />
                     </Box>
                   )}
-                </Pressable>
-                <Pressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
+                </DebouncedPressable>
+                <DebouncedPressable onPress={() => setIsDeleteAlertOpen(true)} className="p-2">
                   {(props: { pressed: boolean }) => (
                     <Box
                       style={{
@@ -119,7 +109,7 @@ export default function FolderDetailsScreen() {
                       <Trash color="red" />
                     </Box>
                   )}
-                </Pressable>
+                </DebouncedPressable>
               </HStack>
             )}
             {/* Se não for dono, colocamos um Box vazio para manter o alinhamento do título */}

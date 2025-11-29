@@ -8,11 +8,11 @@ import { ImageBackground, ScrollView } from "react-native";
 import { Box } from '../../components/ui/box';
 import { Heading } from '../../components/ui/heading';
 import { HStack } from '../../components/ui/hstack';
-import { Pressable } from '../../components/ui/pressable';
 import { Text } from '../../components/ui/text';
 import { VStack } from '../../components/ui/vstack';
 import { SetupCard } from '../../src/components/cards/SetupCard';
 import { useSetupStore } from '../../src/stores/setupStore';
+import { DebouncedPressable } from "@/src/components/common/DebouncedPressable";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function HomeScreen() {
   };
 
   const QuickAction = ({ title, icon, color, onPress, subtitle }: any) => (
-    <Pressable onPress={onPress} className="flex-1">
+    <DebouncedPressable onPress={onPress} className="flex-1">
       {({ pressed }) => (
         <Box
           className={`p-4 rounded-xl border-l-4 bg-gray-800 shadow-sm ${pressed ? 'opacity-80' : 'opacity-100'}`}
@@ -51,7 +51,7 @@ export default function HomeScreen() {
           <Text size="xs" className="text-gray-400">{subtitle}</Text>
         </Box>
       )}
-    </Pressable>
+    </DebouncedPressable>
   );
 
   return (
@@ -72,7 +72,7 @@ export default function HomeScreen() {
                   {userProfile?.username || "Piloto"}
                 </Heading>
               </VStack>
-              <Pressable onPress={handleLogout} className="p-2 bg-gray-800/80 rounded-full">
+              <DebouncedPressable onPress={handleLogout} className="p-2 bg-gray-800/80 rounded-full">
                 {(props: { pressed: boolean }) => (
                   <Box
                     style={{
@@ -82,7 +82,7 @@ export default function HomeScreen() {
                     <LogOut color="#ef4444" size={24} />
                   </Box>
                 )}
-              </Pressable>
+              </DebouncedPressable>
             </HStack>
           </Box>
 
