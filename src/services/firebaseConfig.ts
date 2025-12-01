@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence  } from 'firebase/auth'; 
-import { getFirestore } from 'firebase/firestore';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeFirestore, persistentLocalCache, reactNativeLocalPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -13,25 +13,11 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_APP_ID,
 };
 
-// console.log('Firebase Config Status:', {
-//   apiKey: firebaseConfig.apiKey ? '✅ Loaded' : '❌ Missing',
-//   authDomain: firebaseConfig.authDomain ? '✅ Loaded' : '❌ Missing',
-//   projectId: firebaseConfig.projectId ? '✅ Loaded' : '❌ Missing',
-//   storageBucket: firebaseConfig.storageBucket ? '✅ Loaded' : '❌ Missing',
-//   messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Loaded' : '❌ Missing',
-//   appId: firebaseConfig.appId ? '✅ Loaded' : '❌ Missing',
-// });
-
-// console.log('Using project:', firebaseConfig.projectId);
-
 const requiredFields = ['apiKey', 'authDomain', 'projectId', 'appId'] as const;
 const missingFields = requiredFields.filter(field => !firebaseConfig[field as keyof typeof firebaseConfig]);
 
 if (missingFields.length > 0) {
   console.error('❌ Firebase configuration missing required fields:', missingFields);
-  console.error('Please check your .env file and ensure all EXPO_PUBLIC_* variables are set correctly');
-} else {
-  // console.log('✅ Firebase configuration is complete');
 }
 
 const app = initializeApp(firebaseConfig);
@@ -40,7 +26,11 @@ const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });
 
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+        tabManager: reactNativeLocalPersistence(ReactNativeAsyncStorage)
+    })
+});
 
 const storage = getStorage(app);
 
