@@ -2,16 +2,16 @@
 
 <div align="center">
 
-![Versão do app](https://img.shields.io/badge/v0.1.0-red?style=for-the-badge&logo=formula1)
-![React Native](https://img.shields.io/badge/React%20Native-0.74-blue?style=for-the-badge&logo=react)
+![Versão do app](https://img.shields.io/badge/v1.0.0-red?style=for-the-badge&logo=formula1)
+![React Native](https://img.shields.io/badge/React%20Native-0.76-blue?style=for-the-badge&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Firebase](https://img.shields.io/badge/Firebase-10.0-orange?style=for-the-badge&logo=firebase)
 
 <img src="./src/assets/images/apex-logo-readme.png" alt="Logo do app" width="150" height="150">
 
-**Um aplicativo mobile para gerenciar setups de carros de Fórmula 1 em jogos de corrida**
+**O seu engenheiro de corrida de bolso. Gerencie setups, planeje estratégias e conecte-se com a comunidade de F1 24.**
 
-[📱 Demo](#-demo) • [🚀 Instalação](#-instalação) • [📖 Documentação](#-documentação)
+[📱 Funcionalidades](#-funcionalidades) • [🛠️ Stack](#%EF%B8%8F-stack-tecnológica) • [🚀 Instalação](#-instalação) • [📋 Backlog](#-backlog-e-critérios)
 
 </div>
 
@@ -19,37 +19,75 @@
 
 ## 📄 Sobre o Projeto
 
-O **Apex F1 Assistant** é um aplicativo mobile desenvolvido para entusiastas de jogos de corrida de Fórmula 1. Ele permite que os usuários salvem, gerenciem e consultem seus setups de carro (configurações) para diferentes circuitos e condições climáticas, otimizando a performance nas pistas virtuais.
+O **Apex F1 Assistant** é uma plataforma completa para pilotos virtuais de Fórmula 1. Muito mais do que um bloco de notas, ele é um hub de engenharia que permite criar, organizar e compartilhar ajustes mecânicos de precisão.
 
-Este projeto foi criado para centralizar as informações dos setups, oferecendo uma solução moderna e intuitiva.
+Com suporte offline-first e sincronização em nuvem, o Apex garante que sua estratégia esteja sempre à mão, seja no meio de uma sessão classificatória ou discutindo ajustes com amigos.
 
-## 📄 Backlog do Produto
-<img src="./src/assets/images/backlog-completo.png" alt="Backlog do Projeto">
+---
 
-## Sprint 1
+## ✨ Funcionalidades
 
-<img src="./src/assets/images/backlog-sprint-1.png" alt="Sprint 1">
+### 🛠️ Engenharia de Setup
+- **Criação Detalhada:** Ajuste fino de Aerodinâmica, Transmissão, Geometria, Suspensão, Freios e Pneus.
+- **Validação em Tempo Real:** Regras automáticas que garantem que seu setup esteja dentro dos limites do jogo F1 24.
+- **Organização por Pastas:** Agrupe seus ajustes por campeonato, clima ou estilo de pilotagem.
 
-### User Stories da 1 Sprint
-- **US 01:** Como usuário, quero criar, salvar e editar setups para os jogos de F1 para não perder minhas configurações.
+### 📊 Estratégia de Corrida
+- **Calculadora de Combustível:** Estime a carga ideal para a largada.
+- **Gestão de Pneus:** Controle seu inventário de compostos disponíveis.
+- **Múltiplos Cenários:** Crie planos A, B e C com diferentes janelas de parada (Pit Windows).
 
-- **US 02:** Como usuário, quero ver uma lista dos setups que salvei para encontrar rapidamente o que preciso.
+### 🌎 Comunidade e Social
+- **Feed de Setups:** Descubra os ajustes mais rápidos compartilhados por outros pilotos.
+- **Sistema de Avaliação:** Teste setups da comunidade e deixe sua nota (estrelas).
+- **Clonagem Inteligente:** Importe qualquer setup público para sua biblioteca pessoal com um clique.
+- **Perfis Sociais:** Siga seus criadores favoritos e veja suas estatísticas de contribuição.
+- **Compartilhamento Externo:** Gere links profundos (Deep Links) para enviar seus setups via WhatsApp ou Discord.
 
-- **US 03:** Como usuário, quero pesquisar e filtrar meus setups para encontrar um específico sem ter que rolar a tela toda.
+### 🔒 Segurança e Performance
+- **Offline-First:** O app funciona perfeitamente sem internet e sincroniza quando reconectado.
+- **Autenticação Híbrida:** Login via E-mail/Senha ou Google.
+- **Dark Mode Nativo:** Interface otimizada para baixo consumo de bateria e conforto visual.
 
-- **US 04:** Como usuário, quero criar uma conta para ter meus setups salvos e acessíveis de qualquer lugar.
+---
 
-- **US 05:** Como usuário, quero fazer login e logout para gerenciar minha conta e proteger meus dados.
+## 📋 Backlog e Critérios
 
-- **US 06:** Como usuário logado, quero que meus setups sejam sincronizados automaticamente para que eu possa acessá-los em qualquer dispositivo.
+Abaixo estão as User Stories que guiaram o desenvolvimento do MVP até a versão 1.0.
 
-## ✨ Funcionalidades Principais
+### 📌 Sprint 1: Fundação e CRUD
+> **Foco:** Garantir que o usuário possa salvar e recuperar seus dados com segurança.
 
-- **👤 Autenticação Segura**: Sistema completo de login e cadastro com Firebase Auth
-- **📝 Gerenciamento de Setups**: CRUD completo para criar, visualizar, editar e deletar setups
-- **🔍 Busca Inteligente**: Encontre setups específicos com filtros avançados
-- **⚙️ Configurações Detalhadas**: Aerodinâmica, Transmissão, Geometria da Suspensão, Suspensão, Freios e Pneus
-- **📱 Design Responsivo**: Interface moderna construída com Gluestack UI
+<img src="./src/assets/images/backlog-sprint-1.png" alt="Backlog sprint 1">
+
+* **US 01 (Setup):** Criar formulário completo com validação para todos os parâmetros do carro.
+* **US 02 (Listagem):** Exibir lista de setups salvos com resumo visual.
+* **US 03 (Filtros):** Filtrar lista por Pista, Carro e Condições.
+* **US 04/05 (Auth):** Cadastro e Login seguro com persistência de sessão.
+* **US 06 (Sync):** Sincronização automática entre dispositivos via Nuvem.
+
+### 📌 Sprint 2: Organização e Estratégia
+> **Foco:** Transformar dados soltos em informação útil para a corrida.
+
+<img src="./src/assets/images/backlog-sprint-2.png" alt="Backlog sprint 2">
+
+* **US 07 (Pastas):** Criar sistema de pastas para categorizar setups.
+* **US 08/09 (Notas):** Adicionar campo de anotações técnicas e dicas de pilotagem.
+* **US 10 (Estratégia):** Criar módulo de planejamento de paradas e combustível.
+
+### 📌 Sprint 3: Comunidade e Social
+> **Foco:** Conectar os pilotos e permitir a troca de conhecimento.
+
+<img src="./src/assets/images/backlog-sprint-3.png" alt="Backlog sprint 3">
+
+* **US 11 (Perfil):** Página de perfil com foto, gamertags e estatísticas.
+* **US 12 (Publicação):** "Switch" de privacidade para tornar setups públicos.
+* **US 13 (Avaliação):** Sistema de Rating (1-5 estrelas) com proteção contra fraude.
+* **US 14 (Discovery):** Seção "Em Alta" na Home com os melhores setups.
+* **US 15 (Importação):** Funcionalidade de "Clonar" setups de terceiros.
+* **US 16 (Share):** Deep Linking para abrir o app direto no setup compartilhado.
+
+---
 
 ## 🛠️ Stack Tecnológica
 
@@ -57,169 +95,74 @@ Este projeto foi criado para centralizar as informações dos setups, oferecendo
 
 | Categoria | Tecnologia |
 |-----------|------------|
-| **Framework** | React Native |
-| **UI Library** | Gluestack UI |
-| **Estilização** | Tailwind CSS + NativeWind |
-| **Backend** | Firebase (Auth + Firestore) |
+| **Framework** | React Native (Expo) |
+| **Linguagem** | TypeScript |
+| **UI & Estilo** | Gluestack UI + NativeWind (Tailwind) |
+| **Backend** | Firebase (Auth, Firestore, Storage) |
 | **Gerenciamento de Estado** | Zustand |
-| **Navegação** | Expo Router |
+| **Navegação** | Expo Router (File-based routing) |
+| **Build & Deploy** | EAS (Expo Application Services) |
 
 </div>
 
-## 🚀 Instalação
+---
+
+## 🚀 Instalação e Execução
 
 ### Pré-requisitos
+- Node.js (v18+)
+- Expo CLI (`npm install -g eas-cli`)
+- Um dispositivo Android/iOS ou Emulador configurado.
 
-- **Node.js** (versão 18 ou superior)
-- **npm** ou **yarn**
-- **Expo CLI** instalado globalmente
-- **Android Studio** (para Android) ou **Xcode** (para iOS)
+## Passo a Passo
 
-### Configuração do Ambiente
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/Duponesss/FormulaSetupManager.git
+   cd FormulaSetupManager
+   ```
 
-```bash
-# Instalar Expo CLI globalmente
-npm install -g @expo/cli
+2. **Instale as dependências**
+   ```bash
+   npm install
+   ```
 
-# Verificar instalação
-expo --version
+3. **Configure as Variáveis de Ambiente**
+   Crie um arquivo `.env` na raiz e adicione suas chaves do Firebase (disponíveis no console do projeto):
+   ```env
+   EXPO_PUBLIC_API_KEY=sua_api_key
+   EXPO_PUBLIC_AUTH_DOMAIN=seu_projeto.firebaseapp.com
+   EXPO_PUBLIC_PROJECT_ID=seu_project_id
+   # ... outras variáveis do firebase
+   ```
+
+4. **Execute o projeto**
+   ```bash
+   npx expo start
+   ```
+
+## 📱 Estrutura de Pastas (Expo Router)
+
+A arquitetura segue o padrão de rotas baseadas em arquivos do Expo Router v3:
+
 ```
-
-### Clonando e Configurando o Projeto
-
-```bash
-# 1. Clone o repositório
-git clone https://github.com/Duponesss/FormulaSetupManager.git
-
-# 2. Acesse o diretório do projeto
-cd FormulaSetupManager
-
-# 3. Instale as dependências
-npm install
-
-# 4. Configure as variáveis de ambiente
-cp .env.example .env
+app/
+├── (auth)/              # Rotas de Autenticação (Login, Registro)
+├── (tabs)/              # Rotas da Barra de Navegação Inferior
+│   ├── index.tsx        # Home (Hub Principal)
+│   ├── profile-screen   # Perfil do Usuário
+│   ├── folders-screen   # Gerenciador de Pastas
+│   └── ...
+├── setup/
+│   └── [id].tsx         # Rota Dinâmica para Deep Linking
+├── _layout.tsx          # Configuração Global (Providers, Theme)
+└── ...
+src/
+├── components/          # Componentes Reutilizáveis (Cards, Modais)
+├── stores/              # Lógica de Estado (Zustand)
+├── services/            # Configuração do Firebase
+└── hooks/               # Hooks Customizados (useAuth, useSingleTap)
 ```
-
-### Configuração do Firebase
-
-1. **Acesse o [Console do Firebase](https://console.firebase.google.com/)**
-2. **Crie um novo projeto** ou use um existente
-3. **Configure a autenticação**:
-   - Ative Email/Password
-   - Ative Google Sign-In (opcional)
-4. **Configure o Firestore Database**
-5. **Baixe os arquivos de configuração**:
-   - `google-services.json` (Android)
-   - `GoogleService-Info.plist` (iOS)
-
-### Executando o Projeto
-
-```bash
-# Iniciar o servidor de desenvolvimento
-npx expo start
-
-# Para executar no Android
-npx expo run:android
-
-# Para executar no iOS (apenas macOS)
-npx expo run:ios
-
-# Para executar na web
-npx expo start --web
-```
-
-<!-- ## 📂 Estrutura do Projeto
-
-```bash
-FormulaSetupManager/
-├── 📁 app/                          # Expo Router - Estrutura de rotas
-│   ├── 📁 (auth)/                   # Grupo de rotas de autenticação
-│   │   ├── _layout.tsx              # Layout das telas de auth
-│   │   └── index.tsx                # Tela de login
-│   ├── 📁 (tabs)/                   # Grupo de rotas principais
-│   │   ├── _layout.tsx              # Layout com navegação em tabs
-│   │   ├── index.tsx                # Tela inicial (Home)
-│   │   ├── create-setup.tsx         # Criar novo setup
-│   │   ├── setup-details.tsx        # Detalhes do setup
-│   │   ├── aerodynamics.tsx         # Configurações aerodinâmicas
-│   │   ├── suspension.tsx           # Configurações de suspensão
-│   │   └── tires-brakes.tsx         # Configurações de pneus e freios
-│   └── _layout.tsx                  # Layout raiz da aplicação
-├── 📁 components/                   # Componentes de UI reutilizáveis
-│   └── 📁 ui/                       # Componentes Gluestack UI
-├── 📁 src/                          # Código fonte principal
-│   ├── 📁 contexts/                 # Context providers
-│   │   ├── AuthContext.tsx          # Contexto de autenticação
-│   │   └── ThemeContext.tsx         # Contexto de tema
-│   ├── 📁 hooks/                    # Custom hooks
-│   │   └── use-auth.ts              # Hook de autenticação
-│   ├── 📁 screens/                  # Componentes de tela
-│   │   ├── AuthScreen.tsx           # Tela de autenticação
-│   │   ├── HomeScreen.tsx           # Tela inicial
-│   │   ├── CreateSetupScreen.tsx    # Tela de criação de setup
-│   │   ├── SetupDetailsScreen.tsx   # Tela de detalhes
-│   │   ├── AerodynamicsScreen.tsx   # Tela de aerodinâmica
-│   │   ├── SuspensionScreen.tsx     # Tela de suspensão
-│   │   └── TiresBrakesScreen.tsx    # Tela de pneus e freios
-│   └── 📁 services/                 # Serviços externos
-│       └── firebaseConfig.ts        # Configuração do Firebase
-├── 📄 package.json                  # Dependências e scripts
-├── 📄 tailwind.config.js            # Configuração do Tailwind
-├── 📄 tsconfig.json                 # Configuração do TypeScript
-├── 📄 app.json                      # Configuração do Expo
-├── 📄 global.css                    # Estilos globais
-└── 📄 README.md                     # Este arquivo
-``` -->
-
-## 🎯 Funcionalidades Implementadas
-
-### ✅ Autenticação
-- [x] Login com email/senha
-- [x] Cadastro de novos usuários
-- [x] Logout
-- [🚧] Persistência de sessão
-
-### ✅ Gerenciamento de Setups
-- [x] Criar novos setups
-- [x] Listar setups salvos
-- [x] Visualizar detalhes do setup
-- [x] Editar configurações existentes
-- [x] Deletar setups
-
-### ✅ Configurações de Carro
-- [x] **Aerodinâmica**: Asa dianteira e traseira
-- [x] **Suspensão**: Altura, rigidez, amortecimento
-- [x] **Pneus e Freios**: Pressão, temperatura, força de frenagem
-- 🚧 **As configurações detalhadas ainda estão em desenvolvimento**
-
-### ✅ Interface e UX
-- [🚧] Modo escuro/claro
-
-## 🔮 Roadmap
-
-### 📋 Próximas Funcionalidades
-- [🚧] **Importação/Exportação** de setups
-- [🚧] **Compartilhamento** de setups entre usuários
-- [🚧] **Categorização** por jogo (F1 23, F1 24, etc.)
-- [🚧] **Filtros avançados** por circuito e condições
-- [🚧] **Backup automático** na nuvem
-- [🚧] **Modo offline** com sincronização
-
-### 🎮 Integração com Dados dos Jogos
-- [🚧] Suporte para **F1 23 e versões anteriores**
-- [🚧] Suporte para **F1 25**
-
-### 📋 Guidelines
-
-- Siga os padrões de código existentes
-- Adicione testes para novas funcionalidades
-- Atualize a documentação quando necessário
-- Use commits semânticos
-
-## 📱 Demo
-
-> **Em breve**: Screenshots e vídeos demonstrativos da aplicação
 
 ## 👨‍💻 Autor
 
@@ -232,6 +175,6 @@ FormulaSetupManager/
 
 <div align="center">
 
-**⭐ Se você gostou deste projeto, considere dar uma estrela!**
+**⭐ Se este projeto te ajudou a ganhar alguns décimos na pista, deixe uma estrela!**
 
 </div>
