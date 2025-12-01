@@ -4,7 +4,6 @@ import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc
   type DocumentSnapshot, startAfter
  } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { DEFAULT_GAME_DATA } from '../data/defaultGameData';
 
 export interface UserProfile {
   uid: string;
@@ -259,9 +258,9 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   loadingProfile: true,
   formData: formInitialState,
   allSetups: [],
-  gameData: DEFAULT_GAME_DATA,
+  gameData: null,
   loadingSetups: true,
-  loadingGameData: false,
+  loadingGameData: true,
   folders: [],
   loadingFolders: true,
   folderSetups: [],
@@ -640,18 +639,20 @@ export const useSetupStore = create<SetupState>((set, get) => ({
   },
 
   fetchGameData: async (gameId) => {
+    if (get().gameData) return; 
     try {
+      set({ loadingGameData: true });
       const docRef = doc(db, "gamedata", gameId);
-      
       const docSnap = await getDoc(docRef);
-      
       if (docSnap.exists()) {
         set({ gameData: docSnap.data() as GameData });
       } else {
-        console.warn(`GameData não encontrado no Firestore, mantendo padrão.`);
+        console.warn(`GameData para ${gameId} não encontrado.`);
       }
     } catch (error) {
-      console.log("Modo Offline: Usando dados locais do app.");
+      console.error("Erro ao buscar gamedata:", error);
+    } finally {
+      set({ loadingGameData: false });
     }
   },
 
